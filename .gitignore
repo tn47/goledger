@@ -2,5 +2,3 @@ bnc
 *.swp
 .vimsession
 ledger
-tools/collate_validate/collate_validate
-tools/validate/validate
