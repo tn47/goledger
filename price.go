@@ -28,10 +28,8 @@ func NewPrice(context s.Settings) *Price {
 }
 
 func (price *Price) Y() parsec.Parser {
-	noder := func(nodes []parsec.ParsecNode) parsec.ParsecNode {
-		return nil
-	}
-
+	// P
+	yp := parsec.Token("P ", "PRICESTART")
 	// DATE
 	ydate := Ydate(price.year, price.month, price.dateformat)
 	// SYMBOL
@@ -39,6 +37,11 @@ func (price *Price) Y() parsec.Parser {
 	// [*|!]
 	yexchange := parsec.Token("", "PRICEEXCHANGE")
 
-	y := parsec.And(noder, ydate, ysymbol, yexchange)
+	y := parsec.And(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			return price
+		},
+		yp, ydate, ysymbol, yexchange,
+	)
 	return y
 }

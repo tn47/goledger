@@ -11,23 +11,21 @@ type Posting struct {
 	note      *Note
 }
 
+func NewPosting() *Posting {
+	return &Posting{}
+}
+
 func (p *Posting) Y() parsec.Parser {
-	poster := func(nodes []parsec.ParsecNode) parsec.ParsecNode {
-		return nil
-	}
-
-	accounter := func(nodes []parsec.ParsecNode) parsec.ParsecNode {
-		t := nodes[0].(*parsec.Terminal)
-		switch t.Name {
-		case "TRANSACCOUNT", "TRANSVACCOUNT", "TRANSBACCOUNT":
-			return NewAccount(string(t.Value))
-		}
-		panic("unreachable code")
-	}
-
 	// ACCOUNT
 	yaccount := parsec.OrdChoice(
-		accounter,
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			t := nodes[0].(*parsec.Terminal)
+			switch t.Name {
+			case "TRANSACCOUNT", "TRANSVACCOUNT", "TRANSBACCOUNT":
+				return NewAccount(string(t.Value))
+			}
+			panic("unreachable code")
+		},
 		parsec.Token("[a-zA-Z][a-zA-Z: ~.,;?/-]*", "TRANSACCOUNT"),
 		parsec.Token(`\([a-zA-Z][a-zA-Z: ~.,;?/-]*\)`, "TRANSVACCOUNT"),
 		parsec.Token(`\[[a-zA-Z][a-zA-Z: ~.,;?/-]*\]`, "TRANSBACCOUNT"),
@@ -40,6 +38,11 @@ func (p *Posting) Y() parsec.Parser {
 	yposting := parsec.And(nil, yaccount, yamount, ynote)
 	ypersnote := parsec.Token(";[^;]+", "TRANSPNOTE")
 
-	y := parsec.OrdChoice(poster, yposting, ypersnote)
+	y := parsec.OrdChoice(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			return p
+		},
+		yposting, ypersnote,
+	)
 	return y
 }
