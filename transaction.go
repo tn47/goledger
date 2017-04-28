@@ -3,7 +3,6 @@ package main
 import "time"
 
 import "github.com/prataprc/goparsec"
-import s "github.com/prataprc/gosettings"
 
 type Transprefix byte
 type Transcode string
@@ -22,15 +21,19 @@ type Transaction struct {
 	year       int
 	month      int
 	dateformat string
-	context    s.Settings
+	context    Context
 }
 
-func NewTransaction(context s.Settings) *Transaction {
-	trans := &Transaction{
-		year:       int(context.Int64("year")),
-		month:      int(context.Int64("month")),
-		dateformat: context.String("dateformat"),
-		context:    context,
+func NewTransaction(context Context) *Transaction {
+	trans := &Transaction{context: context}
+	if year, ok := context.Int64("year"); ok {
+		trans.year = int(year)
+	}
+	if month, ok := context.Int64("month"); ok {
+		trans.month = int(month)
+	}
+	if dateformat, ok := context.String("dateformat"); ok {
+		trans.dateformat = dateformat
 	}
 	return trans
 }
@@ -100,8 +103,7 @@ func (trans *Transaction) Parsepostings(scanner parsec.Scanner) {
 	var node parsec.ParsecNode
 
 	for {
-		bs, scanner = scanner.SkipWS()
-		if len(bs) == 0 {
+		if bs, scanner = scanner.SkipWS(); len(bs) == 0 {
 			return
 		}
 		node, scanner = NewPosting().Y()(scanner)
