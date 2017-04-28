@@ -1,28 +1,37 @@
 package main
 
 import "os"
-import "bufio"
+import "fmt"
+import "flag"
 
 var options struct {
-	journal string
+	journals []string
+}
+
+func argparse() []string {
+	f := flag.NewFlagSet("ledger", flag.ExitOnError)
+	f.Usage = func() {
+		fmsg := "Usage of command: %v [ARGS]\n"
+		fmt.Printf(fmsg, os.Args[0])
+		f.PrintDefaults()
+	}
+
+	f.Parse(os.Args[1:])
+	return f.Args()
 }
 
 func main() {
-	options.journal = "examples/journal.dat"
-
-	readlines(options.journal)
-}
-
-func readlines(path string) []string {
-	fd, _ := os.Open(path)
-	defer fd.Close()
-
-	scanner := bufio.NewScanner(fd)
-	scanner.Split(bufio.ScanLines)
-
-	lines := []string{}
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
+	options.journals = argparse()
+	cwd, err := os.Getwd()
+	if err != nil {
+		fmt.Printf("os.Getwd(): %v\n", err)
+		os.Exit(1)
 	}
-	return lines
+	journals := getjournals(cwd)
+	journals = append(journals, options.journals...)
+	for _, journal := range journals {
+		for _, line := range readlines(journal) {
+			fmt.Println(line)
+		}
+	}
 }
