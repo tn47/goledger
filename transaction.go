@@ -17,30 +17,19 @@ type Transaction struct {
 	postings []*Posting
 	note     string
 
-	// context
-	year       int
-	month      int
-	dateformat string
-	context    Context
+	db Datastore // read-only copy
 }
 
-func NewTransaction(context Context) *Transaction {
-	trans := &Transaction{context: context}
-	if year, ok := context.Int64("year"); ok {
-		trans.year = int(year)
-	}
-	if month, ok := context.Int64("month"); ok {
-		trans.month = int(month)
-	}
-	if dateformat, ok := context.String("dateformat"); ok {
-		trans.dateformat = dateformat
-	}
+func NewTransaction(db Datastore) *Transaction {
+	trans := &Transaction{db: db}
 	return trans
 }
 
 func (trans *Transaction) Y() parsec.Parser {
 	// DATE
-	ydate := Ydate(trans.year, trans.month, trans.dateformat)
+	ydate := Ydate(
+		trans.db.Year(), trans.db.Month(), trans.db.Dateformat(),
+	)
 	// [=EDATE]
 	yequal := parsec.Token("=", "TRANSEQUAL")
 	yedate := parsec.Maybe(

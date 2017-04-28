@@ -67,6 +67,8 @@ func Ydate(year, month int, format string) parsec.Parser {
 					panic("unreachable code")
 				}
 			}
+			if year < -1 {
+			}
 
 			tm := time.Date(
 				year, time.Month(month), date, 0, 0, 0, 0, nil, /*TODO: locale*/

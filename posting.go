@@ -10,7 +10,7 @@ type Posting struct {
 	amount    *Amount
 	note      *Note
 
-	context Context
+	db Datastore // read-only copy
 }
 
 func NewPosting() *Posting {
@@ -18,7 +18,7 @@ func NewPosting() *Posting {
 }
 
 func (p *Posting) Y() parsec.Parser {
-	account := NewAccount("", p.context)
+	account := NewAccount("", p.db)
 	// ACCOUNT
 	// AMOUNT
 	yamount := parsec.Token("[^;]+", "TRANSAMOUNT")

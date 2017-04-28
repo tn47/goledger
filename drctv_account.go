@@ -12,15 +12,15 @@ type DirectiveAccount struct {
 	assert  string
 	eval    string
 
-	context Context
+	db Datastore // read-only copy
 }
 
-func NewDirectiveAccount(context Context) *DirectiveAccount {
-	return &DirectiveAccount{context: context}
+func NewDirectiveAccount(db Datastore) *DirectiveAccount {
+	return &DirectiveAccount{db: db}
 }
 
 func (drtv *DirectiveAccount) Y() parsec.Parser {
-	account := NewAccount("", drtv.context)
+	account := NewAccount("", drtv.db)
 	// account
 	ybegin := parsec.Token("account", "DRTV_ACCOUNT")
 	y := parsec.And(

@@ -11,11 +11,11 @@ type Account struct {
 	virtual  bool
 	balanced bool
 
-	context Context
+	db Datastore // read-only copy
 }
 
-func NewAccount(name string, context Context) *Account {
-	return &Account{name: name, context: context}
+func NewAccount(name string, db Datastore) *Account {
+	return &Account{name: name, db: db}
 }
 
 func (acc *Account) Y() parsec.Parser {
