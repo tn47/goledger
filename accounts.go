@@ -61,6 +61,14 @@ func (acc *Account) Addchild(child *Account) {
 	acc.children[child.name] = child
 }
 
+func (acc *Account) Getchild(name string) *Account {
+	child, ok := acc.children[name]
+	if ok {
+		return child
+	}
+	return nil
+}
+
 func (acc *Account) Children() []*Account {
 	names := []string{}
 	for _, child := range acc.children {

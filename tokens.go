@@ -2,9 +2,6 @@ package main
 
 import "github.com/prataprc/goparsec"
 
-//---- Directives
-var ytok_account = parsec.Token("account", "DRTV_ACCOUNT")
-
 //---- Transaction tokens
 type Transprefix byte
 type Transcode string
@@ -33,6 +30,10 @@ var ytok_persnote = parsec.Token(";[^;]+", "TRANSPNOTE")
 
 var ytok_postamount = parsec.Token("[^;]+", "AMOUNT")
 var ytok_postnote = parsec.Token(";[^;]+", "TRANSNOTE")
+
+//---- Directives
+var ytok_account = parsec.Token("account", "DRTV_ACCOUNT")
+var ytok_apply = parsec.Token("apply", "DRTV_APPLY")
 
 //
 func maybenode(nodes []parsec.ParsecNode) parsec.ParsecNode {

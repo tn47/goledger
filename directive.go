@@ -4,7 +4,7 @@ import "github.com/prataprc/goparsec"
 
 type Directive struct {
 	dtype string
-	// account
+	// account, apply
 	account *Account
 }
 
@@ -14,6 +14,7 @@ func NewDirective() *Directive {
 
 func (d *Directive) Y(db *Datastore) parsec.Parser {
 	d.account = NewAccount("")
+
 	yaccount := parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			account := db.GetAccount(nodes[1].(*Account).Name())
@@ -26,9 +27,22 @@ func (d *Directive) Y(db *Datastore) parsec.Parser {
 		ytok_account, d.account.Y(),
 	)
 
+	yapply := parsec.And(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			account := db.GetAccount(nodes[1].(*Account).Name())
+			if account != nil {
+				d.account = account
+			}
+			d.dtype = "apply"
+			return d
+		},
+		ytok_apply, ytok_account, d.account.Y(),
+	)
+
 	y := parsec.OrdChoice(
 		vector2scalar,
 		yaccount,
+		yapply,
 	)
 	return y
 }

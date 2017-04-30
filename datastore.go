@@ -32,12 +32,13 @@ func (db *Datastore) GetAccount(name string) *Account {
 
 	names := strings.Split(name, ":")
 	for _, name := range names {
-		account, ok = db.accounts[name]
-		if ok == false {
-			account = NewAccount(name)
-		}
 		if parent != nil {
-			parent.Addchild(account)
+			if account = parent.Getchild(name); account == nil {
+				if _, ok = db.accounts[name]; ok == false {
+					db.accounts[name] = NewAccount(name)
+				}
+				parent.Addchild(db.accounts[name])
+			}
 		}
 		parent = account
 	}
