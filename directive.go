@@ -35,7 +35,7 @@ func (d *Directive) Yaccount(db *Datastore) parsec.Parser {
 			d.dtype = "account"
 			return d
 		},
-		ytok_account, d.account.Y(),
+		ytok_account, d.account.Y(db),
 	)
 }
 
@@ -47,7 +47,7 @@ func (d *Directive) Yapply(db *Datastore) parsec.Parser {
 			d.dtype = "apply"
 			return d
 		},
-		ytok_apply, ytok_account, d.account.Y(),
+		ytok_apply, ytok_account, d.account.Y(db),
 	)
 }
 
@@ -60,7 +60,7 @@ func (d *Directive) Yalias(db *Datastore) parsec.Parser {
 			d.dtype = "apply"
 			return d
 		},
-		ytok_alias, ytok_aliasname, ytok_equal, d.account.Y(),
+		ytok_alias, ytok_aliasname, ytok_equal, d.account.Y(db),
 	)
 }
 

@@ -25,7 +25,7 @@ func NewDatastore(name string) *Datastore {
 		// working fields
 		year:       -1,
 		month:      -1,
-		dateformat: "%d-%m-%y",
+		dateformat: "%d/%m/%y %h:%t:%s",
 	}
 	return db
 }

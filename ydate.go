@@ -4,13 +4,41 @@ import "fmt"
 import "time"
 import "regexp"
 import "strconv"
+import "strings"
 
 import "github.com/prataprc/goparsec"
 
 var century int
 
 func Ydate(year, month int, format string) parsec.Parser {
-	pattern := "([^%]*)?(%[mdeyYAajuw])"
+	parsers := []interface{}{}
+	parts := strings.Split(format, " ")
+	parsers = append(parsers, Ymdy(parts[0]))
+	if len(parts) == 2 {
+		parsers = append(parsers, parsec.Maybe(maybenode, Yhns(parts[1])))
+	}
+	return parsec.And(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			ymd := nodes[0].([]interface{})
+			year, month, date := ymd[0].(int), ymd[1].(int), ymd[2].(int)
+			hour, minute, second := 0, 0, 0
+			if len(nodes) == 2 {
+				hns := nodes[1].([]interface{})
+				hour, minute, second = hns[0].(int), hns[1].(int), hns[2].(int)
+			}
+			tm := time.Date(
+				year, time.Month(month), date,
+				hour, minute, second, 0,
+				nil, /*locale*/
+			)
+			return tm
+		},
+		parsers...,
+	)
+}
+
+func Ymdy(format string) parsec.Parser {
+	pattern := "([^%]*)?(%[mdy])"
 	regc, err := regexp.Compile(pattern)
 	if err != nil {
 		panic(fmt.Errorf("unable to parse %q: %v\n", pattern, err))
@@ -19,18 +47,16 @@ func Ydate(year, month int, format string) parsec.Parser {
 	parsers := []interface{}{}
 	for i, match := range matches {
 		if match[1] != "" {
-			name := fmt.Sprintf("DATEDELIMIT-%v", i)
+			name := fmt.Sprintf("LIMIT-%v", i)
 			parsers = append(parsers, parsec.Token(match[1], name))
 		}
 		switch match[2] {
-		case "%Y", "%y":
-			parsers = append(parsers, parsec.Token(match[1], "DATEYEAR"))
+		case "%y":
+			parsers = append(parsers, parsec.Token(match[1], "YEAR"))
 		case "%m":
-			parsers = append(parsers, parsec.Token(match[1], "DATEMONTH"))
+			parsers = append(parsers, parsec.Token(match[1], "MONTH"))
 		case "%d":
-			parsers = append(parsers, parsec.Token(match[1], "DATEDATE"))
-		case "%A": // weekday information
-			// TODO: we may not need to parse this, redundant information
+			parsers = append(parsers, parsec.Token(match[1], "DATE"))
 		default:
 			panic("unreachable code")
 		}
@@ -38,46 +64,101 @@ func Ydate(year, month int, format string) parsec.Parser {
 
 	y := parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
-			var date int
+			var year, month, date int
 			var err error
 
 			for _, node := range nodes {
 				switch t := node.(*parsec.Terminal); t.Name {
-				case "DATEYEAR":
+				case "YEAR":
 					year, err = strconv.Atoi(t.Value)
 					if err != nil {
-						fmt.Printf("invalid DATEYEAR at %v\n", t.Position)
+						fmt.Printf("invalid YEAR at %v\n", t.Position)
 					}
 					if year < 100 {
 						year = century + year
 					}
 
-				case "DATEMONTH":
+				case "MONTH":
 					month, err = strconv.Atoi(t.Value)
 					if err != nil {
-						fmt.Printf("invalid DATEMONTH at %v\n", t.Position)
+						fmt.Printf("invalid MONTH at %v\n", t.Position)
 					}
 
-				case "DATEDATE":
+				case "DATE":
 					date, err = strconv.Atoi(t.Value)
 					if err != nil {
-						fmt.Printf("invalid DATEDATE at %v\n", t.Position)
+						fmt.Printf("invalid DATE at %v\n", t.Position)
 					}
+
 				default:
 					panic("unreachable code")
 				}
 			}
-			if year < -1 {
-			}
-
-			tm := time.Date(
-				year, time.Month(month), date, 0, 0, 0, 0, nil, /*TODO: locale*/
-			)
-			return tm
+			return []interface{}{year, month, date}
 		},
 		parsers...,
 	)
+	return y
+}
 
+func Yhns(format string) parsec.Parser {
+	pattern := "([^%]*)?(%[hns])"
+	regc, err := regexp.Compile(pattern)
+	if err != nil {
+		panic(fmt.Errorf("unable to parse %q: %v\n", pattern, err))
+	}
+	matches := regc.FindAllStringSubmatch(format, -1)
+	parsers := []interface{}{}
+	for i, match := range matches {
+		if match[1] != "" {
+			name := fmt.Sprintf("LIMIT-%v", i)
+			parsers = append(parsers, parsec.Token(match[1], name))
+		}
+		switch match[2] {
+		case "%h":
+			parsers = append(parsers, parsec.Token(match[1], "HOUR"))
+		case "%n":
+			parsers = append(parsers, parsec.Token(match[1], "MINUTE"))
+		case "%s":
+			parsers = append(parsers, parsec.Token(match[1], "SECOND"))
+		default:
+			panic("unreachable code")
+		}
+	}
+
+	y := parsec.And(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			var hour, minute, second int
+			var err error
+
+			for _, node := range nodes {
+				switch t := node.(*parsec.Terminal); t.Name {
+				case "HOUR":
+					hour, err = strconv.Atoi(t.Value)
+					if err != nil {
+						fmt.Printf("invalid HOUR at %v\n", t.Position)
+					}
+
+				case "MINUTE":
+					minute, err = strconv.Atoi(t.Value)
+					if err != nil {
+						fmt.Printf("invalid MONTH at %v\n", t.Position)
+					}
+
+				case "SECOND":
+					second, err = strconv.Atoi(t.Value)
+					if err != nil {
+						fmt.Printf("invalid DATE at %v\n", t.Position)
+					}
+
+				default:
+					panic("unreachable code")
+				}
+			}
+			return []interface{}{hour, minute, second}
+		},
+		parsers...,
+	)
 	return y
 }
 

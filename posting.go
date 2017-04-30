@@ -7,7 +7,7 @@ type Posting struct {
 	virtual   bool
 	balanced  bool
 	account   *Account
-	amount    *Amount
+	commodity *Commodity
 	note      string
 }
 
@@ -17,13 +17,14 @@ func NewPosting() *Posting {
 
 func (p *Posting) Y(db *Datastore) parsec.Parser {
 	account := NewAccount("")
-	yposting := parsec.And(nil, account.Y(), ytok_postamount, ytok_postnote)
+	commodity := NewCommodity()
+	yposting := parsec.And(nil, account.Y(db), commodity.Y(db), ytok_postnote)
 
 	y := parsec.OrdChoice(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			if len(nodes) == 3 {
 				p.account = nodes[0].(*Account)
-				p.amount = NewAmount(string(nodes[1].(*parsec.Terminal).Value))
+				p.commodity = nodes[1].(*Commodity)
 				p.note = string(nodes[2].(*parsec.Terminal).Value)
 				return p
 

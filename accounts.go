@@ -30,7 +30,7 @@ func NewAccount(name string) *Account {
 	return acc
 }
 
-func (acc *Account) Y() parsec.Parser {
+func (acc *Account) Y(db *Datastore) parsec.Parser {
 	y := parsec.OrdChoice(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			t := nodes[0].(*parsec.Terminal)

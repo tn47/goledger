@@ -3,6 +3,9 @@ package main
 import "github.com/prataprc/goparsec"
 
 var ytok_equal = parsec.Token("=", "EQUAL")
+var ytok_currency = parsec.Token("[^0-9 \t\r\n]+", "CURRENCY")
+var ytok_amount = parsec.Token("[0-9,.]+", "AMOUNT")
+var ytok_commodity = parsec.Token("[^0-9.,/@]+", "COMMODITY")
 
 //---- Transaction tokens
 type Transprefix byte
@@ -33,7 +36,6 @@ var ytok_persnote = parsec.Token(";[^;]+", "TRANSPNOTE")
 
 //---- Posting tokens
 
-var ytok_postamount = parsec.Token("[^;]+", "AMOUNT")
 var ytok_postnote = parsec.Token(";[^;]+", "TRANSNOTE")
 
 //---- Directives
