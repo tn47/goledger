@@ -3,9 +3,6 @@ package main
 import "os"
 import "fmt"
 import "flag"
-import "io/ioutil"
-
-import "github.com/prataprc/goparsec"
 
 var options struct {
 	dbname   string
@@ -40,10 +37,6 @@ func main() {
 	journals := getjournals(cwd)
 	journals = append(journals, options.journals...)
 	for _, journal := range journals {
-		data, err := ioutil.ReadFile(journal)
-		if err != nil {
-			fmt.Printf("%v\n", err)
-		}
-		firstpass(db, parsec.NewScanner(data))
+		firstpass(db, journal)
 	}
 }
