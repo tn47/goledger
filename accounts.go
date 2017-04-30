@@ -38,18 +38,19 @@ func (acc *Account) Y() parsec.Parser {
 			switch t.Name {
 			case "TRANSACCOUNT":
 				acc.name = name
+				return acc
 			case "TRANSVACCOUNT":
 				acc.virtual = true
 				acc.name = name[1 : len(name)-1]
+				return acc
 			case "TRANSBACCOUNT":
 				acc.balanced = true
 				acc.name = name[1 : len(name)-1]
+				return acc
 			}
 			panic("unreachable code")
 		},
-		parsec.Token("[a-zA-Z][a-zA-Z: ~.,;?/-]*", "TRANSACCOUNT"),
-		parsec.Token(`\([a-zA-Z][a-zA-Z: ~.,;?/-]*\)`, "TRANSVACCOUNT"),
-		parsec.Token(`\[[a-zA-Z][a-zA-Z: ~.,;?/-]*\]`, "TRANSBACCOUNT"),
+		ytok_accname, ytok_vaccname, ytok_baccname,
 	)
 	return y
 }
@@ -91,7 +92,7 @@ func (acc *Account) SetNote(note string) *Account {
 	return acc
 }
 
-func (acc *Account) SetAlias(alias string) *Account {
+func (acc *Account) AddAlias(alias string) *Account {
 	acc.alias = append(acc.alias, alias)
 	return acc
 }

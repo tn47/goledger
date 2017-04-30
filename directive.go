@@ -3,9 +3,11 @@ package main
 import "github.com/prataprc/goparsec"
 
 type Directive struct {
-	dtype string
-	// account, apply
-	account *Account
+	dtype       string
+	accountname string   // account, alias
+	account     *Account // account
+	applyname   string   // apply
+	aliasname   string   // alias
 }
 
 func NewDirective() *Directive {
@@ -13,11 +15,20 @@ func NewDirective() *Directive {
 }
 
 func (d *Directive) Y(db *Datastore) parsec.Parser {
-	d.account = NewAccount("")
+	y := parsec.OrdChoice(
+		vector2scalar,
+		d.Yaccount(db),
+		d.Yapply(db),
+	)
+	return y
+}
 
-	yaccount := parsec.And(
+func (d *Directive) Yaccount(db *Datastore) parsec.Parser {
+	d.account = NewAccount("")
+	return parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
-			account := db.GetAccount(nodes[1].(*Account).Name())
+			d.accountname = nodes[1].(*Account).Name()
+			account := db.GetAccount(d.accountname, true /*declare*/)
 			if account != nil {
 				d.account = account
 			}
@@ -26,90 +37,80 @@ func (d *Directive) Y(db *Datastore) parsec.Parser {
 		},
 		ytok_account, d.account.Y(),
 	)
+}
 
-	yapply := parsec.And(
+func (d *Directive) Yapply(db *Datastore) parsec.Parser {
+	d.account = NewAccount("")
+	return parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
-			account := db.GetAccount(nodes[1].(*Account).Name())
-			if account != nil {
-				d.account = account
-			}
+			d.applyname = nodes[2].(*Account).Name()
 			d.dtype = "apply"
 			return d
 		},
 		ytok_apply, ytok_account, d.account.Y(),
 	)
-
-	y := parsec.OrdChoice(
-		vector2scalar,
-		yaccount,
-		yapply,
-	)
-	return y
 }
 
-func (d *Directive) Parseaccount(
-	db *Datastore, account *Account, scanner parsec.Scanner) parsec.Scanner {
+func (d *Directive) Yalias(db *Datastore) parsec.Parser {
+	d.account = NewAccount("")
+	return parsec.And(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			d.aliasname = string(nodes[1].(*parsec.Terminal).Value)
+			d.accountname = nodes[3].(*Account).Name()
+			d.dtype = "apply"
+			return d
+		},
+		ytok_alias, ytok_aliasname, ytok_equal, d.account.Y(),
+	)
+}
 
-	var bs []byte
-	var pn parsec.ParsecNode
+func (d *Directive) Yattr(db *Datastore) parsec.Parser {
+	switch d.dtype {
+	case "account":
+		ynote := parsec.And(nil, ytok_note, ytok_value)
+		yalias := parsec.And(nil, ytok_alias, ytok_value)
+		ypayee := parsec.And(nil, ytok_payee, ytok_value)
+		ycheck := parsec.And(nil, ytok_check, ytok_value)
+		yassert := parsec.And(nil, ytok_assert, ytok_value)
+		yeval := parsec.And(nil, ytok_eval, ytok_value)
+		ydefault := parsec.And(nil, ytok_default)
+		y := parsec.OrdChoice(
+			nil,
+			ynote, yalias, ypayee, ycheck, yassert, yeval, ydefault,
+		)
+		return y
 
-	for {
-		if bs, scanner = scanner.SkipWS(); len(bs) == 0 {
-			return scanner
-		}
-		pn, scanner = d.account_subdirective()(scanner)
-		nodes := pn.([]parsec.ParsecNode)
+	case "apply", "alias":
+		return nil
+	}
+	panic("unreachable code")
+}
+
+func (d *Directive) Applysubdir(db *Datastore, node parsec.ParsecNode) {
+	switch d.dtype {
+	case "account":
+		nodes := node.([]parsec.ParsecNode)
 		t := nodes[0].(*parsec.Terminal)
 		switch t.Name {
 		case "DRTV_ACCOUNT_NOTE":
-			account.SetNote(string(nodes[1].(*parsec.Terminal).Value))
+			d.account.SetNote(string(nodes[1].(*parsec.Terminal).Value))
 		case "DRTV_ACCOUNT_ALIAS":
-			account.SetAlias(string(nodes[1].(*parsec.Terminal).Value))
+			aliasname := string(nodes[1].(*parsec.Terminal).Value)
+			db.AddAlias(aliasname, d.accountname)
 		case "DRTV_ACCOUNT_PAYEE":
-			account.SetPayee(string(nodes[1].(*parsec.Terminal).Value))
+			d.account.SetPayee(string(nodes[1].(*parsec.Terminal).Value))
 		case "DRTV_ACCOUNT_CHECK":
-			account.SetCheck(string(nodes[1].(*parsec.Terminal).Value))
+			d.account.SetCheck(string(nodes[1].(*parsec.Terminal).Value))
 		case "DRTV_ACCOUNT_ASSERT":
-			account.SetAssert(string(nodes[1].(*parsec.Terminal).Value))
+			d.account.SetAssert(string(nodes[1].(*parsec.Terminal).Value))
 		case "DRTV_ACCOUNT_EVAL":
-			account.SetEval(string(nodes[1].(*parsec.Terminal).Value))
+			d.account.SetEval(string(nodes[1].(*parsec.Terminal).Value))
 		case "DRTV_ACCOUNT_DEFAULT":
-			db.SetBalancingaccount(account)
+			db.SetBalancingaccount(d.account)
 		}
-	}
-}
 
-func (d *Directive) account_subdirective() parsec.Parser {
-	ynote := parsec.And(nil,
-		parsec.Token("note", "DRTV_ACCOUNT_NOTE"),
-		parsec.Token(".*", "DRTV_ACCOUNT_NOTE_VALUE"),
-	)
-	yalias := parsec.And(nil,
-		parsec.Token("alias", "DRTV_ACCOUNT_ALIAS"),
-		parsec.Token(".*", "DRTV_ACCOUNT_ALIAS_VALUE"),
-	)
-	ypayee := parsec.And(nil,
-		parsec.Token("payee", "DRTV_ACCOUNT_PAYEE"),
-		parsec.Token(".*", "DRTV_ACCOUNT_PAYEE_VALUE"),
-	)
-	ycheck := parsec.And(nil,
-		parsec.Token("check", "DRTV_ACCOUNT_CHECK"),
-		parsec.Token(".*", "DRTV_ACCOUNT_CHECK_VALUE"),
-	)
-	yassert := parsec.And(nil,
-		parsec.Token("assert", "DRTV_ACCOUNT_ASSERT"),
-		parsec.Token(".*", "DRTV_ACCOUNT_ASSERT_VALUE"),
-	)
-	yeval := parsec.And(nil,
-		parsec.Token("eval", "DRTV_ACCOUNT_EVAL"),
-		parsec.Token(".*", "DRTV_ACCOUNT_EVAL_VALUE"),
-	)
-	ydefault := parsec.And(nil,
-		parsec.Token("default", "DRTV_ACCOUNT_DEFAULT"),
-	)
-	y := parsec.OrdChoice(
-		nil,
-		ynote, yalias, ypayee, ycheck, yassert, yeval, ydefault,
-	)
-	return y
+	case "apply", "alias":
+		return
+	}
+	panic("unreachable code")
 }
