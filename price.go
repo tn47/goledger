@@ -9,10 +9,10 @@ type Price struct {
 	commodity time.Time
 	exchange  time.Time // common exchange commodity.
 
-	db Datastore // read-only copy
+	db *Datastore // read-only copy
 }
 
-func NewPrice(db Datastore) *Price {
+func NewPrice(db *Datastore) *Price {
 	price := &Price{db: db}
 	return price
 }

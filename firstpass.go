@@ -2,7 +2,7 @@ package main
 
 import "github.com/prataprc/goparsec"
 
-func firstpass(db Datastore, scanner parsec.Scanner) {
+func firstpass(db *Datastore, scanner parsec.Scanner) {
 	var node parsec.ParsecNode
 
 	trans := NewTransaction(db)
@@ -15,12 +15,12 @@ func firstpass(db Datastore, scanner parsec.Scanner) {
 		node, scanner = y(scanner)
 		switch node.(type) {
 		case *Transaction:
-			trans.Parsepostings(scanner)
+			scanner = trans.Parse(scanner)
 			trans = NewTransaction(db)
 		case *Price:
 			price = NewPrice(db)
 		case *DirectiveAccount:
-			d_account.Parsedirective(scanner)
+			scanner = d_account.Parse(scanner)
 			d_account = NewDirectiveAccount(db)
 		}
 	}

@@ -17,10 +17,10 @@ type Transaction struct {
 	postings []*Posting
 	note     string
 
-	db Datastore // read-only copy
+	db *Datastore // read-only copy
 }
 
-func NewTransaction(db Datastore) *Transaction {
+func NewTransaction(db *Datastore) *Transaction {
 	trans := &Transaction{db: db}
 	return trans
 }
@@ -87,17 +87,18 @@ func (trans *Transaction) Y() parsec.Parser {
 	return y
 }
 
-func (trans *Transaction) Parsepostings(scanner parsec.Scanner) {
+func (trans *Transaction) Parse(scanner parsec.Scanner) parsec.Scanner {
 	var bs []byte
 	var node parsec.ParsecNode
 
 	for {
 		if bs, scanner = scanner.SkipWS(); len(bs) == 0 {
-			return
+			return scanner
 		}
-		node, scanner = NewPosting().Y()(scanner)
+		node, scanner = NewPosting(trans.db).Y()(scanner)
 		trans.postings = append(trans.postings, node.(*Posting))
 	}
+	return scanner
 }
 
 func maybenode(nodes []parsec.ParsecNode) parsec.ParsecNode {

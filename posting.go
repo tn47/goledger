@@ -10,16 +10,16 @@ type Posting struct {
 	amount    *Amount
 	note      *Note
 
-	db Datastore // read-only copy
+	db *Datastore // read-only reference
 }
 
-func NewPosting() *Posting {
-	return &Posting{}
+func NewPosting(db *Datastore) *Posting {
+	return &Posting{db: db}
 }
 
 func (p *Posting) Y() parsec.Parser {
-	account := NewAccount("", p.db)
 	// ACCOUNT
+	account := NewAccount("", p.db)
 	// AMOUNT
 	yamount := parsec.Token("[^;]+", "TRANSAMOUNT")
 	// [; NOTE]
