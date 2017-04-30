@@ -8,22 +8,18 @@ type Price struct {
 	date      time.Time
 	commodity time.Time
 	exchange  time.Time // common exchange commodity.
-
-	db *Datastore // read-only copy
 }
 
-func NewPrice(db *Datastore) *Price {
-	price := &Price{db: db}
+func NewPrice() *Price {
+	price := &Price{}
 	return price
 }
 
-func (price *Price) Y() parsec.Parser {
+func (price *Price) Y(db *Datastore) parsec.Parser {
 	// P
 	yp := parsec.Token("P ", "PRICESTART")
 	// DATE
-	ydate := Ydate(
-		price.db.Year(), price.db.Month(), price.db.Dateformat(),
-	)
+	ydate := Ydate(db.Year(), db.Month(), db.Dateformat())
 	// SYMBOL
 	ysymbol := parsec.Token("", "PRICESYMBOL")
 	// [*|!]

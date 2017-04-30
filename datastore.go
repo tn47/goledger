@@ -34,7 +34,7 @@ func (db *Datastore) GetAccount(name string) *Account {
 	for _, name := range names {
 		account, ok = db.accounts[name]
 		if ok == false {
-			account = NewAccount(name, db)
+			account = NewAccount(name)
 		}
 		if parent != nil {
 			parent.Addchild(account)

@@ -3,8 +3,12 @@ package main
 import "os"
 import "fmt"
 import "flag"
+import "io/ioutil"
+
+import "github.com/prataprc/goparsec"
 
 var options struct {
+	dbname   string
 	journals []string
 }
 
@@ -17,6 +21,9 @@ func argparse() []string {
 	}
 
 	f.Parse(os.Args[1:])
+
+	options.dbname = "devjournal"
+
 	return f.Args()
 }
 
@@ -27,11 +34,16 @@ func main() {
 		fmt.Printf("os.Getwd(): %v\n", err)
 		os.Exit(1)
 	}
+
+	db := NewDatastore(options.dbname)
+
 	journals := getjournals(cwd)
 	journals = append(journals, options.journals...)
 	for _, journal := range journals {
-		for _, line := range readlines(journal) {
-			fmt.Println(line)
+		data, err := ioutil.ReadFile(journal)
+		if err != nil {
+			fmt.Printf("%v\n", err)
 		}
+		firstpass(db, parsec.NewScanner(data))
 	}
 }

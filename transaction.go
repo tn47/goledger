@@ -4,9 +4,6 @@ import "time"
 
 import "github.com/prataprc/goparsec"
 
-type Transprefix byte
-type Transcode string
-
 type Transaction struct {
 	// start
 	date     time.Time
@@ -16,51 +13,27 @@ type Transaction struct {
 	desc     string
 	postings []*Posting
 	note     string
-
-	db *Datastore // read-only copy
 }
 
-func NewTransaction(db *Datastore) *Transaction {
-	trans := &Transaction{db: db}
+func NewTransaction() *Transaction {
+	trans := &Transaction{}
 	return trans
 }
 
-func (trans *Transaction) Y() parsec.Parser {
+func (trans *Transaction) Y(db *Datastore) parsec.Parser {
 	// DATE
-	ydate := Ydate(
-		trans.db.Year(), trans.db.Month(), trans.db.Dateformat(),
-	)
+	ydate := Ydate(db.Year(), db.Month(), db.Dateformat())
 	// [=EDATE]
-	yequal := parsec.Token("=", "TRANSEQUAL")
 	yedate := parsec.Maybe(
 		maybenode,
 		parsec.And(
 			func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 				return nodes[1] // EDATE
 			},
-			yequal,
+			ytok_equal,
 			ydate,
 		),
 	)
-	// [*|!]
-	yprefix := parsec.Maybe(
-		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
-			s := string(nodes[0].(*parsec.Terminal).Value)
-			return Transprefix(s[0])
-		},
-		parsec.Token(`\*|!`, "TRANSPREFIX"),
-	)
-	// [(CODE)]
-	ycode := parsec.Maybe(
-		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
-			code := string(nodes[0].(*parsec.Terminal).Value)
-			ln := len(code)
-			return Transcode(code[1 : ln-1])
-		},
-		parsec.Token(`\(.*\)`, "TRANSCODE"),
-	)
-	// DESC
-	ydesc := parsec.Token(".+", "TRANSDESC")
 
 	y := parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
@@ -82,12 +55,14 @@ func (trans *Transaction) Y() parsec.Parser {
 			trans.desc = nodes[n].(string)
 			return trans
 		},
-		ydate, yedate, yprefix, ycode, ydesc,
+		ydate, yedate, ytok_prefix, ytok_code, ytok_desc,
 	)
 	return y
 }
 
-func (trans *Transaction) Parse(scanner parsec.Scanner) parsec.Scanner {
+func (trans *Transaction) Parse(
+	db *Datastore, scanner parsec.Scanner) parsec.Scanner {
+
 	var bs []byte
 	var node parsec.ParsecNode
 
@@ -95,12 +70,15 @@ func (trans *Transaction) Parse(scanner parsec.Scanner) parsec.Scanner {
 		if bs, scanner = scanner.SkipWS(); len(bs) == 0 {
 			return scanner
 		}
-		node, scanner = NewPosting(trans.db).Y()(scanner)
-		trans.postings = append(trans.postings, node.(*Posting))
+		node, scanner = NewPosting().Y(db)(scanner)
+		switch val := node.(type) {
+		case *Posting:
+			trans.postings = append(trans.postings, node.(*Posting))
+		case Transnote:
+			trans.note = string(val)
+		default:
+			panic("unreachable code")
+		}
 	}
 	return scanner
-}
-
-func maybenode(nodes []parsec.ParsecNode) parsec.ParsecNode {
-	return nodes[0]
 }

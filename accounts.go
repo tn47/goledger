@@ -20,15 +20,12 @@ type Account struct {
 	check  string
 	assert string
 	eval   string
-
-	db *Datastore // read-only copy
 }
 
-func NewAccount(name string, db *Datastore) *Account {
+func NewAccount(name string) *Account {
 	acc := &Account{
 		name: name, children: make(map[string]*Account),
 		alias: []string{}, payee: []string{},
-		db: db,
 	}
 	return acc
 }

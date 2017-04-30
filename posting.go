@@ -8,31 +8,31 @@ type Posting struct {
 	balanced  bool
 	account   *Account
 	amount    *Amount
-	note      *Note
-
-	db *Datastore // read-only reference
+	note      string
 }
 
-func NewPosting(db *Datastore) *Posting {
-	return &Posting{db: db}
+func NewPosting() *Posting {
+	return &Posting{}
 }
 
-func (p *Posting) Y() parsec.Parser {
-	// ACCOUNT
-	account := NewAccount("", p.db)
-	// AMOUNT
-	yamount := parsec.Token("[^;]+", "TRANSAMOUNT")
-	// [; NOTE]
-	ynote := parsec.Token(";[^;]+", "TRANSNOTE")
-
-	yposting := parsec.And(nil, account.Y(), yamount, ynote)
-	ypersnote := parsec.Token(";[^;]+", "TRANSPNOTE")
+func (p *Posting) Y(db *Datastore) parsec.Parser {
+	account := NewAccount("")
+	yposting := parsec.And(nil, account.Y(), ytok_postamount, ytok_postnote)
 
 	y := parsec.OrdChoice(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
-			return p
+			if len(nodes) == 3 {
+				p.account = nodes[0].(*Account)
+				p.amount = NewAmount(string(nodes[1].(*parsec.Terminal).Value))
+				p.note = string(nodes[2].(*parsec.Terminal).Value)
+				return p
+
+			} else if len(nodes) == 1 {
+				return Transnote(string(nodes[0].(*parsec.Terminal).Value))
+			}
+			panic("unreachable code")
 		},
-		yposting, ypersnote,
+		yposting, ytok_persnote,
 	)
 	return y
 }
