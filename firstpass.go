@@ -25,10 +25,22 @@ nextblock:
 
 		switch block := node.(type) {
 		case *Transaction:
-			scanner = block.Parse(db, scanner)
+			lineno++
+			for ; lineno < len(lines); lineno++ {
+				line := lines[lineno]
+				scanner := parsec.NewScanner([]byte(line))
+				if bs, scanner = scanner.SkipWS(); len(bs) == 0 {
+					continue nextblock
+				}
+				posting := NewPosting()
+				node, scanner = posting.Y(db)(scanner)
+				block.Apply(db, node)
+			}
+			db.Apply(block)
 
 		case *Price:
 			lineno++
+			db.Apply(block)
 
 		case *Directive:
 			lineno++
@@ -43,7 +55,7 @@ nextblock:
 					continue nextblock
 				}
 				node, scanner = parser(scanner)
-				block.Applysubdir(db, node)
+				block.Apply(db, node)
 			}
 			db.Apply(block)
 		}

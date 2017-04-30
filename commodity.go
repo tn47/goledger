@@ -6,9 +6,9 @@ import "strings"
 import "github.com/prataprc/goparsec"
 
 type Commodity struct {
-	currency  string
+	name      string
 	amount    float64
-	symbol    string
+	currency  bool
 	precision int
 	mark1k    bool
 }
@@ -26,8 +26,9 @@ func (comm *Commodity) Y(db *Datastore) parsec.Parser {
 				t := node.(*parsec.Terminal)
 				switch t.Name {
 				case "CURRENCY":
-					comm.currency = string(t.Value)
+					comm.name, comm.currency = string(t.Value), true
 				case "AMOUNT":
+					comm.mark1k = strings.Contains(string(t.Value), ",")
 					amount := strings.Replace(string(t.Value), ",", "", -1)
 					comm.precision = comm.parseprecision(amount)
 					comm.amount, err = strconv.ParseFloat(amount, 64)
@@ -36,7 +37,7 @@ func (comm *Commodity) Y(db *Datastore) parsec.Parser {
 					}
 
 				case "COMMODITY":
-					comm.symbol = string(t.Value)
+					comm.name, comm.currency = string(t.Value), false
 				}
 			}
 			return comm

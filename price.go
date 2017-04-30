@@ -5,9 +5,9 @@ import "time"
 import "github.com/prataprc/goparsec"
 
 type Price struct {
-	date      time.Time
-	commodity time.Time
-	exchange  time.Time // common exchange commodity.
+	when time.Time
+	this *Commodity
+	that *Commodity
 }
 
 func NewPrice() *Price {
@@ -16,20 +16,21 @@ func NewPrice() *Price {
 }
 
 func (price *Price) Y(db *Datastore) parsec.Parser {
-	// P
-	yp := parsec.Token("P ", "PRICESTART")
-	// DATE
-	ydate := Ydate(db.Year(), db.Month(), db.Dateformat())
-	// SYMBOL
-	ysymbol := parsec.Token("", "PRICESYMBOL")
-	// [*|!]
-	yexchange := parsec.Token("", "PRICEEXCHANGE")
+	commodity := NewCommodity()
 
 	y := parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			price.when = nodes[1].(time.Time)
+			price.this = NewCommodity()
+			price.this.name = string(nodes[2].(*parsec.Terminal).Value)
+			price.this.amount = 1
+			price.that = nodes[3].(*Commodity)
 			return price
 		},
-		yp, ydate, ysymbol, yexchange,
+		ytok_price, // P
+		Ydate(db.Year(), db.Month(), db.Dateformat()), // DATE
+		ytok_commodity,                                // SYMBOL
+		commodity.Y(db),
 	)
 	return y
 }

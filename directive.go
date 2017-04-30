@@ -86,7 +86,7 @@ func (d *Directive) Yattr(db *Datastore) parsec.Parser {
 	panic("unreachable code")
 }
 
-func (d *Directive) Applysubdir(db *Datastore, node parsec.ParsecNode) {
+func (d *Directive) Apply(db *Datastore, node parsec.ParsecNode) {
 	switch d.dtype {
 	case "account":
 		nodes := node.([]parsec.ParsecNode)

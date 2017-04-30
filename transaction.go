@@ -60,25 +60,11 @@ func (trans *Transaction) Y(db *Datastore) parsec.Parser {
 	return y
 }
 
-func (trans *Transaction) Parse(
-	db *Datastore, scanner parsec.Scanner) parsec.Scanner {
-
-	var bs []byte
-	var node parsec.ParsecNode
-
-	for {
-		if bs, scanner = scanner.SkipWS(); len(bs) == 0 {
-			return scanner
-		}
-		node, scanner = NewPosting().Y(db)(scanner)
-		switch val := node.(type) {
-		case *Posting:
-			trans.postings = append(trans.postings, node.(*Posting))
-		case Transnote:
-			trans.note = string(val)
-		default:
-			panic("unreachable code")
-		}
+func (trans *Transaction) Apply(db *Datastore, node parsec.ParsecNode) {
+	switch val := node.(type) {
+	case *Posting:
+		trans.postings = append(trans.postings, val)
+	case Transnote:
+		trans.note = string(val)
 	}
-	return scanner
 }

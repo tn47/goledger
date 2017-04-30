@@ -38,6 +38,10 @@ var ytok_persnote = parsec.Token(";[^;]+", "TRANSPNOTE")
 
 var ytok_postnote = parsec.Token(";[^;]+", "TRANSNOTE")
 
+//---- Price tokens
+
+var ytok_price = parsec.Token(";[^;]+", "TRANSNOTE")
+
 //---- Directives
 var ytok_account = parsec.Token("account", "DRTV_ACCOUNT")
 var ytok_note = parsec.Token("note", "DRTV_ACCOUNT_NOTE")
