@@ -7,6 +7,8 @@ import "bufio"
 import "strings"
 import "io/ioutil"
 
+import "github.com/prataprc/golog"
+
 func readlines(filepath string) []string {
 	fd, _ := os.Open(filepath)
 	defer fd.Close()
@@ -22,6 +24,7 @@ func readlines(filepath string) []string {
 }
 
 func getjournals(cwd string) (files []string) {
+	log.Debugf("gathering journals from %q\n", cwd)
 	dirs := parentpaths(cwd, []string{})
 	for _, dir := range dirs {
 		entries, err := ioutil.ReadDir(dir)
@@ -39,7 +42,9 @@ func getjournals(cwd string) (files []string) {
 			ok = ok || filename == ".ledgerrc"
 			ok = ok || strings.HasPrefix(filename, "ledger_")
 			if ok {
-				files = append(files, path.Join(dir, filename))
+				includefile := path.Join(dir, filename)
+				log.Debugf("auto including %q\n", includefile)
+				files = append(files, includefile)
 			}
 		}
 	}
@@ -49,7 +54,9 @@ func getjournals(cwd string) (files []string) {
 func parentpaths(dirpath string, acc []string) (dirs []string) {
 	dir, _ := path.Split(dirpath)
 	if dir != "" {
-		return parentpaths(dir, append(acc, dirpath))
+		acc = append(acc, dirpath)
+		dir = strings.TrimRight(dir, string(os.PathSeparator))
+		return parentpaths(dir, acc)
 	}
 	return acc
 }

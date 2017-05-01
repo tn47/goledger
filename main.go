@@ -4,12 +4,17 @@ import "os"
 import "fmt"
 import "flag"
 
+import "github.com/prataprc/golog"
+
 var options struct {
 	dbname   string
 	journals []string
+	loglevel string
 }
 
 func argparse() []string {
+	var journals string
+
 	f := flag.NewFlagSet("ledger", flag.ExitOnError)
 	f.Usage = func() {
 		fmsg := "Usage of command: %v [ARGS]\n"
@@ -17,26 +22,42 @@ func argparse() []string {
 		f.PrintDefaults()
 	}
 
+	f.StringVar(&journals, "f", "example/first.ldg",
+		"comma separated list of input files")
+	f.StringVar(&options.dbname, "db", "devjournal",
+		"provide datastore name")
+	f.StringVar(&options.loglevel, "log", "debug",
+		"console log level")
 	f.Parse(os.Args[1:])
 
-	options.dbname = "devjournal"
+	options.journals = Parsecsv(journals)
 
 	return f.Args()
 }
 
 func main() {
-	options.journals = argparse()
+	argparse()
+
+	logsetts := map[string]interface{}{
+		"log.level":      options.loglevel,
+		"log.file":       "",
+		"log.timeformat": "",
+		"log.prefix":     "[%v]",
+	}
+	log.SetLogger(nil, logsetts)
+
 	cwd, err := os.Getwd()
 	if err != nil {
 		fmt.Printf("os.Getwd(): %v\n", err)
 		os.Exit(1)
 	}
 
-	db := NewDatastore(options.dbname)
+	NewDatastore(options.dbname)
 
 	journals := getjournals(cwd)
 	journals = append(journals, options.journals...)
 	for _, journal := range journals {
-		firstpass(db, journal)
+		//firstpass(db, journal)
+		log.Debugf("processing journal %q\n", journal)
 	}
 }
