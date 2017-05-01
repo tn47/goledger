@@ -2,7 +2,7 @@ build: clean
 	go build -o ledger
 
 dev: build
-	./ledger examples/first.ldg
+	./ledger -f examples/first.ldg -log debug
 
 clean:
 	rm -rf ledger

@@ -12,7 +12,7 @@ var options struct {
 	loglevel string
 }
 
-func argparse() []string {
+func argparse() {
 	var journals string
 
 	f := flag.NewFlagSet("ledger", flag.ExitOnError)
@@ -26,13 +26,13 @@ func argparse() []string {
 		"comma separated list of input files")
 	f.StringVar(&options.dbname, "db", "devjournal",
 		"provide datastore name")
-	f.StringVar(&options.loglevel, "log", "debug",
+	f.StringVar(&options.loglevel, "log", "warn",
 		"console log level")
 	f.Parse(os.Args[1:])
 
 	options.journals = Parsecsv(journals)
 
-	return f.Args()
+	return
 }
 
 func main() {
@@ -57,7 +57,7 @@ func main() {
 	journals := getjournals(cwd)
 	journals = append(journals, options.journals...)
 	for _, journal := range journals {
-		//firstpass(db, journal)
 		log.Debugf("processing journal %q\n", journal)
+		//firstpass(db, journal)
 	}
 }
