@@ -8,6 +8,7 @@ type Directive struct {
 	account     *Account // account
 	applyname   string   // apply
 	aliasname   string   // alias
+	expression  string   // assert
 }
 
 func NewDirective() *Directive {
@@ -19,6 +20,8 @@ func (d *Directive) Y(db *Datastore) parsec.Parser {
 		vector2scalar,
 		d.Yaccount(db),
 		d.Yapply(db),
+		d.Yalias(db),
+		d.Yassert(db),
 	)
 	return y
 }
@@ -27,12 +30,12 @@ func (d *Directive) Yaccount(db *Datastore) parsec.Parser {
 	d.account = NewAccount("")
 	return parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			d.dtype = "account"
 			d.accountname = nodes[1].(*Account).Name()
 			account := db.GetAccount(d.accountname, true /*declare*/)
 			if account != nil {
 				d.account = account
 			}
-			d.dtype = "account"
 			return d
 		},
 		ytok_account, d.account.Y(db),
@@ -43,8 +46,8 @@ func (d *Directive) Yapply(db *Datastore) parsec.Parser {
 	d.account = NewAccount("")
 	return parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
-			d.applyname = nodes[2].(*Account).Name()
 			d.dtype = "apply"
+			d.applyname = nodes[2].(*Account).Name()
 			return d
 		},
 		ytok_apply, ytok_account, d.account.Y(db),
@@ -55,12 +58,23 @@ func (d *Directive) Yalias(db *Datastore) parsec.Parser {
 	d.account = NewAccount("")
 	return parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			d.dtype = "apply"
 			d.aliasname = string(nodes[1].(*parsec.Terminal).Value)
 			d.accountname = nodes[3].(*Account).Name()
-			d.dtype = "apply"
 			return d
 		},
 		ytok_alias, ytok_aliasname, ytok_equal, d.account.Y(db),
+	)
+}
+
+func (d *Directive) Yassert(db *Datastore) parsec.Parser {
+	return parsec.And(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			d.dtype = "assert"
+			d.expression = string(nodes[1].(*parsec.Terminal).Value)
+			return nil
+		},
+		ytok_assert, ytok_expr,
 	)
 }
 
@@ -82,6 +96,8 @@ func (d *Directive) Yattr(db *Datastore) parsec.Parser {
 
 	case "apply", "alias":
 		return nil
+
+	case "assert":
 	}
 	panic("unreachable code")
 }

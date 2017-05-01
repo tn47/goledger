@@ -6,6 +6,8 @@ var ytok_equal = parsec.Token("=", "EQUAL")
 var ytok_currency = parsec.Token("[^0-9 \t\r\n]+", "CURRENCY")
 var ytok_amount = parsec.Token("[0-9,.]+", "AMOUNT")
 var ytok_commodity = parsec.Token("[^0-9.,/@]+", "COMMODITY")
+var ytok_assert = parsec.Token("assert", "ASSERT")
+var ytok_expr = parsec.Token(`\{.*\}`, "EXPRESSION")
 
 //---- Transaction tokens
 type Transprefix byte
@@ -48,13 +50,11 @@ var ytok_note = parsec.Token("note", "DRTV_ACCOUNT_NOTE")
 var ytok_alias = parsec.Token("alias", "DRTV_ACCOUNT_ALIAS")
 var ytok_payee = parsec.Token("payee", "DRTV_ACCOUNT_PAYEE")
 var ytok_check = parsec.Token("check", "DRTV_ACCOUNT_CHECK")
-var ytok_assert = parsec.Token("assert", "DRTV_ACCOUNT_ASSERT")
 var ytok_eval = parsec.Token("eval", "DRTV_ACCOUNT_EVAL")
 var ytok_default = parsec.Token("default", "DRTV_ACCOUNT_DEFAULT")
 var ytok_value = parsec.Token(".*", "DRTV_VALUE")
 
 var ytok_apply = parsec.Token("apply", "DRTV_APPLY")
-
 var ytok_aliasname = parsec.Token("[^=]+", "DRTV_ALIASNAME")
 
 //
