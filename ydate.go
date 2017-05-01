@@ -29,7 +29,7 @@ func Ydate(year, month int, format string) parsec.Parser {
 			tm := time.Date(
 				year, time.Month(month), date,
 				hour, minute, second, 0,
-				nil, /*locale*/
+				time.Local, /*locale*/
 			)
 			return tm
 		},
@@ -38,25 +38,26 @@ func Ydate(year, month int, format string) parsec.Parser {
 }
 
 func Ymdy(format string) parsec.Parser {
-	pattern := "([^%]*)?(%[mdy])"
+	pattern := "([^%]*)?(%[mdyY])"
 	regc, err := regexp.Compile(pattern)
 	if err != nil {
 		panic(fmt.Errorf("unable to parse %q: %v\n", pattern, err))
 	}
 	matches := regc.FindAllStringSubmatch(format, -1)
 	parsers := []interface{}{}
-	for i, match := range matches {
+	for _, match := range matches {
 		if match[1] != "" {
-			name := fmt.Sprintf("LIMIT-%v", i)
-			parsers = append(parsers, parsec.Token(match[1], name))
+			parsers = append(parsers, parsec.Token(match[1], "LIMIT"))
 		}
 		switch match[2] {
+		case "%Y":
+			parsers = append(parsers, parsec.Token(`[0-9]{4}`, "YEAR"))
 		case "%y":
-			parsers = append(parsers, parsec.Token(match[1], "YEAR"))
+			parsers = append(parsers, parsec.Token(`[0-9]{2}`, "YEAR"))
 		case "%m":
-			parsers = append(parsers, parsec.Token(match[1], "MONTH"))
+			parsers = append(parsers, parsec.Token(`[0-9]{1,2}`, "MONTH"))
 		case "%d":
-			parsers = append(parsers, parsec.Token(match[1], "DATE"))
+			parsers = append(parsers, parsec.Token(`[0-9]{1,2}`, "DATE"))
 		default:
 			panic("unreachable code")
 		}
@@ -69,13 +70,16 @@ func Ymdy(format string) parsec.Parser {
 
 			for _, node := range nodes {
 				switch t := node.(*parsec.Terminal); t.Name {
+				case "LIMIT":
+					continue
+
 				case "YEAR":
 					year, err = strconv.Atoi(t.Value)
 					if err != nil {
 						fmt.Printf("invalid YEAR at %v\n", t.Position)
 					}
 					if year < 100 {
-						year = century + year
+						year = (century * 100) + year
 					}
 
 				case "MONTH":
@@ -109,18 +113,17 @@ func Yhns(format string) parsec.Parser {
 	}
 	matches := regc.FindAllStringSubmatch(format, -1)
 	parsers := []interface{}{}
-	for i, match := range matches {
+	for _, match := range matches {
 		if match[1] != "" {
-			name := fmt.Sprintf("LIMIT-%v", i)
-			parsers = append(parsers, parsec.Token(match[1], name))
+			parsers = append(parsers, parsec.Token(match[1], "LIMIT"))
 		}
 		switch match[2] {
 		case "%h":
-			parsers = append(parsers, parsec.Token(match[1], "HOUR"))
+			parsers = append(parsers, parsec.Token(`[0-9]{1,2}`, "HOUR"))
 		case "%n":
-			parsers = append(parsers, parsec.Token(match[1], "MINUTE"))
+			parsers = append(parsers, parsec.Token(`[0-9]{1,2}`, "MINUTE"))
 		case "%s":
-			parsers = append(parsers, parsec.Token(match[1], "SECOND"))
+			parsers = append(parsers, parsec.Token(`[0-9]{1,2}`, "SECOND"))
 		default:
 			panic("unreachable code")
 		}
@@ -133,6 +136,9 @@ func Yhns(format string) parsec.Parser {
 
 			for _, node := range nodes {
 				switch t := node.(*parsec.Terminal); t.Name {
+				case "LIMIT":
+					continue
+
 				case "HOUR":
 					hour, err = strconv.Atoi(t.Value)
 					if err != nil {
