@@ -20,6 +20,8 @@ func NewTransaction() *Transaction {
 	return trans
 }
 
+//---- Leger text
+
 func (trans *Transaction) Y(db *Datastore) parsec.Parser {
 	// DATE
 	ydate := Ydate(db.Year(), db.Month(), db.Dateformat())
@@ -60,11 +62,17 @@ func (trans *Transaction) Y(db *Datastore) parsec.Parser {
 	return y
 }
 
-func (trans *Transaction) Apply(db *Datastore, node parsec.ParsecNode) {
-	switch val := node.(type) {
-	case *Posting:
-		trans.postings = append(trans.postings, val)
-	case Transnote:
-		trans.note = string(val)
+func (trans *Transaction) Applyblock(db *Datastore, blocks []parsec.Scanner) {
+	var node parsec.ParsecNode
+
+	for _, scanner := range blocks {
+		posting := NewPosting()
+		node, scanner = posting.Y(db)(scanner)
+		switch val := node.(type) {
+		case *Posting:
+			trans.postings = append(trans.postings, val)
+		case Transnote:
+			trans.note = string(val)
+		}
 	}
 }

@@ -102,27 +102,35 @@ func (d *Directive) Yattr(db *Datastore) parsec.Parser {
 	panic("unreachable code")
 }
 
-func (d *Directive) Apply(db *Datastore, node parsec.ParsecNode) {
+func (d *Directive) Applyblock(db *Datastore, blocks []parsec.Scanner) {
+	var node parsec.ParsecNode
 	switch d.dtype {
 	case "account":
-		nodes := node.([]parsec.ParsecNode)
-		t := nodes[0].(*parsec.Terminal)
-		switch t.Name {
-		case "DRTV_ACCOUNT_NOTE":
-			d.account.SetNote(string(nodes[1].(*parsec.Terminal).Value))
-		case "DRTV_ACCOUNT_ALIAS":
-			aliasname := string(nodes[1].(*parsec.Terminal).Value)
-			db.AddAlias(aliasname, d.accountname)
-		case "DRTV_ACCOUNT_PAYEE":
-			d.account.SetPayee(string(nodes[1].(*parsec.Terminal).Value))
-		case "DRTV_ACCOUNT_CHECK":
-			d.account.SetCheck(string(nodes[1].(*parsec.Terminal).Value))
-		case "DRTV_ACCOUNT_ASSERT":
-			d.account.SetAssert(string(nodes[1].(*parsec.Terminal).Value))
-		case "DRTV_ACCOUNT_EVAL":
-			d.account.SetEval(string(nodes[1].(*parsec.Terminal).Value))
-		case "DRTV_ACCOUNT_DEFAULT":
-			db.SetBalancingaccount(d.account)
+		for _, scanner := range blocks {
+			parser := d.Yattr(db)
+			if parser == nil {
+				continue
+			}
+			node, scanner = parser(scanner)
+			nodes := node.([]parsec.ParsecNode)
+			t := nodes[0].(*parsec.Terminal)
+			switch t.Name {
+			case "DRTV_ACCOUNT_NOTE":
+				d.account.SetNote(string(nodes[1].(*parsec.Terminal).Value))
+			case "DRTV_ACCOUNT_ALIAS":
+				aliasname := string(nodes[1].(*parsec.Terminal).Value)
+				db.AddAlias(aliasname, d.accountname)
+			case "DRTV_ACCOUNT_PAYEE":
+				d.account.SetPayee(string(nodes[1].(*parsec.Terminal).Value))
+			case "DRTV_ACCOUNT_CHECK":
+				d.account.SetCheck(string(nodes[1].(*parsec.Terminal).Value))
+			case "DRTV_ACCOUNT_ASSERT":
+				d.account.SetAssert(string(nodes[1].(*parsec.Terminal).Value))
+			case "DRTV_ACCOUNT_EVAL":
+				d.account.SetEval(string(nodes[1].(*parsec.Terminal).Value))
+			case "DRTV_ACCOUNT_DEFAULT":
+				db.SetBalancingaccount(d.account)
+			}
 		}
 
 	case "apply", "alias":

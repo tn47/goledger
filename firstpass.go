@@ -23,28 +23,20 @@ func firstpass(db *Datastore, journalfile string) {
 
 		node, scanner = y(scanner)
 
-		switch blockobj := node.(type) {
-		case *Transaction:
-			for _, scanner := range block[1:] {
-				posting := NewPosting()
-				node, scanner = posting.Y(db)(scanner)
-				blockobj.Apply(db, node)
+		if trans, ok := node.(*Transaction); ok {
+			if len(block[1:]) > 0 {
+				trans.Applyblock(db, block[1:])
 			}
-			db.Apply(blockobj)
+			db.Apply(trans)
 
-		case *Price:
-			db.Apply(blockobj)
+		} else if price, ok := node.(*Price); ok {
+			db.Apply(price)
 
-		case *Directive:
-			for _, scanner := range block[1:] {
-				parser := blockobj.Yattr(db)
-				if parser == nil {
-					continue
-				}
-				node, scanner = parser(scanner)
-				blockobj.Apply(db, node)
+		} else if directive, ok := node.(*Directive); ok {
+			if len(block[1:]) > 0 {
+				directive.Applyblock(db, block[1:])
 			}
-			db.Apply(blockobj)
+			db.Apply(directive)
 		}
 		block, eof, err = iterate()
 	}
@@ -53,27 +45,19 @@ func firstpass(db *Datastore, journalfile string) {
 }
 
 func blockiterate(lines []string) func() ([]parsec.Scanner, bool, error) {
-	var nextscanner parsec.Scanner
-
 	row := 0
 
-	blocklines := func() []parsec.Scanner {
+	parseblock := func() []parsec.Scanner {
 		var bs []byte
 		var scanner parsec.Scanner
 
 		scanners := []parsec.Scanner{}
 		for ; row < len(lines); row++ {
 			scanner = parsec.NewScanner([]byte(lines[row]))
-			bs, scanner = scanner.SkipWS()
-			if len(bs) > 0 {
-				if scanner.Endof() == false {
-					scanners = append(scanners, scanner)
-				}
-				continue
-			} else {
-				row++
+			if bs, scanner = scanner.SkipWS(); scanner.Endof() || len(bs) == 0 {
 				return scanners
 			}
+			scanners = append(scanners, scanner)
 		}
 		return scanners
 	}
@@ -83,27 +67,22 @@ func blockiterate(lines []string) func() ([]parsec.Scanner, bool, error) {
 		var scanner parsec.Scanner
 
 		scanners := []parsec.Scanner{}
-		if nextscanner == nil {
-			for ; row < len(lines); row++ {
-				scanner = parsec.NewScanner([]byte(lines[row]))
-				bs, scanner = scanner.SkipWS()
-				if len(bs) == 0 && scanner.Endof() == false {
-					scanners = append(scanners, scanner)
-					scanners = append(scanners, blocklines()...)
-					return scanners, row >= len(lines), nil
-				} else if len(bs) > 0 {
-					fmsg := "syntax in beginning of line line: %v column:%v"
-					cursor := scanner.GetCursor()
-					return nil, false, fmt.Errorf(fmsg, row+1, cursor)
-				} else if scanner.Endof() {
-					continue
-				}
-			}
+		for ; row < len(lines); row++ {
+			scanner = parsec.NewScanner([]byte(lines[row]))
+			if bs, scanner = scanner.SkipWS(); scanner.Endof() {
+				continue
 
-		} else {
-			scanners = append(scanners, nextscanner)
-			scanners = append(scanners, blocklines()...)
-			return scanners, row >= len(lines), nil
+			} else if len(bs) == 0 {
+				row++
+				scanners = append(scanners, scanner)
+				scanners = append(scanners, parseblock()...)
+				return scanners, row >= len(lines), nil
+
+			} else {
+				fmsg := "syntax in beginning of line line: %v column:%v"
+				cursor := scanner.GetCursor()
+				return nil, false, fmt.Errorf(fmsg, row+1, cursor)
+			}
 		}
 		return scanners, true, nil
 	}
