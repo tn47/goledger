@@ -7,6 +7,7 @@ type Datastore struct {
 	accounts      map[string]*Account
 	decl_accounts map[string]bool
 	aliases       map[string]string
+	prices        []*Price
 
 	// working fields
 	year             int
@@ -27,6 +28,7 @@ func NewDatastore(name string) *Datastore {
 		month:      -1,
 		dateformat: "%d/%m/%y %h:%t:%s",
 	}
+	db.defaultprices()
 	return db
 }
 
@@ -93,6 +95,10 @@ func (db *Datastore) AddAlias(aliasname, accountname string) *Datastore {
 
 func (db *Datastore) Apply(block interface{}) *Datastore {
 	switch blk := block.(type) {
+	case *Transaction:
+	case *Price:
+		db.prices = append(db.prices, blk)
+
 	case *Directive:
 		switch blk.dtype {
 		case "account":
@@ -104,8 +110,22 @@ func (db *Datastore) Apply(block interface{}) *Datastore {
 		default:
 			panic("unreachable code")
 		}
+
 	default:
 		panic("unreachable code")
 	}
 	return db
+}
+
+func (db *Datastore) defaultprices() {
+	_ = []string{
+		"P 01/01/2000 kb 1024b",
+		"P 01/01/2000 mb 1024kb",
+		"P 01/01/2000 gb 1024mb",
+		"P 01/01/2000 tb 1024gb",
+		"P 01/01/2000 pb 1024tb",
+
+		"P 01/01/2000 m 60s",
+		"P 01/01/2000 h 60m",
+	}
 }

@@ -5,9 +5,9 @@ import "time"
 import "github.com/prataprc/goparsec"
 
 type Price struct {
-	when time.Time
-	this *Commodity
-	that *Commodity
+	when  time.Time
+	this  *Commodity
+	other *Commodity
 }
 
 func NewPrice() *Price {
@@ -24,7 +24,7 @@ func (price *Price) Y(db *Datastore) parsec.Parser {
 			price.this = NewCommodity()
 			price.this.name = string(nodes[2].(*parsec.Terminal).Value)
 			price.this.amount = 1
-			price.that = nodes[3].(*Commodity)
+			price.other = nodes[3].(*Commodity)
 			return price
 		},
 		ytok_price, // P
