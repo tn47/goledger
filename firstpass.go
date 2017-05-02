@@ -3,8 +3,10 @@ package main
 import "fmt"
 
 import "github.com/prataprc/goparsec"
+import "github.com/prataprc/golog"
+import "github.com/prataprc/goledger/dblentry"
 
-func firstpass(db *Datastore, journalfile string) {
+func firstpass(db *dblentry.Datastore, journalfile string) bool {
 	var node parsec.ParsecNode
 
 	lines := readlines(journalfile)
@@ -13,35 +15,37 @@ func firstpass(db *Datastore, journalfile string) {
 	block, eof, err := iterate()
 	for eof == false {
 		if err != nil {
-			panic(err)
+			log.Errorf("%v\n", err)
+			return false
 		}
 		scanner := block[0]
-		trans := NewTransaction()
-		price := NewPrice()
-		directive := NewDirective()
-		y := parsec.OrdChoice(nil, trans.Y(db), price.Y(db), directive.Y(db))
+		ytrans := dblentry.NewTransaction().Yledger(db)
+		yprice := dblentry.NewPrice().Yledger(db)
+		ydirective := dblentry.NewDirective().Yledger(db)
+		y := parsec.OrdChoice(nil, ytrans, yprice, ydirective)
 
 		node, scanner = y(scanner)
 
-		if trans, ok := node.(*Transaction); ok {
+		switch obj := node.(type) {
+		case *dblentry.Transaction:
 			if len(block[1:]) > 0 {
-				trans.Applyblock(db, block[1:])
+				obj.Yledgerblock(db, block[1:])
 			}
-			db.Apply(trans)
+			db.Apply(obj)
 
-		} else if price, ok := node.(*Price); ok {
-			db.Apply(price)
+		case *dblentry.Price:
+			db.Apply(obj)
 
-		} else if directive, ok := node.(*Directive); ok {
+		case *dblentry.Directive:
 			if len(block[1:]) > 0 {
-				directive.Applyblock(db, block[1:])
+				obj.Yledgerblock(db, block[1:])
 			}
-			db.Apply(directive)
+			db.Apply(obj)
 		}
 		block, eof, err = iterate()
 	}
 
-	return
+	return true
 }
 
 func blockiterate(lines []string) func() ([]parsec.Scanner, bool, error) {
@@ -69,17 +73,17 @@ func blockiterate(lines []string) func() ([]parsec.Scanner, bool, error) {
 		scanners := []parsec.Scanner{}
 		for ; row < len(lines); row++ {
 			scanner = parsec.NewScanner([]byte(lines[row]))
-			if bs, scanner = scanner.SkipWS(); scanner.Endof() {
+			if bs, scanner = scanner.SkipWS(); scanner.Endof() { // emptyline
 				continue
 
-			} else if len(bs) == 0 {
+			} else if len(bs) == 0 { // begin block
 				row++
 				scanners = append(scanners, scanner)
 				scanners = append(scanners, parseblock()...)
 				return scanners, row >= len(lines), nil
 
 			} else {
-				fmsg := "syntax in beginning of line line: %v column:%v"
+				fmsg := "must be at the begnning: %v column:%v"
 				cursor := scanner.GetCursor()
 				return nil, false, fmt.Errorf(fmsg, row+1, cursor)
 			}

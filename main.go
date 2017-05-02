@@ -5,6 +5,7 @@ import "fmt"
 import "flag"
 
 import "github.com/prataprc/golog"
+import "github.com/prataprc/goledger/dblentry"
 
 var options struct {
 	dbname   string
@@ -52,12 +53,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	NewDatastore(options.dbname)
+	db := dblentry.NewDatastore(options.dbname)
 
 	journals := getjournals(cwd)
 	journals = append(journals, options.journals...)
 	for _, journal := range journals {
 		log.Debugf("processing journal %q\n", journal)
-		//firstpass(db, journal)
+		if firstpass(db, journal) == false {
+			os.Exit(1)
+		}
 	}
 }
