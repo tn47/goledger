@@ -1,6 +1,7 @@
 package main
 
 import "fmt"
+import "strings"
 
 import "github.com/prataprc/goparsec"
 import "github.com/prataprc/golog"
@@ -13,16 +14,21 @@ func firstpass(db *dblentry.Datastore, journalfile string) bool {
 
 	iterate := blockiterate(lines)
 	block, eof, err := iterate()
-	for eof == false {
+	for len(block) > 0 {
 		if err != nil {
 			log.Errorf("%v\n", err)
 			return false
 		}
-		scanner := block[0]
+
+		log.Debugf("parsing block: %v\n", block[0])
+		scanner := parsec.NewScanner([]byte(block[0]))
 		ytrans := dblentry.NewTransaction().Yledger(db)
 		yprice := dblentry.NewPrice().Yledger(db)
 		ydirective := dblentry.NewDirective().Yledger(db)
-		y := parsec.OrdChoice(nil, ytrans, yprice, ydirective)
+		y := parsec.OrdChoice(
+			dblentry.Vector2scalar,
+			ytrans, yprice, ydirective,
+		)
 
 		node, scanner = y(scanner)
 
@@ -44,50 +50,55 @@ func firstpass(db *dblentry.Datastore, journalfile string) bool {
 		}
 		block, eof, err = iterate()
 	}
+	if eof == false {
+		log.Errorf("expected eof")
+	}
 
 	return true
 }
 
-func blockiterate(lines []string) func() ([]parsec.Scanner, bool, error) {
+func blockiterate(lines []string) func() ([]string, bool, error) {
 	row := 0
 
-	parseblock := func() []parsec.Scanner {
-		var bs []byte
-		var scanner parsec.Scanner
-
-		scanners := []parsec.Scanner{}
+	parseblock := func() []string {
+		blocklines := []string{}
 		for ; row < len(lines); row++ {
-			scanner = parsec.NewScanner([]byte(lines[row]))
-			if bs, scanner = scanner.SkipWS(); scanner.Endof() || len(bs) == 0 {
-				return scanners
+			line := lines[row]
+			if (len(line) > 0) && (line[0] == ' ' || line[0] == '\t') {
+				if line = strings.TrimLeft(line, " \t"); line == "" {
+					break
+				}
+				blocklines = append(blocklines, line)
+			} else {
+				break
 			}
-			scanners = append(scanners, scanner)
 		}
-		return scanners
+		return blocklines
 	}
 
-	return func() ([]parsec.Scanner, bool, error) {
-		var bs []byte
-		var scanner parsec.Scanner
-
-		scanners := []parsec.Scanner{}
+	return func() ([]string, bool, error) {
+		blocklines := []string{}
 		for ; row < len(lines); row++ {
-			scanner = parsec.NewScanner([]byte(lines[row]))
-			if bs, scanner = scanner.SkipWS(); scanner.Endof() { // emptyline
+			line := lines[row]
+			if len(line) == 0 {
 				continue
+			}
+			if line[0] == ' ' || line[0] == '\t' {
+				line = strings.TrimLeft(line, " \t")
+				if line == "" { // emptyline
+					continue
+				} else {
+					fmsg := "must be at the begnning: row:%v column: 0"
+					return nil, false, fmt.Errorf(fmsg, row+1)
+				}
 
-			} else if len(bs) == 0 { // begin block
+			} else { // begin block
 				row++
-				scanners = append(scanners, scanner)
-				scanners = append(scanners, parseblock()...)
-				return scanners, row >= len(lines), nil
-
-			} else {
-				fmsg := "must be at the begnning: %v column:%v"
-				cursor := scanner.GetCursor()
-				return nil, false, fmt.Errorf(fmsg, row+1, cursor)
+				blocklines = append(blocklines, line)
+				blocklines = append(blocklines, parseblock()...)
+				return blocklines, row >= len(lines), nil
 			}
 		}
-		return scanners, true, nil
+		return blocklines, true, nil
 	}
 }
