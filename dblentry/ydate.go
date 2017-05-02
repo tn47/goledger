@@ -7,13 +7,13 @@ import "strconv"
 import "strings"
 
 import "github.com/prataprc/goparsec"
+import "github.com/prataprc/golog"
 
 var century int
 
 func Ydate(year, month int, format string) parsec.Parser {
-	parsers := []interface{}{}
 	parts := strings.Split(format, " ")
-	parsers = append(parsers, Ymdy(parts[0]))
+	parsers := []interface{}{Ymdy(parts[0])}
 	if len(parts) == 2 {
 		parsers = append(parsers, parsec.Maybe(maybenode, Yhns(parts[1])))
 	}
@@ -21,16 +21,19 @@ func Ydate(year, month int, format string) parsec.Parser {
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			ymd := nodes[0].([]interface{})
 			year, month, date := ymd[0].(int), ymd[1].(int), ymd[2].(int)
+
 			hour, minute, second := 0, 0, 0
-			if len(nodes) == 2 {
+			if _, ok := nodes[1].(parsec.MaybeNone); ok == false {
 				hns := nodes[1].([]interface{})
 				hour, minute, second = hns[0].(int), hns[1].(int), hns[2].(int)
 			}
+
 			tm := time.Date(
 				year, time.Month(month), date,
 				hour, minute, second, 0,
 				time.Local, /*locale*/
 			)
+			log.Debugf("Ydate: %v\n", tm)
 			return tm
 		},
 		parsers...,
@@ -47,17 +50,22 @@ func Ymdy(format string) parsec.Parser {
 	parsers := []interface{}{}
 	for _, match := range matches {
 		if match[1] != "" {
+			//fmt.Printf("ydmy: match1: %v\n", match[1])
 			parsers = append(parsers, parsec.Token(match[1], "LIMIT"))
 		}
 		switch match[2] {
 		case "%Y":
 			parsers = append(parsers, parsec.Token(`[0-9]{4}`, "YEAR"))
+			//fmt.Printf("ydmy: YEAR\n")
 		case "%y":
 			parsers = append(parsers, parsec.Token(`[0-9]{2}`, "YEAR"))
+			//fmt.Printf("ydmy: yEAR\n")
 		case "%m":
 			parsers = append(parsers, parsec.Token(`[0-9]{1,2}`, "MONTH"))
+			//fmt.Printf("ydmy: MONTH\n")
 		case "%d":
 			parsers = append(parsers, parsec.Token(`[0-9]{1,2}`, "DATE"))
+			//fmt.Printf("ydmy: DATE\n")
 		default:
 			panic("unreachable code")
 		}
@@ -67,6 +75,8 @@ func Ymdy(format string) parsec.Parser {
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			var year, month, date int
 			var err error
+
+			//fmt.Println("ydate: dmy")
 
 			for _, node := range nodes {
 				switch t := node.(*parsec.Terminal); t.Name {
@@ -115,15 +125,19 @@ func Yhns(format string) parsec.Parser {
 	parsers := []interface{}{}
 	for _, match := range matches {
 		if match[1] != "" {
+			//fmt.Printf("yhms: match1: %v\n", match[1])
 			parsers = append(parsers, parsec.Token(match[1], "LIMIT"))
 		}
 		switch match[2] {
 		case "%h":
 			parsers = append(parsers, parsec.Token(`[0-9]{1,2}`, "HOUR"))
+			//fmt.Printf("yhms: HOUR\n")
 		case "%n":
 			parsers = append(parsers, parsec.Token(`[0-9]{1,2}`, "MINUTE"))
+			//fmt.Printf("yhms: MINUTE\n")
 		case "%s":
 			parsers = append(parsers, parsec.Token(`[0-9]{1,2}`, "SECOND"))
+			//fmt.Printf("yhms: SECOND\n")
 		default:
 			panic("unreachable code")
 		}
@@ -133,6 +147,8 @@ func Yhns(format string) parsec.Parser {
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			var hour, minute, second int
 			var err error
+
+			//fmt.Println("ydate: hms")
 
 			for _, node := range nodes {
 				switch t := node.(*parsec.Terminal); t.Name {

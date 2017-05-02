@@ -1,5 +1,7 @@
 package dblentry
 
+import "fmt"
+
 import "github.com/prataprc/goparsec"
 
 var inclusives = []string{
@@ -23,25 +25,25 @@ func NewAccount(name string) *Account {
 	return acc
 }
 
-func (tempacc *Account) Yledger(db *Datastore) parsec.Parser {
+func (acc *Account) Yledger(db *Datastore) parsec.Parser {
 	y := parsec.OrdChoice(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			t := nodes[0].(*parsec.Terminal)
 			name := string(t.Value)
 			switch t.Name {
-			case "TRANSACCOUNT":
-				tempacc.name = name
-				return tempacc
-			case "TRANSVACCOUNT":
-				tempacc.name = name[1 : len(name)-1]
-				tempacc.virtual = true
-				return tempacc
-			case "TRANSBACCOUNT":
-				tempacc.name = name[1 : len(name)-1]
-				tempacc.balanced = true
-				return tempacc
+			case "FULLACCNM":
+				acc.name = name
+				return acc
+			case "VFULLACCNM":
+				acc.name = name[1 : len(name)-1]
+				acc.virtual = true
+				return acc
+			case "BFULLACCNM":
+				acc.name = name[1 : len(name)-1]
+				acc.balanced = true
+				return acc
 			}
-			panic("unreachable code")
+			panic(fmt.Errorf("unreachable code: terminal(%q)", t.Name))
 		},
 		ytok_accname, ytok_vaccname, ytok_baccname,
 	)
@@ -54,4 +56,16 @@ func (acc *Account) SetDirective(account *Account) *Account {
 	acc.assert = account.assert
 	acc.eval = account.eval
 	return acc
+}
+
+func (acc *Account) Virtual() bool {
+	return acc.virtual
+}
+
+func (acc *Account) Balanced() bool {
+	return acc.balanced
+}
+
+func (acc *Account) String() string {
+	return fmt.Sprintf("%v", acc.name)
 }

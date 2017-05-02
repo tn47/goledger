@@ -18,7 +18,7 @@ func NewDirective() *Directive {
 
 func (d *Directive) Yledger(db *Datastore) parsec.Parser {
 	y := parsec.OrdChoice(
-		vector2scalar,
+		Vector2scalar,
 		d.Yaccount(db),
 		d.Yapply(db),
 		d.Yalias(db),
@@ -92,11 +92,12 @@ func (d *Directive) Yattr(db *Datastore) parsec.Parser {
 	panic("unreachable code")
 }
 
-func (d *Directive) Yledgerblock(db *Datastore, blocks []parsec.Scanner) {
+func (d *Directive) Yledgerblock(db *Datastore, block []string) {
 	var node parsec.ParsecNode
 	switch d.dtype {
 	case "account":
-		for _, scanner := range blocks {
+		for _, line := range block {
+			scanner := parsec.NewScanner([]byte(line))
 			parser := d.Yattr(db)
 			if parser == nil {
 				continue

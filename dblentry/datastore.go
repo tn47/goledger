@@ -27,7 +27,7 @@ func NewDatastore(name string) *Datastore {
 		// directives
 		year:       -1,
 		month:      -1,
-		dateformat: "%d/%m/%y %h:%t:%s",
+		dateformat: "%Y/%m/%d %h:%n:%s", // TODO: no magic string
 		aliases:    map[string]string{},
 	}
 	db.defaultprices()

@@ -1,8 +1,12 @@
 package dblentry
 
 import "time"
+import "fmt"
 
 import "github.com/prataprc/goparsec"
+import "github.com/prataprc/golog"
+
+var _ = fmt.Sprintf("dummy")
 
 type Transaction struct {
 	date     time.Time
@@ -25,46 +29,44 @@ func (trans *Transaction) Yledger(db *Datastore) parsec.Parser {
 	// DATE
 	ydate := Ydate(db.Year(), db.Month(), db.Dateformat())
 	// [=EDATE]
-	yedate := parsec.Maybe(
-		maybenode,
-		parsec.And(
-			func(nodes []parsec.ParsecNode) parsec.ParsecNode {
-				return nodes[1] // EDATE
-			},
-			ytok_equal,
-			ydate,
-		),
+	yedate := parsec.And(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			return nodes[1] // EDATE
+		},
+		ytok_equal,
+		ydate,
 	)
 
 	y := parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
-			n := 0
-			trans.date = nodes[n].(time.Time)
-			n++
-			if edate, ok := nodes[n].(time.Time); ok {
+			trans.date = nodes[0].(time.Time)
+			if edate, ok := nodes[1].(time.Time); ok {
 				trans.edate = edate
-				n++
 			}
-			if prefix, ok := nodes[n].(Transprefix); ok {
-				trans.prefix = byte(prefix)
-				n++
+			if t, ok := nodes[2].(*parsec.Terminal); ok {
+				trans.prefix = t.Value[0]
 			}
-			if code, ok := nodes[n].(Transcode); ok {
-				trans.code = string(code)
-				n++
+			if t, ok := nodes[3].(*parsec.Terminal); ok {
+				trans.code = string(t.Value[1 : len(t.Value)-1])
 			}
-			trans.desc = nodes[n].(string)
+			trans.desc = string(nodes[4].(*parsec.Terminal).Value)
+			log.Debugf("trans.yledger %v %v\n", trans.date, trans.desc)
 			return trans
 		},
-		ydate, yedate, ytok_prefix, ytok_code, ytok_desc,
+		ydate,
+		parsec.Maybe(maybenode, yedate),
+		parsec.Maybe(maybenode, ytok_prefix),
+		parsec.Maybe(maybenode, ytok_code),
+		ytok_desc,
 	)
 	return y
 }
 
-func (trans *Transaction) Yledgerblock(db *Datastore, blocks []parsec.Scanner) {
+func (trans *Transaction) Yledgerblock(db *Datastore, block []string) {
 	var node parsec.ParsecNode
 
-	for _, scanner := range blocks {
+	for _, line := range block {
+		scanner := parsec.NewScanner([]byte(line))
 		posting := NewPosting()
 		node, scanner = posting.Yledger(db)(scanner)
 		switch val := node.(type) {

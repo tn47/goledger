@@ -1,5 +1,6 @@
 package dblentry
 
+import "fmt"
 import "strconv"
 import "strings"
 
@@ -21,9 +22,11 @@ func (comm *Commodity) Yledger(db *Datastore) parsec.Parser {
 	y := parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			for _, node := range nodes {
+				t, ok := node.(*parsec.Terminal)
+				if ok == false {
+					continue
+				}
 				var err error
-
-				t := node.(*parsec.Terminal)
 				switch t.Name {
 				case "CURRENCY":
 					comm.name, comm.currency = string(t.Value), true
@@ -55,4 +58,11 @@ func (comm *Commodity) parseprecision(amount string) int {
 		return len(parts[1])
 	}
 	return 0
+}
+
+func (comm *Commodity) String() string {
+	if comm.currency {
+		return fmt.Sprintf("%v %v", comm.name, comm.amount)
+	}
+	return fmt.Sprintf("%v %v", comm.amount, comm.name)
 }

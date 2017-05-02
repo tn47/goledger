@@ -10,29 +10,14 @@ var ytok_assert = parsec.Token("assert", "ASSERT")
 var ytok_expr = parsec.Token(`\{.*\}`, "EXPRESSION")
 
 //---- Transaction tokens
-type Transprefix byte
-type Transcode string
 type Transnote string
 
 var ytok_accname = parsec.Token("[a-zA-Z][a-zA-Z: ~.,;?/-]*", "FULLACCNM")
 var ytok_vaccname = parsec.Token(`\([a-zA-Z][a-zA-Z: ~.,;?/-]*\)`, "VFULLACCNM")
 var ytok_baccname = parsec.Token(`\[[a-zA-Z][a-zA-Z: ~.,;?/-]*\]`, "BFULLACCNM")
 
-var ytok_prefix = parsec.Maybe(
-	func(nodes []parsec.ParsecNode) parsec.ParsecNode {
-		s := string(nodes[0].(*parsec.Terminal).Value)
-		return Transprefix(s[0])
-	},
-	parsec.Token(`\*|!`, "TRANSPREFIX"),
-)
-var ytok_code = parsec.Maybe(
-	func(nodes []parsec.ParsecNode) parsec.ParsecNode {
-		code := string(nodes[0].(*parsec.Terminal).Value)
-		ln := len(code)
-		return Transcode(code[1 : ln-1])
-	},
-	parsec.Token(`\(.*\)`, "TRANSCODE"),
-)
+var ytok_prefix = parsec.Token(`\*|!`, "TRANSPREFIX")
+var ytok_code = parsec.Token(`\(.*\)`, "TRANSCODE")
 var ytok_desc = parsec.Token(".+", "TRANSDESC")
 var ytok_persnote = parsec.Token(";[^;]+", "TRANSPNOTE")
 
@@ -59,9 +44,12 @@ var ytok_aliasname = parsec.Token("[^=]+", "DRTV_ALIASNAME")
 
 //
 func maybenode(nodes []parsec.ParsecNode) parsec.ParsecNode {
+	if nodes == nil || len(nodes) == 0 {
+		return nil
+	}
 	return nodes[0]
 }
 
-func vector2scalar(nodes []parsec.ParsecNode) parsec.ParsecNode {
+func Vector2scalar(nodes []parsec.ParsecNode) parsec.ParsecNode {
 	return nodes[0]
 }
