@@ -17,3 +17,13 @@ func Parsecsv(input string) []string {
 	}
 	return outs
 }
+
+func maxints(numbers ...int) int {
+	max_num := numbers[0]
+	for _, item := range numbers {
+		if max_num < item {
+			max_num = item
+		}
+	}
+	return max_num
+}
