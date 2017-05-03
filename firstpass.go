@@ -13,7 +13,7 @@ func firstpass(db *dblentry.Datastore, journalfile string) bool {
 	lines := readlines(journalfile)
 
 	iterate := blockiterate(lines)
-	block, eof, err := iterate()
+	rown, block, eof, err := iterate()
 	for len(block) > 0 {
 		if err != nil {
 			log.Errorf("%v\n", err)
@@ -37,7 +37,11 @@ func firstpass(db *dblentry.Datastore, journalfile string) bool {
 			if len(block[1:]) > 0 {
 				obj.Yledgerblock(db, block[1:])
 			}
-			db.Apply(obj)
+			if db.Apply(obj); err != nil {
+				fmsg := "applying transaction at row(%v): %v\n"
+				log.Errorf(fmsg, rown-len(block), err)
+				return false
+			}
 
 		case *dblentry.Price:
 			db.Apply(obj)
@@ -48,7 +52,7 @@ func firstpass(db *dblentry.Datastore, journalfile string) bool {
 			}
 			db.Apply(obj)
 		}
-		block, eof, err = iterate()
+		rown, block, eof, err = iterate()
 	}
 	if eof == false {
 		log.Errorf("expected eof")
@@ -57,7 +61,7 @@ func firstpass(db *dblentry.Datastore, journalfile string) bool {
 	return true
 }
 
-func blockiterate(lines []string) func() ([]string, bool, error) {
+func blockiterate(lines []string) func() (int, []string, bool, error) {
 	row := 0
 
 	parseblock := func() []string {
@@ -76,7 +80,7 @@ func blockiterate(lines []string) func() ([]string, bool, error) {
 		return blocklines
 	}
 
-	return func() ([]string, bool, error) {
+	return func() (int, []string, bool, error) {
 		blocklines := []string{}
 		for ; row < len(lines); row++ {
 			line := lines[row]
@@ -89,16 +93,16 @@ func blockiterate(lines []string) func() ([]string, bool, error) {
 					continue
 				} else {
 					fmsg := "must be at the begnning: row:%v column: 0"
-					return nil, false, fmt.Errorf(fmsg, row+1)
+					return row, nil, false, fmt.Errorf(fmsg, row+1)
 				}
 
 			} else { // begin block
 				row++
 				blocklines = append(blocklines, line)
 				blocklines = append(blocklines, parseblock()...)
-				return blocklines, row >= len(lines), nil
+				return row, blocklines, row >= len(lines), nil
 			}
 		}
-		return blocklines, true, nil
+		return row, blocklines, true, nil
 	}
 }
