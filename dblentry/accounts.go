@@ -3,6 +3,7 @@ package dblentry
 import "fmt"
 
 import "github.com/prataprc/goparsec"
+import "github.com/prataprc/golog"
 
 var inclusives = []string{
 	"asset", "liability", "capital", "equity", "income", "expense",
@@ -12,6 +13,7 @@ type Account struct {
 	name     string
 	virtual  bool
 	balanced bool
+	balance  float64
 	// from account directive
 	note    string
 	check   string
@@ -51,6 +53,11 @@ func (acc *Account) Yledger(db *Datastore) parsec.Parser {
 	return y
 }
 
+func (acc *Account) SetOpeningbalance(amount float64) *Account {
+	acc.balance = amount
+	return acc
+}
+
 func (acc *Account) SetDirective(account *Account) *Account {
 	acc.note = account.note
 	acc.check = account.check
@@ -65,6 +72,13 @@ func (acc *Account) Virtual() bool {
 
 func (acc *Account) Balanced() bool {
 	return acc.balanced
+}
+
+func (acc *Account) Apply(db *Datastore, trans *Transaction, p *Posting) error {
+	acc.balance += p.commodity.amount
+	fmsg := "%v balance (from %v <%v>): %v\n"
+	log.Debugf(fmsg, acc.name, trans.desc, p.commodity.amount, acc.balance)
+	return nil
 }
 
 func (acc *Account) String() string {

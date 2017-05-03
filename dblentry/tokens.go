@@ -12,9 +12,9 @@ var ytok_expr = parsec.Token(`\{.*\}`, "EXPRESSION")
 //---- Transaction tokens
 type Transnote string
 
-var ytok_accname = parsec.Token("[a-zA-Z][a-zA-Z: ~.,;?/-]*", "FULLACCNM")
-var ytok_vaccname = parsec.Token(`\([a-zA-Z][a-zA-Z: ~.,;?/-]*\)`, "VFULLACCNM")
-var ytok_baccname = parsec.Token(`\[[a-zA-Z][a-zA-Z: ~.,;?/-]*\]`, "BFULLACCNM")
+var ytok_accname = parsec.Token(`[a-zA-Z][a-zA-Z: \t~.,;?/-]*`, "FULLACCNM")
+var ytok_vaccname = parsec.Token(`\([a-zA-Z][a-zA-Z: \t~.,;?/-]*\)`, "VFULLACCNM")
+var ytok_baccname = parsec.Token(`\[[a-zA-Z][a-zA-Z: \t~.,;?/-]*\]`, "BFULLACCNM")
 
 var ytok_prefix = parsec.Token(`\*|!`, "TRANSPREFIX")
 var ytok_code = parsec.Token(`\(.*\)`, "TRANSCODE")

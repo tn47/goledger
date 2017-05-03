@@ -71,5 +71,5 @@ func (comm *Commodity) String() string {
 	if comm.currency {
 		return fmt.Sprintf("%v %v", comm.name, comm.amount)
 	}
-	return fmt.Sprintf("%v %v", comm.amount, comm.name)
+	return fmt.Sprintf("Commodity<%v %q>", comm.amount, comm.name)
 }

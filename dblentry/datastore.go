@@ -3,6 +3,7 @@ package dblentry
 import "fmt"
 import "strings"
 
+//import s "github.com/prataprc/gosettings"
 import "github.com/prataprc/golog"
 
 type Datastore struct {
@@ -15,7 +16,7 @@ type Datastore struct {
 	month        int               // month
 	dateformat   string            // dataformat
 	aliases      map[string]string // alias, account-alias
-	payees       map[string]string // account-payee
+	payees       map[string]string // account-payee map[regex]->accountname
 	rootaccount  string            // apply-account
 	blncingaccnt string            // account
 }
@@ -38,12 +39,15 @@ func NewDatastore(name string) *Datastore {
 
 func (db *Datastore) GetAccount(name string) *Account {
 	names := strings.Split(name, ":")
-	fullname := ""
-	for _, name := range names {
-		fullname = strings.Join([]string{fullname, name}, ":")
+	fullname := names[0]
+	for _, name := range names[1:] {
 		if _, ok := db.accntdb[fullname]; ok == false {
 			db.accntdb[fullname] = NewAccount(fullname)
 		}
+		fullname += ":" + name
+	}
+	if _, ok := db.accntdb[fullname]; ok == false { // last part
+		db.accntdb[fullname] = NewAccount(fullname)
 	}
 	return db.accntdb[name]
 }
@@ -60,13 +64,21 @@ func (db *Datastore) SubAccounts(parentname string) []*Account {
 
 func (db *Datastore) Apply(obj interface{}) error {
 	if trans, ok := obj.(*Transaction); ok {
-		if ok, err := trans.Autobalance1(); err != nil {
-			return err
-		} else if ok == false {
-			return fmt.Errorf("unbalanced transaction")
+		if trans.ShouldBalance() {
+			var defaccount *Account
+			if db.blncingaccnt != "" {
+				defaccount = db.GetAccount(db.blncingaccnt)
+			}
+			if ok, err := trans.Autobalance1(defaccount); err != nil {
+				return err
+			} else if ok == false {
+				return fmt.Errorf("unbalanced transaction")
+			}
+			log.Debugf("transaction balanced\n")
 		}
-		log.Debugf("transaction balanced\n")
-		return db.transdb.Insert(trans.date, trans)
+		db.transdb.Insert(trans.date, trans)
+		trans.Apply(db)
+		return nil
 
 	} else if price, ok := obj.(*Price); ok {
 		return db.pricedb.Insert(price.when, price)
@@ -178,6 +190,31 @@ func (db *Datastore) AddPayee(regex, accountname string) *Datastore {
 func (db *Datastore) SetBalancingaccount(name string) *Datastore {
 	db.blncingaccnt = name
 	return db
+}
+
+func (db *Datastore) LookupAlias(name string) string {
+	if accountname, ok := db.aliases[name]; ok {
+		return accountname
+	}
+	return name
+}
+
+func (db *Datastore) Applyroot(name string) string {
+	if db.rootaccount != "" {
+		return db.rootaccount + ":" + name
+	}
+	return name
+}
+
+func (db *Datastore) Report(args []string) {
+	switch args[0] {
+	case "balance":
+		//heads := []string{"Date", "Account", "Balance"}
+		//rcf := NewRCformat(heads, make(s.Settings))
+		//for _, account := range db.accntdb {
+		//	rcf.Addrow()
+		//}
+	}
 }
 
 func (db *Datastore) defaultprices() {

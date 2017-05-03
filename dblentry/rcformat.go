@@ -1,8 +1,8 @@
-package main
+package dblentry
 
 import s "github.com/prataprc/gosettings"
 
-type RC struct {
+type RCformat struct {
 	heads []string
 	rows  [][]string
 	// settings
@@ -14,15 +14,15 @@ type RC struct {
 	padding     string
 }
 
-func NewRC(heads []string, setts s.Settings) *RC {
-	rc := (&RC{
+func NewRCformat(heads []string, setts s.Settings) *RCformat {
+	rc := (&RCformat{
 		heads: heads,
 		rows:  [][]string{},
 	}).readsettings(heads, setts)
 	return rc
 }
 
-func (rc *RC) readsettings(heads []string, setts s.Settings) *RC {
+func (rc *RCformat) readsettings(heads []string, setts s.Settings) *RCformat {
 	defsetts := defaultRCsetts(heads...)
 	setts = make(s.Settings).Mixin(defsetts, setts)
 	rc.width = int(setts.Int64("width"))
@@ -33,7 +33,7 @@ func (rc *RC) readsettings(heads []string, setts s.Settings) *RC {
 	return rc
 }
 
-func (rc *RC) Addrow(columns ...string) *RC {
+func (rc *RCformat) Addrow(columns ...string) *RCformat {
 	row := []string{}
 	for _, col := range columns {
 		col = rc.padding + col + rc.padding
@@ -43,7 +43,7 @@ func (rc *RC) Addrow(columns ...string) *RC {
 	return rc
 }
 
-func (rc *RC) FitWidth(maxwidths []int) {
+func (rc *RCformat) FitWidth(maxwidths []int) {
 	for i, maxwidth := range maxwidths {
 		maxwidth -= 2
 		for j, row := range rc.rows {

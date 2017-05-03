@@ -13,7 +13,7 @@ var options struct {
 	loglevel string
 }
 
-func argparse() {
+func argparse() []string {
 	var journals string
 
 	f := flag.NewFlagSet("ledger", flag.ExitOnError)
@@ -33,11 +33,13 @@ func argparse() {
 
 	options.journals = Parsecsv(journals)
 
-	return
+	return f.Args()
 }
 
 func main() {
-	argparse()
+	args := argparse()
+
+	fmt.Println(args)
 
 	logsetts := map[string]interface{}{
 		"log.level":      options.loglevel,
