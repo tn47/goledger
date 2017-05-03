@@ -16,7 +16,7 @@ type Posting struct {
 }
 
 func NewPosting() *Posting {
-	return &Posting{}
+	return &Posting{virtual: false, balanced: true}
 }
 
 func (p *Posting) Yledger(db *Datastore) parsec.Parser {

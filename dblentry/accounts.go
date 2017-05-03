@@ -33,14 +33,15 @@ func (acc *Account) Yledger(db *Datastore) parsec.Parser {
 			switch t.Name {
 			case "FULLACCNM":
 				acc.name = name
+				acc.virtual, acc.balanced = false, true
 				return acc
 			case "VFULLACCNM":
 				acc.name = name[1 : len(name)-1]
-				acc.virtual = true
+				acc.virtual, acc.balanced = true, false
 				return acc
 			case "BFULLACCNM":
 				acc.name = name[1 : len(name)-1]
-				acc.balanced = true
+				acc.virtual, acc.balanced = true, true
 				return acc
 			}
 			panic(fmt.Errorf("unreachable code: terminal(%q)", t.Name))

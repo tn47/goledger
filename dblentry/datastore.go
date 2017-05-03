@@ -3,6 +3,8 @@ package dblentry
 import "fmt"
 import "strings"
 
+import "github.com/prataprc/golog"
+
 type Datastore struct {
 	name    string
 	transdb *DB
@@ -57,34 +59,39 @@ func (db *Datastore) SubAccounts(parentname string) []*Account {
 }
 
 func (db *Datastore) Apply(obj interface{}) error {
-	switch blk := obj.(type) {
-	case *Transaction:
-		return db.transdb.Insert(blk.date, blk)
+	if trans, ok := obj.(*Transaction); ok {
+		if ok, err := trans.Autobalance1(); err != nil {
+			return err
+		} else if ok == false {
+			return fmt.Errorf("unbalanced transaction")
+		}
+		log.Debugf("transaction balanced\n")
+		return db.transdb.Insert(trans.date, trans)
 
-	case *Price:
-		return db.pricedb.Insert(blk.when, blk)
+	} else if price, ok := obj.(*Price); ok {
+		return db.pricedb.Insert(price.when, price)
 
-	case *Directive:
-		switch blk.dtype {
+	} else if directive, ok := obj.(*Directive); ok {
+		switch directive.dtype {
 		case "year":
-			db.SetYear(blk.year)
+			db.SetYear(directive.year)
 		case "month":
-			db.SetMonth(blk.month)
+			db.SetMonth(directive.month)
 		case "dateformat":
-			db.SetDateformat(blk.dateformat)
+			db.SetDateformat(directive.dateformat)
 		case "account":
-			db.Declare(blk.account) // NOTE: this is redundant
+			db.Declare(directive.account) // NOTE: this is redundant
 		case "apply":
-			db.rootaccount = blk.account.name
+			db.rootaccount = directive.account.name
 		case "alias":
-			db.AddAlias(blk.aliasname, blk.account.name)
+			db.AddAlias(directive.aliasname, directive.account.name)
 		case "assert":
 			return fmt.Errorf("directive not-implemented")
 		default:
 			panic("unreachable code")
 		}
 
-	default:
+	} else {
 		panic("unreachable code")
 	}
 	return nil

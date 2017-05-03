@@ -77,3 +77,63 @@ func (trans *Transaction) Yledgerblock(db *Datastore, block []string) {
 		}
 	}
 }
+
+func (trans *Transaction) ForceBalance() bool {
+	for _, posting := range trans.postings {
+		if posting.virtual == true && posting.balanced == false {
+			return false
+		} else if posting.balanced == false {
+			return false
+		}
+	}
+	return true
+}
+
+func (trans *Transaction) Autobalance1() (bool, error) {
+	if len(trans.postings) == 0 {
+		return false, fmt.Errorf("empty transaction")
+	} else if len(trans.postings) == 1 {
+		return false, fmt.Errorf("unbalanced transaction")
+	}
+
+	var tallywith *Posting
+	for _, posting := range trans.postings {
+		if posting.commodity == nil && tallywith != nil {
+			err := fmt.Errorf("Only one null posting allowed per transaction")
+			return false, err
+		} else if posting.commodity == nil {
+			tallywith = posting
+		}
+	}
+
+	credits, debits := trans.Credits(), trans.Debits()
+	amount := credits + debits
+	if amount == 0 {
+		return true, nil
+	} else if tallywith == nil {
+		return false, fmt.Errorf("unbalanced transaction")
+	}
+	tallywith.commodity = NewCommodity()
+	tallywith.commodity.Balance(trans.postings[0].commodity, amount)
+	return true, nil
+}
+
+func (trans *Transaction) Credits() float64 {
+	credits := float64(0.0)
+	for _, posting := range trans.postings {
+		if posting.commodity != nil && posting.commodity.amount < 0 {
+			credits += posting.commodity.amount
+		}
+	}
+	return credits
+}
+
+func (trans *Transaction) Debits() float64 {
+	debits := float64(0.0)
+	for _, posting := range trans.postings {
+		if posting.commodity != nil && posting.commodity.amount > 0 {
+			debits += posting.commodity.amount
+		}
+	}
+	return debits
+}

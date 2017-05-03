@@ -52,6 +52,13 @@ func (comm *Commodity) Yledger(db *Datastore) parsec.Parser {
 	return y
 }
 
+func (comm *Commodity) Balance(tmpl *Commodity, amount float64) *Commodity {
+	comm.name, comm.currency = tmpl.name, tmpl.currency
+	comm.precision, comm.mark1k = tmpl.precision, tmpl.mark1k
+	comm.amount = amount
+	return comm
+}
+
 func (comm *Commodity) parseprecision(amount string) int {
 	parts := strings.Split(amount, ".")
 	if len(parts) == 2 {
