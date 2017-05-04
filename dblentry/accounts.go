@@ -53,6 +53,14 @@ func (acc *Account) Yledger(db *Datastore) parsec.Parser {
 	return y
 }
 
+func (acc *Account) Name() string {
+	return acc.name
+}
+
+func (acc *Account) Balance() float64 {
+	return acc.balance
+}
+
 func (acc *Account) SetOpeningbalance(amount float64) *Account {
 	acc.balance = amount
 	return acc
@@ -78,6 +86,8 @@ func (acc *Account) Apply(db *Datastore, trans *Transaction, p *Posting) error {
 	acc.balance += p.commodity.amount
 	fmsg := "%v balance (from %v <%v>): %v\n"
 	log.Debugf(fmsg, acc.name, trans.desc, p.commodity.amount, acc.balance)
+
+	db.Reportcallback(trans, p, acc)
 	return nil
 }
 

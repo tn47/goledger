@@ -33,13 +33,13 @@ func argparse() []string {
 
 	options.journals = Parsecsv(journals)
 
-	return f.Args()
+	args := f.Args()
+
+	return args
 }
 
 func main() {
 	args := argparse()
-
-	fmt.Println(args)
 
 	logsetts := map[string]interface{}{
 		"log.level":      options.loglevel,
@@ -55,7 +55,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	db := dblentry.NewDatastore(options.dbname)
+	report := NewReport(args)
+	db := dblentry.NewDatastore(options.dbname, report.callback)
 
 	journals := getjournals(cwd)
 	journals = append(journals, options.journals...)
@@ -65,4 +66,5 @@ func main() {
 			os.Exit(1)
 		}
 	}
+	report.Render(args)
 }

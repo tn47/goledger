@@ -78,6 +78,14 @@ func (trans *Transaction) Yledgerblock(db *Datastore, block []string) {
 	}
 }
 
+func (trans *Transaction) Description() string {
+	return trans.desc
+}
+
+func (trans *Transaction) Date() time.Time {
+	return trans.date
+}
+
 func (trans *Transaction) ShouldBalance() bool {
 	for _, posting := range trans.postings {
 		if posting.virtual == true && posting.balanced == false {

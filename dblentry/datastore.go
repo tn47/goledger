@@ -7,10 +7,11 @@ import "strings"
 import "github.com/prataprc/golog"
 
 type Datastore struct {
-	name    string
-	transdb *DB
-	pricedb *DB
-	accntdb map[string]*Account // full account-name -> account
+	name        string
+	reportcallb func(*Datastore, *Transaction, *Posting, *Account)
+	transdb     *DB
+	pricedb     *DB
+	accntdb     map[string]*Account // full account-name -> account
 	// directive fields
 	year         int               // year
 	month        int               // month
@@ -21,12 +22,16 @@ type Datastore struct {
 	blncingaccnt string            // account
 }
 
-func NewDatastore(name string) *Datastore {
+func NewDatastore(
+	name string,
+	reportcallb func(*Datastore, *Transaction, *Posting, *Account)) *Datastore {
+
 	db := &Datastore{
-		name:    name,
-		transdb: NewDB(fmt.Sprintf("%v-transactions", name)),
-		pricedb: NewDB(fmt.Sprintf("%v-pricedb", name)),
-		accntdb: map[string]*Account{},
+		name:        name,
+		reportcallb: reportcallb,
+		transdb:     NewDB(fmt.Sprintf("%v-transactions", name)),
+		pricedb:     NewDB(fmt.Sprintf("%v-pricedb", name)),
+		accntdb:     map[string]*Account{},
 		// directives
 		year:       -1,
 		month:      -1,
@@ -38,18 +43,12 @@ func NewDatastore(name string) *Datastore {
 }
 
 func (db *Datastore) GetAccount(name string) *Account {
-	names := strings.Split(name, ":")
-	fullname := names[0]
-	for _, name := range names[1:] {
-		if _, ok := db.accntdb[fullname]; ok == false {
-			db.accntdb[fullname] = NewAccount(fullname)
-		}
-		fullname += ":" + name
+	account, ok := db.accntdb[name]
+	if ok == false {
+		account = NewAccount(name)
 	}
-	if _, ok := db.accntdb[fullname]; ok == false { // last part
-		db.accntdb[fullname] = NewAccount(fullname)
-	}
-	return db.accntdb[name]
+	db.accntdb[name] = account
+	return account
 }
 
 func (db *Datastore) SubAccounts(parentname string) []*Account {
@@ -107,6 +106,12 @@ func (db *Datastore) Apply(obj interface{}) error {
 		panic("unreachable code")
 	}
 	return nil
+}
+
+func (db *Datastore) Reportcallback(
+	trans *Transaction, p *Posting, acc *Account) {
+
+	db.reportcallb(db, trans, p, acc)
 }
 
 // directive-year
@@ -204,17 +209,6 @@ func (db *Datastore) Applyroot(name string) string {
 		return db.rootaccount + ":" + name
 	}
 	return name
-}
-
-func (db *Datastore) Report(args []string) {
-	switch args[0] {
-	case "balance":
-		//heads := []string{"Date", "Account", "Balance"}
-		//rcf := NewRCformat(heads, make(s.Settings))
-		//for _, account := range db.accntdb {
-		//	rcf.Addrow()
-		//}
-	}
 }
 
 func (db *Datastore) defaultprices() {
