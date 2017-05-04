@@ -54,13 +54,13 @@ func Filterstring(strpatt string, strs []string) bool {
 			} else if ok {
 				return false
 			}
-			return false
+			return true
 
-		} else { // include patter
-			if strings.HasPrefix(strpatt, item[1:]) {
+		} else { // include pattern
+			if strings.HasPrefix(strpatt, item) {
 				return true
 			}
-			if ok, err := regexp.Match(item[1:], []byte(strpatt)); err != nil {
+			if ok, err := regexp.Match(item, []byte(strpatt)); err != nil {
 				panic(err)
 			} else if ok {
 				return true
@@ -68,5 +68,5 @@ func Filterstring(strpatt string, strs []string) bool {
 			return false
 		}
 	}
-	return false
+	panic("unreachable code")
 }

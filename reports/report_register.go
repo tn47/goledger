@@ -72,9 +72,7 @@ func (report *ReportRegister) BubblePosting(
 func (report *ReportRegister) Render(args []string) {
 	rcf := report.rcf
 
-	cols := []string{
-		" By-date ", " Description ", " Account ", " Amount ", " Balance ",
-	}
+	cols := []string{"By-date", "Description", "Account", "Amount", "Balance"}
 	rcf.Addrow(cols...)
 	rcf.Addrow([]string{"", "", "", "", ""}...)
 
