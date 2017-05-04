@@ -1,37 +1,18 @@
 package main
 
 import "fmt"
-import "strings"
-
-import s "github.com/prataprc/gosettings"
 
 type RCformat struct {
-	heads []string
-	rows  [][]string
-	// settings
-	width      int
-	htxtalign  string
-	ctxtalign  []string
-	marginleft string
-	padding    string
+	rows    [][]string
+	padding string
 }
 
-func NewRCformat(heads []string, setts s.Settings) *RCformat {
-	rcf := (&RCformat{
-		heads:   heads,
-		rows:    [][]string{},
-		padding: " ",
-	}).readsettings(heads, setts)
+func NewRCformat() *RCformat {
+	rcf := &RCformat{rows: [][]string{}, padding: " "}
 	return rcf
 }
 
-func (rcf *RCformat) readsettings(heads []string, setts s.Settings) *RCformat {
-	defsetts := defaultRCsetts(heads...)
-	setts = make(s.Settings).Mixin(defsetts, setts)
-	rcf.width = int(setts.Int64("width"))
-	rcf.htxtalign = setts.String("htxtalign")
-	rcf.ctxtalign = setts.Strings("ctxtalign")
-	rcf.marginleft = setts.String("marginleft")
+func (rcf *RCformat) readsettings() *RCformat {
 	return rcf
 }
 
@@ -61,26 +42,6 @@ func (rcf *RCformat) FitWidth(maxwidths []int) {
 	}
 }
 
-func (rcf *RCformat) RenderBalance() {
-	maxwidths := []int{14, 40, 14}
-	rcf.FitWidth(maxwidths)
-
-	for _, cols := range rcf.rows {
-		line := strings.Join(cols, "")
-		fmt.Printf("%v%v\n", rcf.marginleft, line)
-	}
-}
-
-func defaultRCsetts(heads ...string) s.Settings {
-	setts := s.Settings{
-		"width":      80,
-		"htxtalign":  "left",
-		"marginleft": "    ",
-	}
-	ctxtalign := make([]string, len(heads))
-	for i := 0; i < len(heads); i++ {
-		ctxtalign = append(ctxtalign, "left")
-	}
-	setts["ctxtalign"] = ctxtalign
-	return setts
+func (rcf *RCformat) String() string {
+	return fmt.Sprintf("RCformat{%v}\n", len(rcf.rows))
 }

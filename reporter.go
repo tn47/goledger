@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 import "github.com/prataprc/goledger/dblentry"
 
 type Reporter interface {
@@ -11,7 +13,7 @@ type Reporter interface {
 }
 
 func NewReporter(args []string) (reporter Reporter) {
-	if len(args[0]) > 0 {
+	if len(args[0]) == 0 {
 		return &DummyReporter{}
 	}
 
@@ -40,4 +42,8 @@ func (report *DummyReporter) callback(
 	p *dblentry.Posting, acc *dblentry.Account) {
 
 	return
+}
+
+func (report *DummyReporter) String() string {
+	return fmt.Sprintf("DummyReporter")
 }
