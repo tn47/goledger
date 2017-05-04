@@ -27,3 +27,11 @@ func maxints(numbers ...int) int {
 	}
 	return max_num
 }
+
+func repeatstr(str string, n int) string {
+	out := ""
+	for i := 0; i < n; i++ {
+		out += str
+	}
+	return out
+}

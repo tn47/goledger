@@ -2,6 +2,8 @@ package main
 
 import "fmt"
 
+import "github.com/prataprc/goledger/dblentry"
+
 type RCformat struct {
 	rows    [][]string
 	padding string
@@ -16,32 +18,60 @@ func (rcf *RCformat) readsettings() *RCformat {
 	return rcf
 }
 
-func (rcf *RCformat) Addrow(columns ...string) *RCformat {
-	row := []string{}
-	for _, col := range columns {
-		col = rcf.padding + col + rcf.padding
-		row = append(row, col)
-	}
+func (rcf *RCformat) Addrow(row ...string) *RCformat {
 	rcf.rows = append(rcf.rows, row)
 	return rcf
 }
 
-func (rcf *RCformat) FitWidth(maxwidths []int) {
-	for i, maxwidth := range maxwidths {
-		maxwidth -= 2
-		for j, row := range rcf.rows {
-			if ncol := len(row[i]); ncol > (maxwidth * 2) {
-				row[i] = "!!"
-			} else if ncol > maxwidth {
-				nscrap := ncol - maxwidth
-				x := nscrap / 2
-				row[i] = row[i][0:x] + ".." + row[i][x+nscrap:]
-			}
-			rcf.rows[j] = row
-		}
+func (rcf *RCformat) FitAccountname(index, maxwidth int) int {
+	for i, row := range rcf.rows {
+		row[index] = dblentry.FitAccountname(row[index], maxwidth)
+		rcf.rows[i] = row
 	}
+	return maxwidth
+}
+
+func (rcf *RCformat) Paddcells() {
+	for y, row := range rcf.rows {
+		for x, col := range row {
+			row[x] = rcf.padding + col + rcf.padding
+		}
+		rcf.rows[y] = row
+	}
+}
+
+func (rcf *RCformat) Fmsg(fmsg string) string {
+	w := []interface{}{}
+	for x := range rcf.rows[0] {
+		w = append(w, rcf.maxwidth(rcf.column(x)))
+	}
+	return fmt.Sprintf(fmsg, w...)
 }
 
 func (rcf *RCformat) String() string {
 	return fmt.Sprintf("RCformat{%v}\n", len(rcf.rows))
+}
+
+func (rcf *RCformat) maxwidth(col []string) int {
+	if len(col) == 0 {
+		return 0
+	} else if len(col) == 1 {
+		return len(col[0])
+	}
+
+	max := len(col[0])
+	for _, s := range col[1:] {
+		if len(s) > max {
+			max = len(s)
+		}
+	}
+	return max
+}
+
+func (rcf *RCformat) column(index int) []string {
+	col := []string{}
+	for _, row := range rcf.rows {
+		col = append(col, row[index])
+	}
+	return col
 }

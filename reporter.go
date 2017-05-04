@@ -20,6 +20,8 @@ func NewReporter(args []string) (reporter Reporter) {
 	switch args[0] {
 	case "balance":
 		reporter = NewReportBalance(args)
+	case "register":
+		reporter = NewReportRegister(args)
 	}
 	return reporter
 }

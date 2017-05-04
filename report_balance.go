@@ -10,6 +10,7 @@ type ReportBalance struct {
 	rcf          *RCformat
 	includeaccns []string
 	balance      map[string][]string
+	finaltally   []string
 }
 
 func NewReportBalance(args []string) *ReportBalance {
@@ -32,6 +33,8 @@ func (report *ReportBalance) GetCallback() func(db *dblentry.Datastore,
 }
 
 func (report *ReportBalance) Render(args []string) {
+	rcf := report.rcf
+
 	// sort
 	keys := []string{}
 	for name := range report.balance {
@@ -47,25 +50,63 @@ func (report *ReportBalance) Render(args []string) {
 		}
 		prefix := strings.Trim(dblentry.Lcp([]string{prevkey, key}), ":")
 		if prefix != "" {
-			spaces := ""
-			for i := 0; i < len(strings.Split(prefix, ":")); i++ {
-				spaces += "  "
-			}
+			spaces := repeatstr("  ", len(strings.Split(prefix, ":")))
 			cols[1] = spaces + cols[1][len(prefix)+1:]
 		}
-		report.rcf.Addrow(cols...)
+		rcf.Addrow(cols...)
 		prevkey = key
 	}
-	report.rcf.FitWidth([]int{14, 40, 14})
+	rcf.Addrow([]string{"", "", repeatstr("-", rcf.maxwidth(rcf.column(2)))}...)
+	rcf.Addrow(report.finaltally...)
+
+	w1 := rcf.maxwidth(rcf.column(0)) // date
+	w2 := rcf.maxwidth(rcf.column(1)) // account name
+	w3 := rcf.maxwidth(rcf.column(2)) // balance (amount)
+	if (w1 + w2 + w3) > 70 {
+		w2 = rcf.FitAccountname(1, 70-w1-w3)
+	}
+
+	rcf.Paddcells()
+	fmsg := rcf.Fmsg(" %%-%vs%%-%vs%%%vs\n")
 
 	// start printing
 	fmt.Println()
 	cols := []string{" By-date ", " Account ", " Balance "}
-	fmt.Println(fmt.Sprintf(" %-14s%-40s%14s\n", cols[0], cols[1], cols[2]))
-	for _, cols := range report.rcf.rows {
-		fmt.Println(fmt.Sprintf(" %-14s%-40s%14s", cols[0], cols[1], cols[2]))
+	fmt.Printf(fmsg, cols[0], cols[1], cols[2])
+	fmt.Println()
+	for _, cols := range rcf.rows {
+		fmt.Printf(fmsg, cols[0], cols[1], cols[2])
 	}
 	fmt.Println()
+}
+
+func (report *ReportBalance) callback(
+	db *dblentry.Datastore,
+	trans *dblentry.Transaction,
+	p *dblentry.Posting,
+	acc *dblentry.Account) {
+
+	row := []string{
+		report.latestdate(acc.Name(), trans.Date().Format("2006/01/02")),
+		fmt.Sprintf("%s", acc.Name()),
+		fmt.Sprintf("%10.2f", acc.Balance()),
+	}
+
+	report.balance[acc.Name()] = row
+	report.finaltally = []string{
+		report.latestdate("_fulltally_", trans.Date().Format("2006/01/02")),
+		"",
+		fmt.Sprintf("%10.2f", db.Balance()),
+	}
+}
+
+func (report *ReportBalance) latestdate(accname, date string) string {
+	if cols, ok := report.balance[accname]; ok {
+		if cols[0] > date {
+			return cols[0]
+		}
+	}
+	return date
 }
 
 func (report *ReportBalance) includeaccount(accountname string) bool {
@@ -76,18 +117,4 @@ func (report *ReportBalance) includeaccount(accountname string) bool {
 		return strings.HasPrefix(accountname, include)
 	}
 	return false
-}
-
-func (report *ReportBalance) callback(
-	db *dblentry.Datastore,
-	trans *dblentry.Transaction,
-	p *dblentry.Posting,
-	acc *dblentry.Account) {
-
-	row := []string{
-		trans.Date().Format("2006-01-02"),
-		fmt.Sprintf("%s", acc.Name()),
-		fmt.Sprintf("%10.2f", acc.Balance()),
-	}
-	report.balance[acc.Name()] = row
 }
