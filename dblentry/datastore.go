@@ -3,16 +3,16 @@ package dblentry
 import "fmt"
 import "strings"
 
-//import s "github.com/prataprc/gosettings"
+import "github.com/prataprc/goledger/api"
 import "github.com/prataprc/golog"
 
 type Datastore struct {
-	name        string
-	reportcallb func(*Datastore, *Transaction, *Posting, *Account)
-	transdb     *DB
-	pricedb     *DB
-	accntdb     map[string]*Account // full account-name -> account
-	balance     float64
+	name     string
+	reporter api.Reporter
+	transdb  *DB
+	pricedb  *DB
+	accntdb  map[string]*Account // full account-name -> account
+	balance  float64
 	// directive fields
 	year         int               // year
 	month        int               // month
@@ -23,16 +23,13 @@ type Datastore struct {
 	blncingaccnt string            // account
 }
 
-func NewDatastore(
-	name string,
-	reportcallb func(*Datastore, *Transaction, *Posting, *Account)) *Datastore {
-
+func NewDatastore(name string, reporter api.Reporter) *Datastore {
 	db := &Datastore{
-		name:        name,
-		reportcallb: reportcallb,
-		transdb:     NewDB(fmt.Sprintf("%v-transactions", name)),
-		pricedb:     NewDB(fmt.Sprintf("%v-pricedb", name)),
-		accntdb:     map[string]*Account{},
+		name:     name,
+		reporter: reporter,
+		transdb:  NewDB(fmt.Sprintf("%v-transactions", name)),
+		pricedb:  NewDB(fmt.Sprintf("%v-pricedb", name)),
+		accntdb:  map[string]*Account{},
 		// directives
 		year:       -1,
 		month:      -1,
@@ -128,12 +125,6 @@ func (db *Datastore) Apply(obj interface{}) error {
 		panic("unreachable code")
 	}
 	return nil
-}
-
-func (db *Datastore) Reportcallback(
-	trans *Transaction, p *Posting, acc *Account) {
-
-	db.reportcallb(db, trans, p, acc)
 }
 
 // directive-year

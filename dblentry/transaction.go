@@ -2,9 +2,11 @@ package dblentry
 
 import "time"
 import "fmt"
+import "strings"
 
 import "github.com/prataprc/goparsec"
 import "github.com/prataprc/golog"
+import "github.com/prataprc/goledger/api"
 
 var _ = fmt.Sprintf("dummy")
 
@@ -31,6 +33,14 @@ func (trans *Transaction) Description() string {
 
 func (trans *Transaction) Date() time.Time {
 	return trans.date
+}
+
+func (trans *Transaction) GetPostings() []api.Poster {
+	postings := []api.Poster{}
+	for _, p := range trans.postings {
+		postings = append(postings, p)
+	}
+	return postings
 }
 
 //---- ledger parser
@@ -164,4 +174,26 @@ func (trans *Transaction) Apply(db *Datastore) {
 	for _, posting := range trans.postings {
 		posting.Apply(db, trans)
 	}
+	db.reporter.Transaction(db, trans)
+}
+
+func FitDescription(desc string, maxwidth int) string {
+	if len(desc) < maxwidth {
+		return desc
+	}
+	scraplen := maxwidth - len(desc)
+	fields := []string{}
+	for _, field := range strings.Fields(desc) {
+		if scraplen <= 0 {
+			fields = append(fields, field)
+		}
+		if len(field[3:]) < scraplen {
+			fields = append(fields, field[:3])
+			scraplen -= len(field[3:])
+			continue
+		}
+		fields = append(fields, field[:len(field)-scraplen])
+		scraplen = 0
+	}
+	return strings.Join(fields, " ")
 }

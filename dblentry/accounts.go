@@ -105,10 +105,11 @@ func (acc *Account) Yledger(db *Datastore) parsec.Parser {
 func (acc *Account) Apply(db *Datastore, trans *Transaction, p *Posting) error {
 	db.balance += p.commodity.amount
 	acc.balance += p.commodity.amount
-	db.Reportcallback(trans, p, acc)
+	db.reporter.Posting(db, trans, p, acc)
 
 	// consolidate
-	for _, name := range db.Accountnames() {
+	accountnames := db.Accountnames()
+	for _, name := range accountnames {
 		prefix := strings.Trim(Lcp([]string{name, acc.name}), ":")
 		if name == acc.name || prefix == "" {
 			continue
@@ -116,11 +117,17 @@ func (acc *Account) Apply(db *Datastore, trans *Transaction, p *Posting) error {
 		if db.HasAccount(prefix) == false {
 			consacc := db.GetAccount(prefix)
 			consacc.balance += db.GetAccount(name).balance
-			db.Reportcallback(trans, p, consacc)
+			db.reporter.BubblePosting(db, trans, p, consacc)
+
+			consacc = db.GetAccount(prefix)
+			consacc.balance += p.commodity.amount
+			db.reporter.BubblePosting(db, trans, p, consacc)
+			continue
+		} else if prefix == name {
+			consacc := db.GetAccount(prefix)
+			consacc.balance += p.commodity.amount
+			db.reporter.BubblePosting(db, trans, p, consacc)
 		}
-		consacc := db.GetAccount(prefix)
-		consacc.balance += p.commodity.amount
-		db.Reportcallback(trans, p, consacc)
 	}
 
 	fmsg := "%v balance (from %v <%v>): %v\n"

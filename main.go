@@ -6,6 +6,8 @@ import "flag"
 
 import "github.com/prataprc/golog"
 import "github.com/prataprc/goledger/dblentry"
+import "github.com/prataprc/goledger/reports"
+import "github.com/prataprc/goledger/api"
 
 var options struct {
 	dbname   string
@@ -31,7 +33,7 @@ func argparse() []string {
 		"console log level")
 	f.Parse(os.Args[1:])
 
-	options.journals = Parsecsv(journals)
+	options.journals = api.Parsecsv(journals)
 
 	args := f.Args()
 
@@ -55,9 +57,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	reporter := NewReporter(args)
-	callb := reporter.GetCallback()
-	db := dblentry.NewDatastore(options.dbname, callb)
+	reporter := reports.NewReporter(args)
+	db := dblentry.NewDatastore(options.dbname, reporter)
 
 	journals := getjournals(cwd)
 	journals = append(journals, options.journals...)

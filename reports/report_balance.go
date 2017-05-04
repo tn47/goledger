@@ -1,16 +1,17 @@
-package main
+package reports
 
 import "sort"
 import "fmt"
 import "strings"
 
+import "github.com/prataprc/goledger/api"
 import "github.com/prataprc/goledger/dblentry"
 
 type ReportBalance struct {
-	rcf          *RCformat
-	includeaccns []string
-	balance      map[string][]string
-	finaltally   []string
+	rcf            *RCformat
+	filteraccounts []string
+	balance        map[string][]string
+	finaltally     []string
 }
 
 func NewReportBalance(args []string) *ReportBalance {
@@ -19,17 +20,30 @@ func NewReportBalance(args []string) *ReportBalance {
 		balance: make(map[string][]string),
 	}
 	if len(args) > 1 {
-		report.includeaccns = args[1:]
+		report.filteraccounts = args[1:]
 	}
 	return report
 }
 
-func (report *ReportBalance) GetCallback() func(db *dblentry.Datastore,
-	trans *dblentry.Transaction,
-	p *dblentry.Posting,
-	acc *dblentry.Account) {
+func (report *ReportBalance) Transaction(
+	db api.Datastorer, trans api.Transactor) {
 
-	return report.callback
+	return
+}
+
+func (report *ReportBalance) Posting(
+	db api.Datastorer, trans api.Transactor,
+	p api.Poster, account api.Accounter) {
+
+	report.posting(db, trans, p, account)
+}
+
+func (report *ReportBalance) BubblePosting(
+	db api.Datastorer, trans api.Transactor,
+	p api.Poster, account api.Accounter) {
+
+	report.posting(db, trans, p, account)
+	return
 }
 
 func (report *ReportBalance) Render(args []string) {
@@ -45,25 +59,26 @@ func (report *ReportBalance) Render(args []string) {
 	prevkey := ""
 	for _, key := range keys {
 		cols := report.balance[key]
-		if report.includeaccount(cols[1]) == false {
+		if api.Filterstring(cols[1], report.filteraccounts) == false {
 			continue
 		}
 		prefix := strings.Trim(dblentry.Lcp([]string{prevkey, key}), ":")
 		if prefix != "" {
-			spaces := repeatstr("  ", len(strings.Split(prefix, ":")))
+			spaces := api.Repeatstr("  ", len(strings.Split(prefix, ":")))
 			cols[1] = spaces + cols[1][len(prefix)+1:]
 		}
 		rcf.Addrow(cols...)
 		prevkey = key
 	}
-	rcf.Addrow([]string{"", "", repeatstr("-", rcf.maxwidth(rcf.column(2)))}...)
+	dashes := api.Repeatstr("-", rcf.maxwidth(rcf.column(2)))
+	rcf.Addrow([]string{"", "", dashes}...)
 	rcf.Addrow(report.finaltally...)
 
-	w1 := rcf.maxwidth(rcf.column(0)) // date
-	w2 := rcf.maxwidth(rcf.column(1)) // account name
-	w3 := rcf.maxwidth(rcf.column(2)) // balance (amount)
-	if (w1 + w2 + w3) > 70 {
-		w2 = rcf.FitAccountname(1, 70-w1-w3)
+	w0 := rcf.maxwidth(rcf.column(0)) // Date
+	w1 := rcf.maxwidth(rcf.column(1)) // Account name
+	w2 := rcf.maxwidth(rcf.column(2)) // Balance (amount)
+	if (w0 + w1 + w2) > 70 {
+		w1 = rcf.FitAccountname(1, 70-w0-w2)
 	}
 
 	rcf.Paddcells()
@@ -80,11 +95,9 @@ func (report *ReportBalance) Render(args []string) {
 	fmt.Println()
 }
 
-func (report *ReportBalance) callback(
-	db *dblentry.Datastore,
-	trans *dblentry.Transaction,
-	p *dblentry.Posting,
-	acc *dblentry.Account) {
+func (report *ReportBalance) posting(
+	db api.Datastorer, trans api.Transactor,
+	p api.Poster, acc api.Accounter) {
 
 	row := []string{
 		report.latestdate(acc.Name(), trans.Date().Format("2006/01/02")),
@@ -98,6 +111,7 @@ func (report *ReportBalance) callback(
 		"",
 		fmt.Sprintf("%10.2f", db.Balance()),
 	}
+	return
 }
 
 func (report *ReportBalance) latestdate(accname, date string) string {
@@ -107,14 +121,4 @@ func (report *ReportBalance) latestdate(accname, date string) string {
 		}
 	}
 	return date
-}
-
-func (report *ReportBalance) includeaccount(accountname string) bool {
-	if len(report.includeaccns) == 0 {
-		return true
-	}
-	for _, include := range report.includeaccns {
-		return strings.HasPrefix(accountname, include)
-	}
-	return false
 }

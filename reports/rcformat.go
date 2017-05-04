@@ -1,4 +1,4 @@
-package main
+package reports
 
 import "fmt"
 
@@ -26,6 +26,14 @@ func (rcf *RCformat) Addrow(row ...string) *RCformat {
 func (rcf *RCformat) FitAccountname(index, maxwidth int) int {
 	for i, row := range rcf.rows {
 		row[index] = dblentry.FitAccountname(row[index], maxwidth)
+		rcf.rows[i] = row
+	}
+	return maxwidth
+}
+
+func (rcf *RCformat) FitDescription(index, maxwidth int) int {
+	for i, row := range rcf.rows {
+		row[index] = dblentry.FitDescription(row[index], maxwidth)
 		rcf.rows[i] = row
 	}
 	return maxwidth

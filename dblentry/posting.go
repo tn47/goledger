@@ -5,6 +5,7 @@ import "strings"
 
 import "github.com/prataprc/goparsec"
 import "github.com/prataprc/golog"
+import "github.com/prataprc/goledger/api"
 
 type Posting struct {
 	direction string // "source", target"
@@ -22,8 +23,12 @@ func NewPosting() *Posting {
 
 //---- accessor
 
-func (p *Posting) Commodity() *Commodity {
+func (p *Posting) Commodity() api.Commoditiser {
 	return p.commodity
+}
+
+func (p *Posting) Account() api.Accounter {
+	return p.account
 }
 
 //---- ledger parser
