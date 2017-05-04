@@ -1,6 +1,7 @@
 package dblentry
 
 import "fmt"
+import "strings"
 
 import "github.com/prataprc/goparsec"
 import "github.com/prataprc/golog"
@@ -94,9 +95,25 @@ func (acc *Account) Yledger(db *Datastore) parsec.Parser {
 
 func (acc *Account) Apply(db *Datastore, trans *Transaction, p *Posting) error {
 	acc.balance += p.commodity.amount
+	db.Reportcallback(trans, p, acc)
+
+	// consolidate
+	for _, name := range db.Accountnames() {
+		prefix := strings.Trim(Lcp([]string{name, acc.name}), ":")
+		if name == acc.name || prefix == "" {
+			continue
+		}
+		if db.HasAccount(prefix) == false {
+			consacc := db.GetAccount(prefix)
+			consacc.balance += db.GetAccount(name).balance
+			db.Reportcallback(trans, p, consacc)
+		}
+		consacc := db.GetAccount(prefix)
+		consacc.balance += p.commodity.amount
+		db.Reportcallback(trans, p, consacc)
+	}
+
 	fmsg := "%v balance (from %v <%v>): %v\n"
 	log.Debugf(fmsg, acc.name, trans.desc, p.commodity.amount, acc.balance)
-
-	db.Reportcallback(trans, p, acc)
 	return nil
 }

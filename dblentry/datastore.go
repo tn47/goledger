@@ -53,6 +53,19 @@ func (db *Datastore) GetAccount(name string) *Account {
 	return account
 }
 
+func (db *Datastore) Accountnames() []string {
+	accnames := []string{}
+	for name := range db.accntdb {
+		accnames = append(accnames, name)
+	}
+	return accnames
+}
+
+func (db *Datastore) HasAccount(name string) bool {
+	_, ok := db.accntdb[name]
+	return ok
+}
+
 func (db *Datastore) SubAccounts(parentname string) []*Account {
 	accounts := []*Account{}
 	for name, account := range db.accntdb {
