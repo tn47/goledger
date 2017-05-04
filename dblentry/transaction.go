@@ -23,7 +23,17 @@ func NewTransaction() *Transaction {
 	return trans
 }
 
-//---- Legder text combinators
+//---- accessor
+
+func (trans *Transaction) Description() string {
+	return trans.desc
+}
+
+func (trans *Transaction) Date() time.Time {
+	return trans.date
+}
+
+//---- ledger parser
 
 func (trans *Transaction) Yledger(db *Datastore) parsec.Parser {
 	// DATE
@@ -78,13 +88,7 @@ func (trans *Transaction) Yledgerblock(db *Datastore, block []string) {
 	}
 }
 
-func (trans *Transaction) Description() string {
-	return trans.desc
-}
-
-func (trans *Transaction) Date() time.Time {
-	return trans.date
-}
+//---- engine
 
 func (trans *Transaction) ShouldBalance() bool {
 	for _, posting := range trans.postings {

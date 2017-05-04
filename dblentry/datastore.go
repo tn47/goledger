@@ -42,6 +42,8 @@ func NewDatastore(
 	return db
 }
 
+//---- accessor
+
 func (db *Datastore) GetAccount(name string) *Account {
 	account, ok := db.accntdb[name]
 	if ok == false {
@@ -60,6 +62,8 @@ func (db *Datastore) SubAccounts(parentname string) []*Account {
 	}
 	return accounts
 }
+
+//---- engine
 
 func (db *Datastore) Apply(obj interface{}) error {
 	if trans, ok := obj.(*Transaction); ok {

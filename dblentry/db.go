@@ -72,6 +72,8 @@ endloop:
 	return entries
 }
 
+//---- sort.Interface{}
+
 func (db *DB) Len() int {
 	return len(db.entries)
 }

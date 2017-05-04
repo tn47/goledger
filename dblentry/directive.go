@@ -16,6 +16,8 @@ func NewDirective() *Directive {
 	return &Directive{account: NewAccount("")}
 }
 
+//---- ledger parser
+
 func (d *Directive) Yledger(db *Datastore) parsec.Parser {
 	y := parsec.OrdChoice(
 		Vector2scalar,

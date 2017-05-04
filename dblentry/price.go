@@ -15,6 +15,8 @@ func NewPrice() *Price {
 	return price
 }
 
+//---- ledger parser
+
 func (price *Price) Yledger(db *Datastore) parsec.Parser {
 	commodity := NewCommodity()
 

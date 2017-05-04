@@ -20,6 +20,8 @@ func NewPosting() *Posting {
 	return &Posting{virtual: false, balanced: true}
 }
 
+//---- ledger parser
+
 func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 	account := NewAccount("")
 	commodity := NewCommodity()
@@ -86,6 +88,8 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 	)
 	return y
 }
+
+//---- engine
 
 func (p *Posting) Apply(db *Datastore, trans *Transaction) {
 	p.account.Apply(db, trans, p)

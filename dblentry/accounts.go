@@ -27,6 +27,43 @@ func NewAccount(name string) *Account {
 	return acc
 }
 
+//---- accessors
+
+func (acc *Account) SetOpeningbalance(amount float64) *Account {
+	acc.balance = amount
+	return acc
+}
+
+func (acc *Account) SetDirective(account *Account) *Account {
+	acc.note = account.note
+	acc.check = account.check
+	acc.assert = account.assert
+	acc.eval = account.eval
+	return acc
+}
+
+func (acc *Account) Name() string {
+	return acc.name
+}
+
+func (acc *Account) Balance() float64 {
+	return acc.balance
+}
+
+func (acc *Account) Virtual() bool {
+	return acc.virtual
+}
+
+func (acc *Account) Balanced() bool {
+	return acc.balanced
+}
+
+func (acc *Account) String() string {
+	return fmt.Sprintf("%v", acc.name)
+}
+
+//---- ledger parser
+
 func (acc *Account) Yledger(db *Datastore) parsec.Parser {
 	y := parsec.OrdChoice(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
@@ -53,34 +90,7 @@ func (acc *Account) Yledger(db *Datastore) parsec.Parser {
 	return y
 }
 
-func (acc *Account) Name() string {
-	return acc.name
-}
-
-func (acc *Account) Balance() float64 {
-	return acc.balance
-}
-
-func (acc *Account) SetOpeningbalance(amount float64) *Account {
-	acc.balance = amount
-	return acc
-}
-
-func (acc *Account) SetDirective(account *Account) *Account {
-	acc.note = account.note
-	acc.check = account.check
-	acc.assert = account.assert
-	acc.eval = account.eval
-	return acc
-}
-
-func (acc *Account) Virtual() bool {
-	return acc.virtual
-}
-
-func (acc *Account) Balanced() bool {
-	return acc.balanced
-}
+//---- engine
 
 func (acc *Account) Apply(db *Datastore, trans *Transaction, p *Posting) error {
 	acc.balance += p.commodity.amount
@@ -89,8 +99,4 @@ func (acc *Account) Apply(db *Datastore, trans *Transaction, p *Posting) error {
 
 	db.Reportcallback(trans, p, acc)
 	return nil
-}
-
-func (acc *Account) String() string {
-	return fmt.Sprintf("%v", acc.name)
 }
