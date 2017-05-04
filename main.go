@@ -55,8 +55,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	report := NewReport(args)
-	db := dblentry.NewDatastore(options.dbname, report.callback)
+	reporter := NewReporter(args)
+	callb := reporter.GetCallback()
+	db := dblentry.NewDatastore(options.dbname, callb)
 
 	journals := getjournals(cwd)
 	journals = append(journals, options.journals...)
@@ -66,5 +67,5 @@ func main() {
 			os.Exit(1)
 		}
 	}
-	report.Render(args)
+	reporter.Render(args)
 }

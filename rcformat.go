@@ -12,7 +12,7 @@ type RCformat struct {
 	width      int
 	htxtalign  string
 	ctxtalign  []string
-	marginleft int
+	marginleft string
 	padding    string
 }
 
@@ -31,7 +31,7 @@ func (rcf *RCformat) readsettings(heads []string, setts s.Settings) *RCformat {
 	rcf.width = int(setts.Int64("width"))
 	rcf.htxtalign = setts.String("htxtalign")
 	rcf.ctxtalign = setts.Strings("ctxtalign")
-	rcf.marginleft = int(setts.Int64("marginleft"))
+	rcf.marginleft = setts.String("marginleft")
 	return rcf
 }
 
@@ -65,13 +65,9 @@ func (rcf *RCformat) RenderBalance() {
 	maxwidths := []int{14, 40, 14}
 	rcf.FitWidth(maxwidths)
 
-	marginleft := ""
-	for i := 0; i < rcf.marginleft; i++ {
-		marginleft += " "
-	}
 	for _, cols := range rcf.rows {
 		line := strings.Join(cols, "")
-		fmt.Printf("%v%v\n", marginleft, line)
+		fmt.Printf("%v%v\n", rcf.marginleft, line)
 	}
 }
 
@@ -79,7 +75,7 @@ func defaultRCsetts(heads ...string) s.Settings {
 	setts := s.Settings{
 		"width":      80,
 		"htxtalign":  "left",
-		"marginleft": 4,
+		"marginleft": "    ",
 	}
 	ctxtalign := make([]string, len(heads))
 	for i := 0; i < len(heads); i++ {
