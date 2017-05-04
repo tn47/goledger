@@ -72,6 +72,12 @@ func (report *ReportRegister) BubblePosting(
 func (report *ReportRegister) Render(args []string) {
 	rcf := report.rcf
 
+	cols := []string{
+		" By-date ", " Description ", " Account ", " Amount ", " Balance ",
+	}
+	rcf.Addrow(cols...)
+	rcf.Addrow([]string{"", "", "", "", ""}...)
+
 	for _, cols := range report.register {
 		report.rcf.Addrow(cols...)
 	}
@@ -92,11 +98,6 @@ func (report *ReportRegister) Render(args []string) {
 	fmsg := rcf.Fmsg(" %%-%vs%%-%vs%%-%vs%%%vs%%%vs\n")
 
 	// start printing
-	fmt.Println()
-	cols := []string{
-		" By-date ", " Description ", " Account ", " Amount ", " Balance ",
-	}
-	fmt.Printf(fmsg, cols[0], cols[1], cols[2], cols[3], cols[4])
 	fmt.Println()
 	for _, cols := range report.rcf.rows {
 		fmt.Printf(fmsg, cols[0], cols[1], cols[2], cols[3], cols[4])

@@ -56,6 +56,9 @@ func (report *ReportBalance) Render(args []string) {
 	}
 	sort.Strings(keys)
 
+	rcf.Addrow([]string{"By-date", "Account", "Balance"}...)
+	rcf.Addrow([]string{"", "", ""}...) // empty line
+
 	prevkey := ""
 	for _, key := range keys {
 		cols := report.balance[key]
@@ -85,9 +88,6 @@ func (report *ReportBalance) Render(args []string) {
 	fmsg := rcf.Fmsg(" %%-%vs%%-%vs%%%vs\n")
 
 	// start printing
-	fmt.Println()
-	cols := []string{" By-date ", " Account ", " Balance "}
-	fmt.Printf(fmsg, cols[0], cols[1], cols[2])
 	fmt.Println()
 	for _, cols := range rcf.rows {
 		fmt.Printf(fmsg, cols[0], cols[1], cols[2])
