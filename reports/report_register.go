@@ -20,7 +20,7 @@ func NewReportRegister(args []string) *ReportRegister {
 	}
 	for i, arg := range args[1:] {
 		if arg == "@" || arg == "payee" {
-			report.filterpayees = append(report.filterpayees, args[i+1:]...)
+			report.filterpayees = append(report.filterpayees, args[i+1+1:]...)
 			break
 		}
 		report.filteraccounts = append(report.filteraccounts, arg)
@@ -33,7 +33,7 @@ func (report *ReportRegister) Transaction(
 
 	date, desc := trans.Date().Format("2006-01-02"), trans.Description()
 	for _, p := range trans.GetPostings() {
-		accname, payee := p.Account().Name(), desc
+		accname, payee := p.Account().Name(), trans.Description()
 		if report.dofilter() {
 			if api.Filterstring(accname, report.filteraccounts) == false {
 				continue
