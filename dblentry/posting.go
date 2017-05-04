@@ -60,6 +60,8 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 
 	y := parsec.OrdChoice(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			var prefix string
+
 			node := nodes[0]
 			switch items := node.(type) {
 			case []parsec.ParsecNode:
@@ -73,7 +75,17 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 				p.balanced = account.Balanced()
 				accname := db.Applyroot(db.LookupAlias(account.name))
 				if p.commodity != nil && p.commodity.name == "" {
-					accname, p.commodity.name = getamountprefix(accname)
+					accname, prefix = getamountprefix(accname)
+					if prefix == "-" {
+						commodity.amount = -commodity.amount
+					} else {
+						scanner := parsec.NewScanner([]byte(prefix))
+						node, _ := ytok_currency(scanner)
+						if t, ok := node.(*parsec.Terminal); ok {
+							commodity.name = string(t.Value)
+							commodity.currency = true
+						}
+					}
 				}
 				accname = strings.TrimRight(accname, " \t")
 				p.account = db.GetAccount(accname)

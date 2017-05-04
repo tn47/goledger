@@ -53,6 +53,7 @@ func (comm *Commodity) Yledger(db *Datastore) parsec.Parser {
 				switch t.Name {
 				case "CURRENCY":
 					comm.name, comm.currency = string(t.Value), true
+
 				case "AMOUNT":
 					comm.mark1k = strings.Contains(string(t.Value), ",")
 					amount := strings.Replace(string(t.Value), ",", "", -1)
@@ -63,6 +64,7 @@ func (comm *Commodity) Yledger(db *Datastore) parsec.Parser {
 					}
 
 				case "COMMODITY":
+					fmt.Println("commodity", string(t.Value))
 					comm.name, comm.currency = string(t.Value), false
 				}
 			}
