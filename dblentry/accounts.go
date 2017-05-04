@@ -103,6 +103,7 @@ func (acc *Account) Yledger(db *Datastore) parsec.Parser {
 //---- engine
 
 func (acc *Account) Apply(db *Datastore, trans *Transaction, p *Posting) error {
+	db.balance += p.commodity.amount
 	acc.balance += p.commodity.amount
 	db.Reportcallback(trans, p, acc)
 
@@ -125,4 +126,25 @@ func (acc *Account) Apply(db *Datastore, trans *Transaction, p *Posting) error {
 	fmsg := "%v balance (from %v <%v>): %v\n"
 	log.Debugf(fmsg, acc.name, trans.desc, p.commodity.amount, acc.balance)
 	return nil
+}
+
+func FitAccountname(name string, maxwidth int) string {
+	if len(name) < maxwidth {
+		return name
+	}
+	scraplen := maxwidth - len(name)
+	names := []string{}
+	for _, name := range strings.Split(name, ":") {
+		if scraplen <= 0 {
+			names = append(names, name)
+		}
+		if len(name[3:]) < scraplen {
+			names = append(names, name[:3])
+			scraplen -= len(name[3:])
+			continue
+		}
+		names = append(names, name[:len(name)-scraplen])
+		scraplen = 0
+	}
+	return strings.Join(names, ":")
 }

@@ -20,6 +20,12 @@ func NewPosting() *Posting {
 	return &Posting{virtual: false, balanced: true}
 }
 
+//---- accessor
+
+func (p *Posting) Commodity() *Commodity {
+	return p.commodity
+}
+
 //---- ledger parser
 
 func (p *Posting) Yledger(db *Datastore) parsec.Parser {

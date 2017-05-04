@@ -12,6 +12,7 @@ type Datastore struct {
 	transdb     *DB
 	pricedb     *DB
 	accntdb     map[string]*Account // full account-name -> account
+	balance     float64
 	// directive fields
 	year         int               // year
 	month        int               // month
@@ -64,6 +65,10 @@ func (db *Datastore) Accountnames() []string {
 func (db *Datastore) HasAccount(name string) bool {
 	_, ok := db.accntdb[name]
 	return ok
+}
+
+func (db *Datastore) Balance() float64 {
+	return db.balance
 }
 
 func (db *Datastore) SubAccounts(parentname string) []*Account {

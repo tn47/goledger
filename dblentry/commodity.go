@@ -20,6 +20,10 @@ func NewCommodity() *Commodity {
 
 //---- accessors
 
+func (comm *Commodity) Amount() float64 {
+	return comm.amount
+}
+
 func (comm *Commodity) String() string {
 	if comm.currency {
 		return fmt.Sprintf("%v %v", comm.name, comm.amount)
