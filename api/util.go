@@ -45,28 +45,14 @@ func Filterstring(strpatt string, strs []string) bool {
 		return true
 	}
 	for _, item := range strs {
-		if item[0] == '^' { // exclude pattern
-			if strings.HasPrefix(strpatt, item[1:]) {
-				return false
-			}
-			if ok, err := regexp.Match(item[1:], []byte(strpatt)); err != nil {
-				panic(err)
-			} else if ok {
-				return false
-			}
+		if strings.HasPrefix(strpatt, item) {
 			return true
-
-		} else { // include pattern
-			if strings.HasPrefix(strpatt, item) {
-				return true
-			}
-			if ok, err := regexp.Match(item, []byte(strpatt)); err != nil {
-				panic(err)
-			} else if ok {
-				return true
-			}
-			return false
+		}
+		if ok, err := regexp.Match(item, []byte(strpatt)); err != nil {
+			panic(err)
+		} else if ok {
+			return true
 		}
 	}
-	panic("unreachable code")
+	return false
 }

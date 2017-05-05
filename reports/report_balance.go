@@ -73,9 +73,11 @@ func (report *ReportBalance) Render(args []string) {
 		rcf.Addrow(cols...)
 		prevkey = key
 	}
-	dashes := api.Repeatstr("-", rcf.maxwidth(rcf.column(2)))
-	rcf.Addrow([]string{"", "", dashes}...)
-	rcf.Addrow(report.finaltally...)
+	if report.isfiltered() == false {
+		dashes := api.Repeatstr("-", rcf.maxwidth(rcf.column(2)))
+		rcf.Addrow([]string{"", "", dashes}...)
+		rcf.Addrow(report.finaltally...)
+	}
 
 	w0 := rcf.maxwidth(rcf.column(0)) // Date
 	w1 := rcf.maxwidth(rcf.column(1)) // Account name
@@ -121,4 +123,8 @@ func (report *ReportBalance) latestdate(accname, date string) string {
 		}
 	}
 	return date
+}
+
+func (report *ReportBalance) isfiltered() bool {
+	return len(report.filteraccounts) > 0
 }

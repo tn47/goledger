@@ -34,7 +34,7 @@ func (report *ReportRegister) Transaction(
 	date, desc := trans.Date().Format("2006-01-02"), trans.Description()
 	for _, p := range trans.GetPostings() {
 		accname, payee := p.Account().Name(), trans.Description()
-		if report.dofilter() {
+		if report.isfiltered() {
 			if api.Filterstring(accname, report.filteraccounts) == false {
 				continue
 			}
@@ -103,6 +103,6 @@ func (report *ReportRegister) Render(args []string) {
 	fmt.Println()
 }
 
-func (report *ReportRegister) dofilter() bool {
+func (report *ReportRegister) isfiltered() bool {
 	return (len(report.filteraccounts) + len(report.filterpayees)) > 0
 }
