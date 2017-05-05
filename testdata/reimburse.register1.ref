@@ -1,0 +1,12 @@
+
+  By-date     Descriptio  Account                                Amount  Balance 
+                                                                                 
+  2004-09-29  Circu City  Assets:Reimbursements:MyCompany        100.00   100.00 
+                          Liabilities:MasterCard                -100.00  -100.00 
+  2004-09-29  MyCompany   Assets:Checking                        100.00   100.00 
+                          Assets:Reimbursements:MyCompany       -100.00     0.00 
+  2004-09-29  Circu City  MyCompany:Expenses:Computer:Software   100.00   100.00 
+                          MyCompany:Liabilities:Payable:Myname  -100.00  -100.00 
+  2004-10-15  MyCompany   MyCompany:Liabilities:Payable:Myname   100.00     0.00 
+                          MyCompany:Assets:Checking             -100.00  -100.00 
+
