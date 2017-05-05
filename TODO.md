@@ -6,3 +6,4 @@
   http://ledger-cli.org/3.0/doc/ledger3.html#Cleared-Report
 - implement -M (monthly consolidation)
   http://ledger-cli.org/3.0/doc/ledger3.html#Assets-and-Liabilities
+- support multiple commodities in the same account.

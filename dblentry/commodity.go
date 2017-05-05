@@ -12,23 +12,40 @@ type Commodity struct {
 	currency  bool
 	precision int
 	mark1k    bool
+	equival   map[string]float64
 }
 
-func NewCommodity() *Commodity {
-	return &Commodity{}
+func NewCommodity(name string) *Commodity {
+	return &Commodity{name: name}
+}
+
+func (comm *Commodity) Similar(amount float64) *Commodity {
+	newcomm := &Commodity{
+		name:      comm.name,
+		amount:    amount,
+		currency:  comm.currency,
+		precision: comm.precision,
+		mark1k:    comm.mark1k,
+	}
+	return newcomm
+}
+
+func (comm *Commodity) String() string {
+	amountstr := fmt.Sprintf("%v", comm.amount)
+	if comm.precision > 0 {
+		fmsg := fmt.Sprintf("%%.%vf", comm.precision)
+		amountstr = fmt.Sprintf(fmsg, comm.amount)
+	}
+	if comm.currency {
+		return fmt.Sprintf("%v%v", comm.name, amountstr)
+	}
+	return fmt.Sprintf("%v %v", amountstr, comm.name)
 }
 
 //---- accessors
 
 func (comm *Commodity) Amount() float64 {
 	return comm.amount
-}
-
-func (comm *Commodity) String() string {
-	if comm.currency {
-		return fmt.Sprintf("%v %v", comm.name, comm.amount)
-	}
-	return fmt.Sprintf("Commodity<%v %q>", comm.amount, comm.name)
 }
 
 //---- ledger parser
@@ -68,7 +85,8 @@ func (comm *Commodity) Yledger(db *Datastore) parsec.Parser {
 					comm.name, comm.currency = string(t.Value), false
 				}
 			}
-			return comm
+			newcomm := db.GetCommodity(comm.name, comm).Similar(comm.amount)
+			return newcomm
 		},
 		parsec.Maybe(maybenode, ytok_currency),
 		ytok_amount,
@@ -78,13 +96,6 @@ func (comm *Commodity) Yledger(db *Datastore) parsec.Parser {
 }
 
 //---- engine
-
-func (comm *Commodity) Balance(tmpl *Commodity, amount float64) *Commodity {
-	comm.name, comm.currency = tmpl.name, tmpl.currency
-	comm.precision, comm.mark1k = tmpl.precision, tmpl.mark1k
-	comm.amount = amount
-	return comm
-}
 
 func (comm *Commodity) Firstpass(
 	db *Datastore, trans *Transaction, p *Posting) error {

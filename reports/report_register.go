@@ -29,7 +29,7 @@ func NewReportRegister(args []string) *ReportRegister {
 }
 
 func (report *ReportRegister) Transaction(
-	db api.Datastorer, trans api.Transactor) {
+	db api.Datastorer, trans api.Transactor) error {
 
 	date, desc := trans.Date().Format("2006-01-02"), trans.Description()
 	for _, p := range trans.GetPostings() {
@@ -46,27 +46,27 @@ func (report *ReportRegister) Transaction(
 			date,
 			desc,
 			fmt.Sprintf("%s", accname),
-			fmt.Sprintf("%.2f", p.Commodity().Amount()),
-			fmt.Sprintf("%.2f", p.Account().Balance()),
+			fmt.Sprintf("%v", p.Commodity()),
+			fmt.Sprintf("%s", BalanceRepr(p.Account().Balances())),
 		}
 		report.register = append(report.register, row)
 		date, desc = "", ""
 	}
-	return
+	return nil
 }
 
 func (report *ReportRegister) Posting(
 	db api.Datastorer, trans api.Transactor,
-	p api.Poster, account api.Accounter) {
+	p api.Poster, account api.Accounter) error {
 
-	return
+	return nil
 }
 
 func (report *ReportRegister) BubblePosting(
 	db api.Datastorer, trans api.Transactor,
-	p api.Poster, account api.Accounter) {
+	p api.Poster, account api.Accounter) error {
 
-	return
+	return nil
 }
 
 func (report *ReportRegister) Render(args []string) {

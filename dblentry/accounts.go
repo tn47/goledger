@@ -1,10 +1,11 @@
 package dblentry
 
 import "fmt"
+import "sort"
 import "strings"
 
 import "github.com/prataprc/goparsec"
-import "github.com/prataprc/golog"
+import "github.com/prataprc/goledger/api"
 
 var inclusives = []string{
 	"asset", "liability", "capital", "equity", "income", "expense",
@@ -14,7 +15,7 @@ type Account struct {
 	name     string
 	virtual  bool
 	balanced bool
-	balance  float64
+	balance  map[string]*Commodity
 	// from account directive
 	note      string
 	aliasname string
@@ -26,14 +27,17 @@ type Account struct {
 }
 
 func NewAccount(name string) *Account {
-	acc := &Account{name: name}
+	acc := &Account{
+		name:    name,
+		balance: make(map[string]*Commodity),
+	}
 	return acc
 }
 
 //---- accessors
 
-func (acc *Account) SetOpeningbalance(amount float64) *Account {
-	acc.balance = amount
+func (acc *Account) SetOpeningbalance(commodity *Commodity) *Account {
+	acc.balance[commodity.name] = commodity.Similar(commodity.amount)
 	return acc
 }
 
@@ -49,8 +53,27 @@ func (acc *Account) Name() string {
 	return acc.name
 }
 
-func (acc *Account) Balance() float64 {
-	return acc.balance
+func (acc *Account) Balance(obj interface{}) (balance api.Commoditiser) {
+	switch v := obj.(type) {
+	case *Commodity:
+		balance, _ = acc.balance[v.name]
+	case string:
+		balance, _ = acc.balance[v]
+	}
+	return balance
+}
+
+func (acc *Account) Balances() []api.Commoditiser {
+	keys := []string{}
+	for name := range acc.balance {
+		keys = append(keys, name)
+	}
+	sort.Strings(keys)
+	comms := []api.Commoditiser{}
+	for _, key := range keys {
+		comms = append(comms, acc.balance[key])
+	}
+	return comms
 }
 
 func (acc *Account) Virtual() bool {
@@ -103,7 +126,8 @@ func (acc *Account) Yledger(db *Datastore) parsec.Parser {
 }
 
 //---- engine
-func (acc *Account) Total(db *Datastore, trans *Transaction, p *Posting) {
+
+func (acc *Account) Total(db *Datastore, trans *Transaction, p *Posting) error {
 	accountnames := db.Accountnames()
 	for _, name := range accountnames {
 		prefix := strings.Trim(Lcp([]string{name, acc.name}), ":")
@@ -112,19 +136,31 @@ func (acc *Account) Total(db *Datastore, trans *Transaction, p *Posting) {
 		}
 		if db.HasAccount(prefix) == false {
 			consacc := db.GetAccount(prefix)
-			consacc.balance += db.GetAccount(name).balance
-			db.reporter.BubblePosting(db, trans, p, consacc)
+			for _, bc := range db.GetAccount(name).balance {
+				consacc.AddBalance(bc)
+			}
+			err := db.reporter.BubblePosting(db, trans, p, consacc)
+			if err != nil {
+				return err
+			}
 
 			consacc = db.GetAccount(prefix)
-			consacc.balance += p.commodity.amount
-			db.reporter.BubblePosting(db, trans, p, consacc)
+			consacc.AddBalance(p.commodity)
+			err = db.reporter.BubblePosting(db, trans, p, consacc)
+			if err != nil {
+				return err
+			}
 
 		} else if prefix == name {
 			consacc := db.GetAccount(prefix)
-			consacc.balance += p.commodity.amount
-			db.reporter.BubblePosting(db, trans, p, consacc)
+			consacc.AddBalance(p.commodity)
+			err := db.reporter.BubblePosting(db, trans, p, consacc)
+			if err != nil {
+				return err
+			}
 		}
 	}
+	return nil
 }
 
 func (acc *Account) Firstpass(
@@ -136,15 +172,34 @@ func (acc *Account) Firstpass(
 func (acc *Account) Secondpass(
 	db *Datastore, trans *Transaction, p *Posting) error {
 
-	db.balance += p.commodity.amount
-	acc.balance += p.commodity.amount
-	db.reporter.Posting(db, trans, p, acc)
+	db.AddBalance(p.commodity)
+	acc.AddBalance(p.commodity)
+	if err := db.reporter.Posting(db, trans, p, acc); err != nil {
+		return err
+	}
 
-	acc.Total(db, trans, p)
-
-	fmsg := "%v balance (from %v <%v>): %v\n"
-	log.Debugf(fmsg, acc.name, trans.desc, p.commodity.amount, acc.balance)
+	if err := acc.Total(db, trans, p); err != nil {
+		return err
+	}
 	return nil
+}
+
+func (acc *Account) AddBalance(commodity *Commodity) {
+	if balance, ok := acc.balance[commodity.name]; ok {
+		balance.amount += commodity.amount
+		acc.balance[commodity.name] = balance
+		return
+	}
+	acc.balance[commodity.name] = commodity.Similar(commodity.amount)
+}
+
+func (acc *Account) DeductBalance(commodity *Commodity) {
+	if balance, ok := acc.balance[commodity.name]; ok {
+		balance.amount -= commodity.amount
+		acc.balance[commodity.name] = balance
+		return
+	}
+	acc.balance[commodity.name] = commodity.Similar(commodity.amount)
 }
 
 func FitAccountname(name string, maxwidth int) string {

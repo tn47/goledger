@@ -26,24 +26,23 @@ func NewReportBalance(args []string) *ReportBalance {
 }
 
 func (report *ReportBalance) Transaction(
-	db api.Datastorer, trans api.Transactor) {
+	db api.Datastorer, trans api.Transactor) error {
 
-	return
+	return nil
 }
 
 func (report *ReportBalance) Posting(
 	db api.Datastorer, trans api.Transactor,
-	p api.Poster, account api.Accounter) {
+	p api.Poster, account api.Accounter) error {
 
-	report.posting(db, trans, p, account)
+	return report.posting(db, trans, p, account)
 }
 
 func (report *ReportBalance) BubblePosting(
 	db api.Datastorer, trans api.Transactor,
-	p api.Poster, account api.Accounter) {
+	p api.Poster, account api.Accounter) error {
 
-	report.posting(db, trans, p, account)
-	return
+	return report.posting(db, trans, p, account)
 }
 
 func (report *ReportBalance) Render(args []string) {
@@ -99,21 +98,21 @@ func (report *ReportBalance) Render(args []string) {
 
 func (report *ReportBalance) posting(
 	db api.Datastorer, trans api.Transactor,
-	p api.Poster, acc api.Accounter) {
+	p api.Poster, acc api.Accounter) error {
 
 	row := []string{
-		report.latestdate(acc.Name(), trans.Date().Format("2006/01/02")),
+		report.latestdate(acc.Name(), trans.Date().Format("2006/Jan/02")),
 		fmt.Sprintf("%s", acc.Name()),
-		fmt.Sprintf("%10.2f", acc.Balance()),
+		fmt.Sprintf("%s", BalanceRepr(acc.Balances())),
 	}
 
 	report.balance[acc.Name()] = row
 	report.finaltally = []string{
-		report.latestdate("_fulltally_", trans.Date().Format("2006/01/02")),
+		report.latestdate("_fulltally_", trans.Date().Format("2006/Jan/02")),
 		"",
-		fmt.Sprintf("%10.2f", db.Balance()),
+		fmt.Sprintf("%s", BalanceRepr(db.Balances())),
 	}
-	return
+	return nil
 }
 
 func (report *ReportBalance) latestdate(accname, date string) string {

@@ -111,11 +111,12 @@ func (trans *Transaction) ShouldBalance() bool {
 	return true
 }
 
-func (trans *Transaction) Defaultposting(defacc *Account, p *Posting) *Posting {
+func (trans *Transaction) Defaultposting(
+	db *Datastore, defacc *Account, amount float64) *Posting {
+
 	posting := NewPosting()
 	posting.account = defacc
-	posting.commodity = NewCommodity()
-	posting.commodity.Balance(p.commodity, -p.commodity.amount)
+	posting.commodity = db.GetCommodity("", nil).Similar(amount)
 	return posting
 }
 
@@ -132,12 +133,15 @@ func (trans *Transaction) Endposting(postings []*Posting) (*Posting, error) {
 	return tallywith, nil
 }
 
-func (trans *Transaction) Autobalance1(defaccount *Account) (bool, error) {
+func (trans *Transaction) Autobalance1(
+	db *Datastore, defaccount *Account) (bool, error) {
+
 	if len(trans.postings) == 0 {
 		return false, fmt.Errorf("empty transaction")
 
 	} else if len(trans.postings) == 1 && defaccount != nil {
-		posting := trans.Defaultposting(defaccount, trans.postings[0])
+		amount := trans.postings[0].commodity.amount
+		posting := trans.Defaultposting(db, defaccount, -amount)
 		trans.postings = append(trans.postings, posting)
 		return true, nil
 
@@ -150,6 +154,7 @@ func (trans *Transaction) Autobalance1(defaccount *Account) (bool, error) {
 		return false, err
 	}
 
+	// TODO: validate for multiple commodities.
 	credits, debits := trans.Credits(), trans.Debits()
 	balanceamount := -(credits + debits)
 	if balanceamount == 0 {
@@ -157,8 +162,7 @@ func (trans *Transaction) Autobalance1(defaccount *Account) (bool, error) {
 	} else if tallypost == nil {
 		return false, fmt.Errorf("unbalanced transaction")
 	}
-	tallypost.commodity = NewCommodity()
-	tallypost.commodity.Balance(trans.postings[0].commodity, balanceamount)
+	tallypost.commodity = db.GetCommodity("", nil).Similar(balanceamount)
 	return true, nil
 }
 
@@ -197,8 +201,7 @@ func (trans *Transaction) Secondpass(db *Datastore) error {
 			return err
 		}
 	}
-	db.reporter.Transaction(db, trans)
-	return nil
+	return db.reporter.Transaction(db, trans)
 }
 
 func FitDescription(desc string, maxwidth int) string {

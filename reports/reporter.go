@@ -33,18 +33,20 @@ func NewReporter(args []string) (reporter api.Reporter) {
 }
 
 func (reports *Reports) Transaction(
-	db api.Datastorer, trans api.Transactor) {
+	db api.Datastorer, trans api.Transactor) error {
 
 	reports.n_transactions += 1
 	for _, reporter := range reports.reporters {
-		reporter.Transaction(db, trans)
+		if err := reporter.Transaction(db, trans); err != nil {
+			return err
+		}
 	}
-	return
+	return nil
 }
 
 func (reports *Reports) Posting(
 	db api.Datastorer, trans api.Transactor,
-	p api.Poster, account api.Accounter) {
+	p api.Poster, account api.Accounter) error {
 
 	n, ok := reports.accounts[account.Name()]
 	if ok {
@@ -57,19 +59,23 @@ func (reports *Reports) Posting(
 	reports.n_postings += 1
 
 	for _, reporter := range reports.reporters {
-		reporter.Posting(db, trans, p, account)
+		if err := reporter.Posting(db, trans, p, account); err != nil {
+			return err
+		}
 	}
-	return
+	return nil
 }
 
 func (reports *Reports) BubblePosting(
 	db api.Datastorer, trans api.Transactor,
-	p api.Poster, account api.Accounter) {
+	p api.Poster, account api.Accounter) error {
 
 	for _, reporter := range reports.reporters {
-		reporter.BubblePosting(db, trans, p, account)
+		if err := reporter.BubblePosting(db, trans, p, account); err != nil {
+			return err
+		}
 	}
-	return
+	return nil
 }
 
 func (reports *Reports) Render(args []string) {
@@ -92,4 +98,13 @@ func (reports *Reports) Render(args []string) {
 
 func (reports *Reports) String() string {
 	return fmt.Sprintf("Reports")
+}
+
+func BalanceRepr(balances []api.Commoditiser) string {
+	if len(balances) == 0 {
+		return "<multi-comm>"
+	} else if len(balances) > 1 {
+		return "multi-comm>"
+	}
+	return balances[0].String()
 }

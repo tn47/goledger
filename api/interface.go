@@ -3,7 +3,9 @@ package api
 import "time"
 
 type Datastorer interface {
-	Balance() float64
+	Balance(obj interface{}) Commoditiser
+
+	Balances() []Commoditiser
 }
 
 type Transactor interface {
@@ -22,20 +24,24 @@ type Poster interface {
 
 type Commoditiser interface {
 	Amount() float64
+
+	String() string
 }
 
 type Accounter interface {
 	Name() string
 
-	Balance() float64
+	Balance(obj interface{}) Commoditiser
+
+	Balances() []Commoditiser
 }
 
 type Reporter interface {
-	Transaction(Datastorer, Transactor)
+	Transaction(Datastorer, Transactor) error
 
-	Posting(Datastorer, Transactor, Poster, Accounter)
+	Posting(Datastorer, Transactor, Poster, Accounter) error
 
-	BubblePosting(Datastorer, Transactor, Poster, Accounter)
+	BubblePosting(Datastorer, Transactor, Poster, Accounter) error
 
 	Render(args []string)
 }

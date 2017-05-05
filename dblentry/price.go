@@ -18,21 +18,21 @@ func NewPrice() *Price {
 //---- ledger parser
 
 func (price *Price) Yledger(db *Datastore) parsec.Parser {
-	commodity := NewCommodity()
+	comm := NewCommodity("")
 
 	y := parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			price.when = nodes[1].(time.Time)
-			price.this = NewCommodity()
-			price.this.name = string(nodes[2].(*parsec.Terminal).Value)
-			price.this.amount = 1
-			price.other = nodes[3].(*Commodity)
+			//price.this = NewCommodity("")
+			//price.this.name = string(nodes[2].(*parsec.Terminal).Value)
+			//price.this.amount = 1
+			//price.other = nodes[3].(*Commodity)
 			return price
 		},
 		ytok_price, // P
 		Ydate(db.Year(), db.Month(), db.Dateformat()), // DATE
 		ytok_commodity,                                // SYMBOL
-		commodity.Yledger(db),
+		comm.Yledger(db),
 	)
 	return y
 }

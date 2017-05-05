@@ -35,15 +35,15 @@ func (p *Posting) Account() api.Accounter {
 
 func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 	account := NewAccount("")
-	commodity := NewCommodity()
+	comm := NewCommodity("")
 	yposting := parsec.And(
 		nil,
 		account.Yledger(db),
-		parsec.Maybe(maybenode, commodity.Yledger(db)),
+		parsec.Maybe(maybenode, comm.Yledger(db)),
 		parsec.Maybe(maybenode, ytok_postnote),
 	)
 
-	// hack to fix an issue with regexp
+	// hack to fix an issue with regexp issue #1
 	getamountprefix := func(name string) (string, string) {
 		lastbyte := name[len(name)-1]
 		if lastbyte == ' ' || lastbyte == '\t' {
@@ -66,15 +66,14 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 			switch items := node.(type) {
 			case []parsec.ParsecNode:
 				// first commodity
-				if commodity, ok := items[1].(*Commodity); ok {
-					p.commodity = commodity
-				}
+				commodity, _ := items[1].(*Commodity)
 				// back to account name
 				account := items[0].(*Account)
 				p.virtual = account.Virtual()
 				p.balanced = account.Balanced()
 				accname := db.Applyroot(db.LookupAlias(account.name))
-				if p.commodity != nil && p.commodity.name == "" {
+				// hack to fix issue with regexp issue #1
+				if commodity != nil && commodity.name == "" {
 					accname, prefix = getamountprefix(accname)
 					if prefix == "-" {
 						commodity.amount = -commodity.amount
@@ -86,6 +85,11 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 							commodity.currency = true
 						}
 					}
+				}
+				// setup commodity profiles
+				if commodity != nil {
+					p.commodity = db.GetCommodity(
+						commodity.name, commodity).Similar(commodity.amount)
 				}
 				accname = strings.TrimRight(accname, " \t")
 				p.account = db.GetAccount(accname)
