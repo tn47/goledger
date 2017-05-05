@@ -4,46 +4,92 @@ import "fmt"
 
 import "github.com/prataprc/goledger/api"
 
+type Reports struct {
+	reporters []api.Reporter
+	accounts  map[string]int64
+
+	// stats
+	n_transactions int64
+	n_postings     int64
+}
+
 func NewReporter(args []string) (reporter api.Reporter) {
-	if len(args[0]) == 0 {
-		return &DummyReporter{}
+	reports := &Reports{
+		reporters: make([]api.Reporter, 0),
+		accounts:  make(map[string]int64),
+	}
+
+	if len(args) == 0 {
+		return reports
 	}
 
 	switch args[0] {
 	case "balance":
-		reporter = NewReportBalance(args)
+		reports.reporters = append(reports.reporters, NewReportBalance(args))
 	case "register":
-		reporter = NewReportRegister(args)
+		reports.reporters = append(reports.reporters, NewReportRegister(args))
 	}
-	return reporter
+	return reports
 }
 
-type DummyReporter struct{}
-
-func (report *DummyReporter) Transaction(
+func (reports *Reports) Transaction(
 	db api.Datastorer, trans api.Transactor) {
 
+	reports.n_transactions += 1
+	for _, reporter := range reports.reporters {
+		reporter.Transaction(db, trans)
+	}
 	return
 }
 
-func (report *DummyReporter) Posting(
+func (reports *Reports) Posting(
 	db api.Datastorer, trans api.Transactor,
 	p api.Poster, account api.Accounter) {
 
+	n, ok := reports.accounts[account.Name()]
+	if ok {
+		n += 1
+	} else {
+		n = 0
+	}
+	reports.accounts[account.Name()] = n
+
+	reports.n_postings += 1
+
+	for _, reporter := range reports.reporters {
+		reporter.Posting(db, trans, p, account)
+	}
 	return
 }
 
-func (report *DummyReporter) BubblePosting(
+func (reports *Reports) BubblePosting(
 	db api.Datastorer, trans api.Transactor,
 	p api.Poster, account api.Accounter) {
 
+	for _, reporter := range reports.reporters {
+		reporter.BubblePosting(db, trans, p, account)
+	}
 	return
 }
 
-func (report *DummyReporter) Render(args []string) {
-	return
+func (reports *Reports) Render(args []string) {
+	if len(args) == 0 {
+		fmt.Printf("  No. of transactions: %5v\n", reports.n_transactions)
+		fmt.Printf("  No. of postings:     %5v\n", reports.n_postings)
+		fmt.Printf("  No. of accounts:	%5v\n", len(reports.accounts))
+		fmt.Println()
+		fmt.Printf("  Accountwise postings\n")
+		fmt.Printf("  --------------------\n")
+		for name, count := range reports.accounts {
+			fmt.Printf("  %15v %5v\n", name, count)
+		}
+	}
+
+	for _, reporter := range reports.reporters {
+		reporter.Render(args)
+	}
 }
 
-func (report *DummyReporter) String() string {
-	return fmt.Sprintf("DummyReporter")
+func (reports *Reports) String() string {
+	return fmt.Sprintf("Reports")
 }

@@ -68,5 +68,8 @@ func main() {
 			os.Exit(1)
 		}
 	}
+	if secondpass(db) == false {
+		os.Exit(2)
+	}
 	reporter.Render(args)
 }
