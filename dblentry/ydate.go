@@ -41,6 +41,7 @@ func Ydate(year, month int, format string) parsec.Parser {
 }
 
 func Ymdy(format string) parsec.Parser {
+	var ok bool
 	pattern := "([^%]*)?(%[mdyY])"
 	regc, err := regexp.Compile(pattern)
 	if err != nil {
@@ -61,7 +62,10 @@ func Ymdy(format string) parsec.Parser {
 			parsers = append(parsers, parsec.Token(`[0-9]{2}`, "YEAR"))
 			//fmt.Printf("ydmy: yEAR\n")
 		case "%m":
-			parsers = append(parsers, parsec.Token(`[0-9]{1,2}`, "MONTH"))
+			regex := `([0-9]{1,2})|Jan|jan|Feb|feb|Mar|mar|Apr|apr|` +
+				`May|may|Jun|jun|Jul|jul|Aug|aug|Sep|sep|Oct|oct|` +
+				`Nov|nov|Dec|dec`
+			parsers = append(parsers, parsec.Token(regex, "MONTH"))
 			//fmt.Printf("ydmy: MONTH\n")
 		case "%d":
 			parsers = append(parsers, parsec.Token(`[0-9]{1,2}`, "DATE"))
@@ -95,7 +99,9 @@ func Ymdy(format string) parsec.Parser {
 				case "MONTH":
 					month, err = strconv.Atoi(t.Value)
 					if err != nil {
-						fmt.Printf("invalid MONTH at %v\n", t.Position)
+						if month, ok = mon2index[string(t.Value)]; !ok {
+							fmt.Printf("invalid MONTH at %v\n", t.Position)
+						}
 					}
 
 				case "DATE":
@@ -164,7 +170,7 @@ func Yhns(format string) parsec.Parser {
 				case "MINUTE":
 					minute, err = strconv.Atoi(t.Value)
 					if err != nil {
-						fmt.Printf("invalid MONTH at %v\n", t.Position)
+						fmt.Printf("invalid MINUTE at %v\n", t.Position)
 					}
 
 				case "SECOND":
@@ -182,6 +188,13 @@ func Yhns(format string) parsec.Parser {
 		parsers...,
 	)
 	return y
+}
+
+var mon2index = map[string]int{
+	"Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
+	"Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12,
+	"jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6,
+	"jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12,
 }
 
 func init() {

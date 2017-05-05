@@ -1,5 +1,7 @@
 package dblentry
 
+import "fmt"
+
 import "github.com/prataprc/goparsec"
 
 type Directive struct {
@@ -83,7 +85,7 @@ func (d *Directive) Yattr(db *Datastore) parsec.Parser {
 		yeval := parsec.And(nil, ytok_eval, ytok_value)
 		ydefault := parsec.And(nil, ytok_default)
 		y := parsec.OrdChoice(
-			nil,
+			Vector2scalar,
 			ynote, yalias, ypayee, ycheck, yassert, yeval, ydefault,
 		)
 		return y
@@ -126,9 +128,10 @@ func (d *Directive) Yledgerblock(db *Datastore, block []string) {
 				d.account.defblns = true
 			}
 		}
+		return
 
 	case "apply", "alias":
 		return
 	}
-	panic("unreachable code")
+	panic(fmt.Errorf("unreachable code"))
 }

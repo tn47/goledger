@@ -193,6 +193,7 @@ func (db *Datastore) Declare(value interface{}) {
 		if v.defblns {
 			db.SetBalancingaccount(v.name)
 		}
+		return
 
 	default:
 		panic("unreachable code")
