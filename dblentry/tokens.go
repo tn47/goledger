@@ -41,6 +41,7 @@ var ytok_value = parsec.Token(".*", "DRTV_VALUE")
 
 var ytok_apply = parsec.Token("apply", "DRTV_APPLY")
 var ytok_aliasname = parsec.Token("[^=]+", "DRTV_ALIASNAME")
+var ytok_end = parsec.Token("end", "DRTV_END")
 
 //
 func maybenode(nodes []parsec.ParsecNode) parsec.ParsecNode {

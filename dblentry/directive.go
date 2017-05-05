@@ -12,6 +12,7 @@ type Directive struct {
 	account    *Account // account, alias, apply
 	aliasname  string   // alias
 	expression string   // assert
+	endargs    []string // end
 }
 
 func NewDirective() *Directive {
@@ -55,7 +56,7 @@ func (d *Directive) Yapply(db *Datastore) parsec.Parser {
 func (d *Directive) Yalias(db *Datastore) parsec.Parser {
 	return parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
-			d.dtype = "apply"
+			d.dtype = "alias"
 			d.aliasname = string(nodes[1].(*parsec.Terminal).Value)
 			return d
 		},
@@ -74,26 +75,15 @@ func (d *Directive) Yassert(db *Datastore) parsec.Parser {
 	)
 }
 
-func (d *Directive) Yattr(db *Datastore) parsec.Parser {
-	switch d.dtype {
-	case "account":
-		ynote := parsec.And(nil, ytok_note, ytok_value)
-		yalias := parsec.And(nil, ytok_alias, ytok_value)
-		ypayee := parsec.And(nil, ytok_payee, ytok_value)
-		ycheck := parsec.And(nil, ytok_check, ytok_value)
-		yassert := parsec.And(nil, ytok_assert, ytok_value)
-		yeval := parsec.And(nil, ytok_eval, ytok_value)
-		ydefault := parsec.And(nil, ytok_default)
-		y := parsec.OrdChoice(
-			Vector2scalar,
-			ynote, yalias, ypayee, ycheck, yassert, yeval, ydefault,
-		)
-		return y
-
-	case "apply", "alias", "assert":
-		return nil
-	}
-	panic("unreachable code")
+func (d *Directive) Yend(db *Datastore) parsec.Parser {
+	return parsec.And(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			d.dtype = "end"
+			d.endargs = []string{"apply", "account"}
+			return d
+		},
+		ytok_end, ytok_apply, ytok_account,
+	)
 }
 
 func (d *Directive) Yledgerblock(db *Datastore, block []string) {
@@ -102,7 +92,7 @@ func (d *Directive) Yledgerblock(db *Datastore, block []string) {
 	case "account":
 		for _, line := range block {
 			scanner := parsec.NewScanner([]byte(line))
-			parser := d.Yattr(db)
+			parser := d.Yaccountdirectives(db)
 			if parser == nil {
 				continue
 			}
@@ -130,8 +120,30 @@ func (d *Directive) Yledgerblock(db *Datastore, block []string) {
 		}
 		return
 
-	case "apply", "alias":
+	case "apply", "alias", "end":
 		return
 	}
 	panic(fmt.Errorf("unreachable code"))
+}
+
+func (d *Directive) Yaccountdirectives(db *Datastore) parsec.Parser {
+	switch d.dtype {
+	case "account":
+		ynote := parsec.And(nil, ytok_note, ytok_value)
+		yalias := parsec.And(nil, ytok_alias, ytok_value)
+		ypayee := parsec.And(nil, ytok_payee, ytok_value)
+		ycheck := parsec.And(nil, ytok_check, ytok_value)
+		yassert := parsec.And(nil, ytok_assert, ytok_value)
+		yeval := parsec.And(nil, ytok_eval, ytok_value)
+		ydefault := parsec.And(nil, ytok_default)
+		y := parsec.OrdChoice(
+			Vector2scalar,
+			ynote, yalias, ypayee, ycheck, yassert, yeval, ydefault,
+		)
+		return y
+
+	case "apply", "alias", "assert", "end":
+		return nil
+	}
+	panic("unreachable code")
 }
