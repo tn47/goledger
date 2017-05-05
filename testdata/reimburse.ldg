@@ -1,11 +1,19 @@
 2004/09/29  Circuit City
-    Assets:Reimbursements:Company XYZ     $100.00
+    Assets:Reimbursements:MyCompany       $100.00
     Liabilities:MasterCard
 
-2004/09/29  Company XYZ
+2004/09/29  MyCompany
     Assets:Checking                       $100.00
-    Assets:Reimbursements:Company XYZ
+    Assets:Reimbursements:MyCompany
 
-2004/09/29  Credit card due
-    Liabilities:MasterCard                $100.00
-    Assets:Checking
+apply account MyCompany
+
+2004/09/29  Circuit City
+    Expenses:Computer:Software            $100.00
+    Liabilities:Payable:Myname            $-100.00
+
+2004/10/15  MyCompany
+    Liabilities:Payable:Myname           $100.00
+    Assets:Checking                      $-100.00
+
+end apply account
