@@ -1,0 +1,11 @@
+2004/09/29  Circuit City
+    Assets:Reimbursements:Company XYZ     $100.00
+    Liabilities:MasterCard
+
+2004/09/29  Company XYZ
+    Assets:Checking                       $100.00
+    Assets:Reimbursements:Company XYZ
+
+2004/09/29  Credit card due
+    Liabilities:MasterCard                $100.00
+    Assets:Checking

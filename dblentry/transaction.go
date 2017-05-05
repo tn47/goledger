@@ -181,11 +181,13 @@ func FitDescription(desc string, maxwidth int) string {
 	if len(desc) < maxwidth {
 		return desc
 	}
-	scraplen := maxwidth - len(desc)
+	scraplen := len(desc) - maxwidth
 	fields := []string{}
 	for _, field := range strings.Fields(desc) {
+		fmt.Printf("%v %q\n", scraplen, field)
 		if scraplen <= 0 {
 			fields = append(fields, field)
+			continue
 		}
 		if len(field[3:]) < scraplen {
 			fields = append(fields, field[:3])
