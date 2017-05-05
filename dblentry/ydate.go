@@ -23,9 +23,11 @@ func Ydate(year, month int, format string) parsec.Parser {
 			year, month, date := ymd[0].(int), ymd[1].(int), ymd[2].(int)
 
 			hour, minute, second := 0, 0, 0
-			if _, ok := nodes[1].(parsec.MaybeNone); ok == false {
-				hns := nodes[1].([]interface{})
-				hour, minute, second = hns[0].(int), hns[1].(int), hns[2].(int)
+			if len(parts) == 2 {
+				if _, ok := nodes[1].(parsec.MaybeNone); ok == false {
+					hns := nodes[1].([]interface{})
+					hour, minute, second = hns[0].(int), hns[1].(int), hns[2].(int)
+				}
 			}
 
 			tm := time.Date(
