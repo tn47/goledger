@@ -43,6 +43,9 @@ func NewDatastore(name string, reporter api.Reporter) *Datastore {
 //---- accessor
 
 func (db *Datastore) GetAccount(name string) *Account {
+	if name == "" {
+		return nil
+	}
 	account, ok := db.accntdb[name]
 	if ok == false {
 		account = NewAccount(name)
@@ -80,13 +83,10 @@ func (db *Datastore) SubAccounts(parentname string) []*Account {
 
 //---- engine
 
-func (db *Datastore) Apply(obj interface{}) error {
+func (db *Datastore) Firstpass(obj interface{}) error {
 	if trans, ok := obj.(*Transaction); ok {
 		if trans.ShouldBalance() {
-			var defaccount *Account
-			if db.blncingaccnt != "" {
-				defaccount = db.GetAccount(db.blncingaccnt)
-			}
+			defaccount := db.GetAccount(db.blncingaccnt)
 			if ok, err := trans.Autobalance1(defaccount); err != nil {
 				return err
 			} else if ok == false {
@@ -95,8 +95,7 @@ func (db *Datastore) Apply(obj interface{}) error {
 			log.Debugf("transaction balanced\n")
 		}
 		db.transdb.Insert(trans.date, trans)
-		trans.Apply(db)
-		return nil
+		return trans.Firstpass(db)
 
 	} else if price, ok := obj.(*Price); ok {
 		return db.pricedb.Insert(price.when, price)
@@ -132,6 +131,17 @@ func (db *Datastore) Apply(obj interface{}) error {
 
 	} else {
 		panic("unreachable code")
+	}
+	return nil
+}
+
+func (db *Datastore) Secondpass() error {
+	kvfull := make([]KV, 0)
+	for _, kv := range db.transdb.Range(nil, nil, "both", kvfull) {
+		trans := kv.v.(*Transaction)
+		if err := trans.Secondpass(db); err != nil {
+			return err
+		}
 	}
 	return nil
 }

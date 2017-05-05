@@ -7,7 +7,7 @@ import "github.com/prataprc/goparsec"
 import "github.com/prataprc/golog"
 import "github.com/prataprc/goledger/dblentry"
 
-func firstpass(db *dblentry.Datastore, journalfile string) bool {
+func firstpass(db *dblentry.Datastore, journalfile string) error {
 	var node parsec.ParsecNode
 
 	lines := readlines(journalfile)
@@ -17,7 +17,7 @@ func firstpass(db *dblentry.Datastore, journalfile string) bool {
 	for len(block) > 0 {
 		if err != nil {
 			log.Errorf("%v\n", err)
-			return false
+			return err
 		}
 
 		log.Debugf("parsing block: %v\n", block[0])
@@ -37,20 +37,28 @@ func firstpass(db *dblentry.Datastore, journalfile string) bool {
 			if len(block[1:]) > 0 {
 				obj.Yledgerblock(db, block[1:])
 			}
-			if db.Apply(obj); err != nil {
-				fmsg := "applying transaction at row(%v): %v\n"
+			if err := db.Firstpass(obj); err != nil {
+				fmsg := "firstpass transaction at row(%v): %v\n"
 				log.Errorf(fmsg, rown-len(block), err)
-				return false
+				return err
 			}
 
 		case *dblentry.Price:
-			db.Apply(obj)
+			if err := db.Firstpass(obj); err != nil {
+				fmsg := "firstpass at row(%v): %v\n"
+				log.Errorf(fmsg, rown-len(block), err)
+				return err
+			}
 
 		case *dblentry.Directive:
 			if len(block[1:]) > 0 {
 				obj.Yledgerblock(db, block[1:])
 			}
-			db.Apply(obj)
+			if err := db.Firstpass(obj); err != nil {
+				fmsg := "firstpass at row(%v): %v\n"
+				log.Errorf(fmsg, rown-len(block), err)
+				return err
+			}
 		}
 		rown, block, eof, err = iterate()
 	}
@@ -58,7 +66,7 @@ func firstpass(db *dblentry.Datastore, journalfile string) bool {
 		log.Errorf("expected eof")
 	}
 
-	return true
+	return nil
 }
 
 func blockiterate(lines []string) func() (int, []string, bool, error) {

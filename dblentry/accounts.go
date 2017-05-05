@@ -16,11 +16,13 @@ type Account struct {
 	balanced bool
 	balance  float64
 	// from account directive
-	note    string
-	check   string
-	assert  string
-	eval    string
-	defblns bool
+	note      string
+	aliasname string
+	payee     string
+	check     string
+	assert    string
+	eval      string
+	defblns   bool
 }
 
 func NewAccount(name string) *Account {
@@ -101,13 +103,7 @@ func (acc *Account) Yledger(db *Datastore) parsec.Parser {
 }
 
 //---- engine
-
-func (acc *Account) Apply(db *Datastore, trans *Transaction, p *Posting) error {
-	db.balance += p.commodity.amount
-	acc.balance += p.commodity.amount
-	db.reporter.Posting(db, trans, p, acc)
-
-	// consolidate
+func (acc *Account) Total(db *Datastore, trans *Transaction, p *Posting) {
 	accountnames := db.Accountnames()
 	for _, name := range accountnames {
 		prefix := strings.Trim(Lcp([]string{name, acc.name}), ":")
@@ -122,13 +118,29 @@ func (acc *Account) Apply(db *Datastore, trans *Transaction, p *Posting) error {
 			consacc = db.GetAccount(prefix)
 			consacc.balance += p.commodity.amount
 			db.reporter.BubblePosting(db, trans, p, consacc)
-			continue
+
 		} else if prefix == name {
 			consacc := db.GetAccount(prefix)
 			consacc.balance += p.commodity.amount
 			db.reporter.BubblePosting(db, trans, p, consacc)
 		}
 	}
+}
+
+func (acc *Account) Firstpass(
+	db *Datastore, trans *Transaction, p *Posting) error {
+
+	return nil
+}
+
+func (acc *Account) Secondpass(
+	db *Datastore, trans *Transaction, p *Posting) error {
+
+	db.balance += p.commodity.amount
+	acc.balance += p.commodity.amount
+	db.reporter.Posting(db, trans, p, acc)
+
+	acc.Total(db, trans, p)
 
 	fmsg := "%v balance (from %v <%v>): %v\n"
 	log.Debugf(fmsg, acc.name, trans.desc, p.commodity.amount, acc.balance)

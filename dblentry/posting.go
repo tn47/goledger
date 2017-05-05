@@ -114,6 +114,22 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 
 //---- engine
 
-func (p *Posting) Apply(db *Datastore, trans *Transaction) {
-	p.account.Apply(db, trans, p)
+func (p *Posting) Firstpass(db *Datastore, trans *Transaction) error {
+	if err := p.account.Firstpass(db, trans, p); err != nil {
+		return err
+	}
+	if err := p.commodity.Firstpass(db, trans, p); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *Posting) Secondpass(db *Datastore, trans *Transaction) error {
+	if err := p.account.Secondpass(db, trans, p); err != nil {
+		return err
+	}
+	if err := p.commodity.Secondpass(db, trans, p); err != nil {
+		return err
+	}
+	return nil
 }

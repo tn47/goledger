@@ -36,3 +36,13 @@ func (price *Price) Yledger(db *Datastore) parsec.Parser {
 	)
 	return y
 }
+
+//---- Engine
+
+func (price *Price) Firstpass(db *Datastore) error {
+	return nil
+}
+
+func (price *Price) Secondpass(db *Datastore) error {
+	return nil
+}

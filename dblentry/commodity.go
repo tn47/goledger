@@ -85,3 +85,15 @@ func (comm *Commodity) Balance(tmpl *Commodity, amount float64) *Commodity {
 	comm.amount = amount
 	return comm
 }
+
+func (comm *Commodity) Firstpass(
+	db *Datastore, trans *Transaction, p *Posting) error {
+
+	return nil
+}
+
+func (comm *Commodity) Secondpass(
+	db *Datastore, trans *Transaction, p *Posting) error {
+
+	return nil
+}

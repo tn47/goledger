@@ -28,6 +28,7 @@ func (d *Directive) Yledger(db *Datastore) parsec.Parser {
 		d.Yapply(db),
 		d.Yalias(db),
 		d.Yassert(db),
+		d.Yend(db),
 	)
 	return y
 }
@@ -103,11 +104,11 @@ func (d *Directive) Yledgerblock(db *Datastore, block []string) {
 			case "DRTV_ACCOUNT_NOTE":
 				d.account.note = string(nodes[1].(*parsec.Terminal).Value)
 			case "DRTV_ACCOUNT_ALIAS":
-				aliasname := string(nodes[1].(*parsec.Terminal).Value)
-				db.AddAlias(aliasname, d.account.name)
+				d.account.aliasname = string(nodes[1].(*parsec.Terminal).Value)
+				db.AddAlias(d.account.aliasname, d.account.name)
 			case "DRTV_ACCOUNT_PAYEE":
-				payee := string(nodes[1].(*parsec.Terminal).Value)
-				db.AddPayee(payee, d.account.name)
+				d.account.payee = string(nodes[1].(*parsec.Terminal).Value)
+				db.AddPayee(d.account.payee, d.account.name)
 			case "DRTV_ACCOUNT_CHECK":
 				d.account.check = string(nodes[1].(*parsec.Terminal).Value)
 			case "DRTV_ACCOUNT_ASSERT":
@@ -120,7 +121,7 @@ func (d *Directive) Yledgerblock(db *Datastore, block []string) {
 		}
 		return
 
-	case "apply", "alias", "end":
+	case "apply", "alias", "assert", "end":
 		return
 	}
 	panic(fmt.Errorf("unreachable code"))
@@ -146,4 +147,12 @@ func (d *Directive) Yaccountdirectives(db *Datastore) parsec.Parser {
 		return nil
 	}
 	panic("unreachable code")
+}
+
+func (d *Directive) Firstpass(db *Datastore) error {
+	return nil
+}
+
+func (d *Directive) Secondpass(db *Datastore) error {
+	return nil
 }

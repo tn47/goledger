@@ -111,16 +111,33 @@ func (trans *Transaction) ShouldBalance() bool {
 	return true
 }
 
+func (trans *Transaction) Defaultposting(defacc *Account, p *Posting) *Posting {
+	posting := NewPosting()
+	posting.account = defacc
+	posting.commodity = NewCommodity()
+	posting.commodity.Balance(p.commodity, -p.commodity.amount)
+	return posting
+}
+
+func (trans *Transaction) Endposting(postings []*Posting) (*Posting, error) {
+	var tallywith *Posting
+	for _, posting := range postings {
+		if posting.commodity == nil && tallywith != nil {
+			err := fmt.Errorf("Only one null posting allowed per transaction")
+			return nil, err
+		} else if posting.commodity == nil {
+			tallywith = posting
+		}
+	}
+	return tallywith, nil
+}
+
 func (trans *Transaction) Autobalance1(defaccount *Account) (bool, error) {
 	if len(trans.postings) == 0 {
 		return false, fmt.Errorf("empty transaction")
 
 	} else if len(trans.postings) == 1 && defaccount != nil {
-		posting := NewPosting()
-		posting.account = defaccount
-		posting.commodity = NewCommodity()
-		commodity := trans.postings[0].commodity
-		posting.commodity.Balance(commodity, -commodity.amount)
+		posting := trans.Defaultposting(defaccount, trans.postings[0])
 		trans.postings = append(trans.postings, posting)
 		return true, nil
 
@@ -128,25 +145,20 @@ func (trans *Transaction) Autobalance1(defaccount *Account) (bool, error) {
 		return false, fmt.Errorf("unbalanced transaction")
 	}
 
-	var tallywith *Posting
-	for _, posting := range trans.postings {
-		if posting.commodity == nil && tallywith != nil {
-			err := fmt.Errorf("Only one null posting allowed per transaction")
-			return false, err
-		} else if posting.commodity == nil {
-			tallywith = posting
-		}
+	tallypost, err := trans.Endposting(trans.postings)
+	if err != nil {
+		return false, err
 	}
 
 	credits, debits := trans.Credits(), trans.Debits()
 	balanceamount := -(credits + debits)
 	if balanceamount == 0 {
 		return true, nil
-	} else if tallywith == nil {
+	} else if tallypost == nil {
 		return false, fmt.Errorf("unbalanced transaction")
 	}
-	tallywith.commodity = NewCommodity()
-	tallywith.commodity.Balance(trans.postings[0].commodity, balanceamount)
+	tallypost.commodity = NewCommodity()
+	tallypost.commodity.Balance(trans.postings[0].commodity, balanceamount)
 	return true, nil
 }
 
@@ -170,11 +182,23 @@ func (trans *Transaction) Debits() float64 {
 	return debits
 }
 
-func (trans *Transaction) Apply(db *Datastore) {
+func (trans *Transaction) Firstpass(db *Datastore) error {
 	for _, posting := range trans.postings {
-		posting.Apply(db, trans)
+		if err := posting.Firstpass(db, trans); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (trans *Transaction) Secondpass(db *Datastore) error {
+	for _, posting := range trans.postings {
+		if err := posting.Secondpass(db, trans); err != nil {
+			return err
+		}
 	}
 	db.reporter.Transaction(db, trans)
+	return nil
 }
 
 func FitDescription(desc string, maxwidth int) string {

@@ -64,11 +64,11 @@ func main() {
 	journals = append(journals, options.journals...)
 	for _, journal := range journals {
 		log.Debugf("processing journal %q\n", journal)
-		if firstpass(db, journal) == false {
+		if err := firstpass(db, journal); err != nil {
 			os.Exit(1)
 		}
 	}
-	if secondpass(db) == false {
+	if err := secondpass(db); err != nil {
 		os.Exit(2)
 	}
 	reporter.Render(args)
