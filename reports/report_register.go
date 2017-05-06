@@ -31,7 +31,7 @@ func NewReportRegister(args []string) *ReportRegister {
 func (report *ReportRegister) Transaction(
 	db api.Datastorer, trans api.Transactor) error {
 
-	date, desc := trans.Date().Format("2006-01-02"), trans.Description()
+	date, desc := trans.Date().Format("2006-Jan-02"), trans.Description()
 	for _, p := range trans.GetPostings() {
 		accname, payee := p.Account().Name(), trans.Description()
 		if report.isfiltered() {
