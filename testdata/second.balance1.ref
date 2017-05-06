@@ -1,10 +1,10 @@
 
-  By-date     Account                    Balance 
-                                                 
-  2004/09/29  Assets:Checking             500.00 
-  2004/09/30  Expenses:Dining              25.00 
-  2004/09/29  Income:Salary              -500.00 
-  2004/09/30  Liabilities:MasterCard      -25.00 
-                                      ---------- 
-  2004/09/30                                0.00 
+  By-date      Account                  Balance 
+                                                
+  2004/Sep/29  Assets:Checking          $500.00 
+  2004/Sep/30  Expenses:Dining           $25.00 
+  2004/Sep/29  Income:Salary           $-500.00 
+  2004/Sep/30  Liabilities:MasterCard   $-25.00 
+                                       -------- 
+  2004/Sep/30                             $0.00 
 

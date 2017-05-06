@@ -1,8 +1,8 @@
 
-  By-date     Description         Account           Amount  Balance 
-                                                                    
-  2011-03-01  My Employer         Assets:Checking   500.00   500.00 
-  2011-03-15  Departmental store  Assets:Checking  -100.00   400.00 
-  2011-03-15  KFC                 Assets:Checking   -75.00   325.00 
-  2011-03-15  Chats               Assets:Checking   -75.00   250.00 
+  By-date      Description         Account            Amount  Balance 
+                                                                      
+  2011-Mar-01  My Employer         Assets:Checking   500.00   500.00  
+  2011-Mar-15  Departmental store  Assets:Checking  -100.00   400.00  
+  2011-Mar-15  KFC                 Assets:Checking   -75.00   325.00  
+  2011-Mar-15  Chats               Assets:Checking   -75.00   250.00  
 

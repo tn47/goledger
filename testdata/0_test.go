@@ -19,25 +19,28 @@ func TestDates(t *testing.T) {
 			"dates.balance.ref",
 		},
 		[]interface{}{
-			[]string{"-f", "testdata/dates.ldg", "register"},
+			[]string{"-f", "dates.ldg", "register"},
 			"dates.register1.ref",
 		},
 		[]interface{}{
-			[]string{"-f", "testdata/dates.ldg", "register", "Expenses"},
+			[]string{"-f", "dates.ldg", "register", "Expenses"},
 			"dates.register2.ref",
 		},
 		[]interface{}{
-			[]string{"-f", "testdata/dates.ldg", "register", "Expenses:Sta"},
+			[]string{"-f", "dates.ldg", "register", "Expenses:Sta"},
 			"dates.register3.ref",
 		},
 	}
 	for _, testcase := range testcases {
 		ref := testdataFile(testcase[1].(string))
-		cmd := exec.Command(LEDGEREXEC, testcase[0].([]string)...)
+		args := testcase[0].([]string)
+		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
+		//ioutil.WriteFile(testcase[1].(string), out, 0660)
 		if bytes.Compare(out, ref) != 0 {
-			t.Logf("expected %q", ref)
-			t.Logf("got %q", out)
+			t.Logf(strings.Join(args, " "))
+			t.Logf("expected %s", ref)
+			t.Errorf("got %s", out)
 		}
 	}
 }
@@ -45,7 +48,7 @@ func TestDates(t *testing.T) {
 func TestDrewr3(t *testing.T) {
 	//testcases := [][]interface{}{
 	//	[]interface{}{
-	//		[]string{"-f", "testdata/drewr3.ldg", "balance"},
+	//		[]string{"-f", "drewr3.ldg", "balance"},
 	//		"drewr3.balance.ref",
 	//	},
 	//}
@@ -57,7 +60,7 @@ func TestDrewr3(t *testing.T) {
 	//	fmt.Println(string(ref))
 	//	if bytes.Compare(out, ref) != 0 {
 	//		t.Logf("expected %q", ref)
-	//		t.Logf("got %q", out)
+	//		t.Errorf("got %q", out)
 	//	}
 	//}
 }
@@ -65,71 +68,71 @@ func TestDrewr3(t *testing.T) {
 func TestFirst(t *testing.T) {
 	testcases := [][]interface{}{
 		[]interface{}{
-			[]string{"-f", "testdata/first.ldg", "balance"},
+			[]string{"-f", "first.ldg", "balance"},
 			"first.balance1.ref",
 		},
 		[]interface{}{
-			[]string{"-f", "testdata/first.ldg", "balance", "Assets"},
+			[]string{"-f", "first.ldg", "balance", "Assets"},
 			"first.balance2.ref",
 		},
 		[]interface{}{
-			[]string{"-f", "testdata/first.ldg", "balance", "Expenses"},
+			[]string{"-f", "first.ldg", "balance", "Expenses"},
 			"first.balance3.ref",
 		},
 		[]interface{}{
-			[]string{"-f", "testdata/first.ldg", "register"},
+			[]string{"-f", "first.ldg", "register"},
 			"first.register1.ref",
 		},
 		[]interface{}{
-			[]string{"-f", "testdata/first.ldg", "register", "Expens|Check"},
+			[]string{"-f", "first.ldg", "register", "Expens|Check"},
 			"first.register2.ref",
 		},
 		[]interface{}{
-			[]string{"-f", "testdata/first.ldg", "register", "@", "KFC"},
+			[]string{"-f", "first.ldg", "register", "@", "KFC"},
 			"first.register3.ref",
 		},
 		[]interface{}{
-			[]string{"-f", "testdata/first.ldg", "register", "@", "^KFC"},
+			[]string{"-f", "first.ldg", "register", "@", "^KFC"},
 			"first.register4.ref",
 		},
 		[]interface{}{
-			[]string{"-f", "testdata/first.ldg", "register", "Assets"},
+			[]string{"-f", "first.ldg", "register", "Assets"},
 			"first.register5.ref",
 		},
 		[]interface{}{
-			[]string{"-f", "testdata/first.ldg", "register", "Check"},
+			[]string{"-f", "first.ldg", "register", "Check"},
 			"first.register6.ref",
 		},
 		[]interface{}{
-			[]string{"-f", "testdata/first.ldg", "register", "Dinning"},
+			[]string{"-f", "first.ldg", "register", "Dinning"},
 			"first.register7.ref",
 		},
 		[]interface{}{
-			[]string{"-f", "testdata/first.ldg", "register", "Expenses"},
+			[]string{"-f", "first.ldg", "register", "Expenses"},
 			"first.register8.ref",
 		},
 		[]interface{}{
-			[]string{"-f", "testdata/first.ldg", "register", "Expenses:Din"},
+			[]string{"-f", "first.ldg", "register", "Expenses:Din"},
 			"first.register9.ref",
 		},
 		[]interface{}{
-			[]string{"-f", "testdata/first.ldg", "register", "Expenses:Sta"},
+			[]string{"-f", "first.ldg", "register", "Expenses:Sta"},
 			"first.register10.ref",
 		},
 		[]interface{}{
-			[]string{"-f", "testdata/first.ldg", "register", "Expens|Check"},
+			[]string{"-f", "first.ldg", "register", "Expens|Check"},
 			"first.register11.ref",
 		},
 		[]interface{}{
-			[]string{"-f", "testdata/first.ldg", "register", "^Check"},
+			[]string{"-f", "first.ldg", "register", "^Check"},
 			"first.register12.ref",
 		},
 		[]interface{}{
-			[]string{"-f", "testdata/first.ldg", "register", "^nses"},
+			[]string{"-f", "first.ldg", "register", "^nses"},
 			"first.register13.ref",
 		},
 		[]interface{}{
-			[]string{"-f", "testdata/first.ldg", "register", "nses"},
+			[]string{"-f", "first.ldg", "register", "nses"},
 			"first.register14.ref",
 		},
 	}
@@ -137,9 +140,10 @@ func TestFirst(t *testing.T) {
 		ref := testdataFile(testcase[1].(string))
 		cmd := exec.Command(LEDGEREXEC, testcase[0].([]string)...)
 		out, _ := cmd.CombinedOutput()
+		//ioutil.WriteFile(testcase[1].(string), out, 0660)
 		if bytes.Compare(out, ref) != 0 {
-			t.Logf("expected %q", ref)
-			t.Logf("got %q", out)
+			t.Logf("expected %s", ref)
+			t.Errorf("got %s", out)
 		}
 	}
 }
@@ -147,11 +151,11 @@ func TestFirst(t *testing.T) {
 func TestReimburse(t *testing.T) {
 	testcases := [][]interface{}{
 		[]interface{}{
-			[]string{"-f", "testdata/reimburse.ldg", "balance"},
+			[]string{"-f", "reimburse.ldg", "balance"},
 			"reimburse.balance1.ref",
 		},
 		[]interface{}{
-			[]string{"-f", "testdata/reimburse.ldg", "register"},
+			[]string{"-f", "reimburse.ldg", "register"},
 			"reimburse.register1.ref",
 		},
 	}
@@ -159,9 +163,10 @@ func TestReimburse(t *testing.T) {
 		ref := testdataFile(testcase[1].(string))
 		cmd := exec.Command(LEDGEREXEC, testcase[0].([]string)...)
 		out, _ := cmd.CombinedOutput()
+		//ioutil.WriteFile(testcase[1].(string), out, 0660)
 		if bytes.Compare(out, ref) != 0 {
-			t.Logf("expected %q", ref)
-			t.Logf("got %q", out)
+			t.Logf("expected %s", ref)
+			t.Errorf("got %s", out)
 		}
 	}
 }
@@ -169,36 +174,36 @@ func TestReimburse(t *testing.T) {
 func TestSecond(t *testing.T) {
 	testcases := [][]interface{}{
 		[]interface{}{
-			[]string{"-f", "testdata/second.ldg", "balance"},
+			[]string{"-f", "second.ldg", "balance"},
 			"second.balance1.ref",
 		},
 		[]interface{}{
-			[]string{"-f", "testdata/second.ldg", "balance",
+			[]string{"-f", "second.ldg", "balance",
 				"^Assets", "^Liabilities"},
 			"second.balance2.ref",
 		},
 		[]interface{}{
-			[]string{"-f", "testdata/second.ldg", "balance",
+			[]string{"-f", "second.ldg", "balance",
 				"Assets", "Liabilities.*"},
 			"second.balance3.ref",
 		},
 		[]interface{}{
-			[]string{"-f", "testdata/second.ldg", "balance",
+			[]string{"-f", "second.ldg", "balance",
 				"Assets", "Liabilities"},
 			"second.balance4.ref",
 		},
 		[]interface{}{
-			[]string{"-f", "testdata/second.ldg", "balance",
+			[]string{"-f", "second.ldg", "balance",
 				"Assets", "Liabilities.*"},
 			"second.balance5.ref",
 		},
 		[]interface{}{
-			[]string{"-f", "testdata/second.ldg", "balance",
+			[]string{"-f", "second.ldg", "balance",
 				"^Assets", "^Liabilities"},
 			"second.balance6.ref",
 		},
 		[]interface{}{
-			[]string{"-f", "testdata/second.ldg", "balance",
+			[]string{"-f", "second.ldg", "balance",
 				"^assets", "^liabilities"},
 			"second.balance7.ref",
 		},
@@ -207,9 +212,10 @@ func TestSecond(t *testing.T) {
 		ref := testdataFile(testcase[1].(string))
 		cmd := exec.Command(LEDGEREXEC, testcase[0].([]string)...)
 		out, _ := cmd.CombinedOutput()
+		//ioutil.WriteFile(testcase[1].(string), out, 0660)
 		if bytes.Compare(out, ref) != 0 {
-			t.Logf("expected %q", ref)
-			t.Logf("got %q", out)
+			t.Logf("expected %s", ref)
+			t.Errorf("got %s", out)
 		}
 	}
 }

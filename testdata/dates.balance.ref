@@ -1,13 +1,12 @@
 
-
-  By-date     Account             Balance
-
-  2011/12/15  Assets:Checking      115.00
-  2011/12/15  Expenses             385.00
-  2011/12/15    Dinning            225.00
-  2011/09/15    Groceries          150.00
-  2011/08/29    Stationary          10.00
-  2011/01/29  Income:Salary       -500.00
-                               ----------
-  2011/12/15                         0.00
+  By-date      Account           Balance 
+                                         
+  2011/Sep/15  Assets:Checking   115.00  
+  2011/Sep/15  Expenses          385.00  
+  2011/Oct/15    Dinning         225.00  
+  2011/Sep/15    Groceries       150.00  
+  2011/Aug/29    Stationary       10.00  
+  2011/Jan/29  Income:Salary    -500.00  
+                                -------- 
+  2011/Dec/15                      0.00  
 

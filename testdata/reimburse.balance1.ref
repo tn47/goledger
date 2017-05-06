@@ -1,14 +1,14 @@
 
-  By-date     Account                          Balance 
-                                                       
-  2004/09/29  Assets                            100.00 
-  2004/09/29    Checking                        100.00 
-  2004/09/29    Reimbursements:MyCompany          0.00 
-  2004/09/29  Liabilities:MasterCard           -100.00 
-  2004/10/15  MyCompany                           0.00 
-  2004/10/15    Assets:Checking                -100.00 
-  2004/09/29    Expenses:Computer:Software      100.00 
-  2004/10/15    Liabilities:Payable:Myname        0.00 
-                                            ---------- 
-  2004/10/15                                      0.00 
+  By-date      Account                        Balance 
+                                                      
+  2004/Sep/29  Assets                         $100.00 
+  2004/Sep/29    Checking                     $100.00 
+  2004/Sep/29    Reimbursements:MyCompany       $0.00 
+  2004/Sep/29  Liabilities:MasterCard        $-100.00 
+  2004/Sep/29  MyCompany                        $0.00 
+  2004/Oct/15    Assets:Checking             $-100.00 
+  2004/Sep/29    Expenses:Computer:Software   $100.00 
+  2004/Sep/29    Liabilities:Payable:Myname     $0.00 
+                                             -------- 
+  2004/Oct/15                                   $0.00 
 

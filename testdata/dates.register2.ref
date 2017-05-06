@@ -1,15 +1,15 @@
 
-  By-date     Description         Account              Amount  Balance 
-                                                                       
-  2011-02-15  Departmental store  Expenses:Groceries   100.00   100.00 
-  2011-03-15  KFC                 Expenses:Dinning      75.00    75.00 
-  2011-04-15  Chats               Expenses:Dinning      10.00    85.00 
-  2011-05-15  Dinner              Expenses:Dinning      25.00   110.00 
-  2011-06-15  Breakfast           Expenses:Dinning      15.00   125.00 
-  2011-07-15  Snacks              Expenses:Dinning       5.00   130.00 
-  2011-08-29  Pen                 Expenses:Stationary   10.00    10.00 
-  2011-09-15  Departmental store  Expenses:Groceries    50.00   150.00 
-  2011-10-15  KFC                 Expenses:Dinning      75.00   205.00 
-  2011-11-15  Chats               Expenses:Dinning      15.00   220.00 
-  2011-12-15  Chats               Expenses:Dinning       5.00   225.00 
+  By-date      Description         Account               Amount  Balance 
+                                                                         
+  2011-Feb-15  Departmental store  Expenses:Groceries   100.00   100.00  
+  2011-Mar-15  KFC                 Expenses:Dinning      75.00    75.00  
+  2011-Apr-15  Chats               Expenses:Dinning      10.00    85.00  
+  2011-May-15  Dinner              Expenses:Dinning      25.00   110.00  
+  2011-Jun-15  Breakfast           Expenses:Dinning      15.00   125.00  
+  2011-Jul-15  Snacks              Expenses:Dinning       5.00   130.00  
+  2011-Aug-29  Pen                 Expenses:Stationary   10.00    10.00  
+  2011-Sep-15  Departmental store  Expenses:Groceries    50.00   150.00  
+  2011-Oct-15  KFC                 Expenses:Dinning      75.00   205.00  
+  2011-Nov-15  Chats               Expenses:Dinning      15.00   220.00  
+  2011-Dec-15  Chats               Expenses:Dinning       5.00   225.00  
 
