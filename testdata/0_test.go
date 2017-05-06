@@ -241,6 +241,29 @@ func TestSecond(t *testing.T) {
 	}
 }
 
+func TestMixedComm1(t *testing.T) {
+	testcases := [][]interface{}{
+		[]interface{}{
+			[]string{"-f", "mixedcomm1.ldg", "balance"},
+			"mixedcomm1.balance.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "mixedcomm1.ldg", "register"},
+			"mixedcomm1.register.ref",
+		},
+	}
+	for _, testcase := range testcases {
+		ref := testdataFile(testcase[1].(string))
+		cmd := exec.Command(LEDGEREXEC, testcase[0].([]string)...)
+		out, _ := cmd.CombinedOutput()
+		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if bytes.Compare(out, ref) != 0 {
+			t.Logf("expected %s", ref)
+			t.Errorf("got %s", out)
+		}
+	}
+}
+
 func testdataFile(filename string) []byte {
 	f, err := os.Open(filename)
 	if err != nil {

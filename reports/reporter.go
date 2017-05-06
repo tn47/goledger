@@ -99,12 +99,3 @@ func (reports *Reports) Render(args []string) {
 func (reports *Reports) String() string {
 	return fmt.Sprintf("Reports")
 }
-
-func BalanceRepr(balances []api.Commoditiser) string {
-	if len(balances) == 0 {
-		return "<multi-comm>"
-	} else if len(balances) > 1 {
-		return "multi-comm>"
-	}
-	return balances[0].String()
-}

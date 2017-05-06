@@ -112,11 +112,11 @@ func (trans *Transaction) ShouldBalance() bool {
 }
 
 func (trans *Transaction) Defaultposting(
-	db *Datastore, defacc *Account, amount float64) *Posting {
+	db *Datastore, defacc *Account, commodity *Commodity) *Posting {
 
 	posting := NewPosting()
 	posting.account = defacc
-	posting.commodity = db.GetCommodity("", nil).Similar(amount)
+	posting.commodity = commodity.Similar(commodity.amount)
 	return posting
 }
 
@@ -140,8 +140,9 @@ func (trans *Transaction) Autobalance1(
 		return false, fmt.Errorf("empty transaction")
 
 	} else if len(trans.postings) == 1 && defaccount != nil {
-		amount := trans.postings[0].commodity.amount
-		posting := trans.Defaultposting(db, defaccount, -amount)
+		commodity := trans.postings[0].commodity
+		posting := trans.Defaultposting(db, defaccount, commodity)
+		posting.commodity.InverseAmount()
 		trans.postings = append(trans.postings, posting)
 		return true, nil
 
@@ -154,39 +155,55 @@ func (trans *Transaction) Autobalance1(
 		return false, err
 	}
 
-	// TODO: validate for multiple commodities.
-	credits, debits := trans.Credits(), trans.Debits()
-	balanceamount := -(credits + debits)
-	if balanceamount == 0 {
+	unbcs := trans.DoBalance()
+	if len(unbcs) == 0 {
 		return true, nil
-	} else if tallypost == nil {
-		return false, fmt.Errorf("unbalanced transaction")
 	}
-	tallypost.commodity = db.GetCommodity("", nil).Similar(balanceamount)
+	tallypost.commodity = unbcs[0]
+	tallypost.commodity.InverseAmount()
+	if len(unbcs) > 1 {
+		account := tallypost.account
+		for _, unbc := range unbcs[1:] {
+			posting := trans.Defaultposting(db, account, unbc)
+			posting.commodity.InverseAmount()
+			trans.postings = append(trans.postings, posting)
+		}
+	}
 	return true, nil
 }
 
-func (trans *Transaction) Credits() float64 {
-	credits := float64(0.0)
+func (trans *Transaction) DoBalance() []*Commodity {
+	unbalanced := map[string]*Commodity{}
 	for _, posting := range trans.postings {
-		if posting.commodity != nil && posting.commodity.amount < 0 {
-			credits += posting.commodity.amount
+		if posting.commodity == nil {
+			continue
+		}
+		unbc, ok := unbalanced[posting.commodity.name]
+		if ok == false {
+			unbc = posting.commodity.Similar(0)
+		}
+		unbc.Add(posting.commodity)
+		unbalanced[unbc.name] = unbc
+	}
+	unbcs := []*Commodity{}
+	for _, unbc := range unbalanced {
+		if unbc.amount != 0 {
+			unbcs = append(unbcs, unbc)
 		}
 	}
-	return credits
-}
-
-func (trans *Transaction) Debits() float64 {
-	debits := float64(0.0)
-	for _, posting := range trans.postings {
-		if posting.commodity != nil && posting.commodity.amount > 0 {
-			debits += posting.commodity.amount
-		}
-	}
-	return debits
+	return unbcs
 }
 
 func (trans *Transaction) Firstpass(db *Datastore) error {
+	if trans.ShouldBalance() {
+		defaccount := db.GetAccount(db.blncingaccnt)
+		if ok, err := trans.Autobalance1(db, defaccount); err != nil {
+			return err
+		} else if ok == false {
+			return fmt.Errorf("unbalanced transaction")
+		}
+		log.Debugf("transaction balanced\n")
+	}
 	for _, posting := range trans.postings {
 		if err := posting.Firstpass(db, trans); err != nil {
 			return err
@@ -211,7 +228,7 @@ func FitDescription(desc string, maxwidth int) string {
 	scraplen := len(desc) - maxwidth
 	fields := []string{}
 	for _, field := range strings.Fields(desc) {
-		if scraplen <= 0 {
+		if scraplen <= 0 || len(field) <= 3 {
 			fields = append(fields, field)
 			continue
 		}

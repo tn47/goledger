@@ -13,9 +13,10 @@ var ytok_yearval = parsec.Token(`[0-9]{4}`, "YEAR")
 //---- Transaction tokens
 type Transnote string
 
-var ytok_accname = parsec.Token(`[a-zA-Z][0-9a-zA-Z :~.,;?/-]*`, "FULLACCNM")
-var ytok_vaccname = parsec.Token(`\([a-zA-Z][0-9a-zA-Z: ~.,;?/-]*\)`, "VFULLACCNM")
-var ytok_baccname = parsec.Token(`\[[a-zA-Z][0-9a-zA-Z: ~.,;?/-]*\]`, "BFULLACCNM")
+var accchars = `~!^()_\{}\[\]:;"'<>,.?/-`
+var ytok_accname = parsec.Token(`[a-zA-Z][0-9a-zA-Z `+accchars+`]*`, "FULLACCNM")
+var ytok_vaccname = parsec.Token(`\([a-zA-Z][0-9a-zA-Z: `+accchars+`]*\)`, "VFULLACCNM")
+var ytok_baccname = parsec.Token(`\[[a-zA-Z][0-9a-zA-Z: `+accchars+`]*\]`, "BFULLACCNM")
 
 var ytok_prefix = parsec.Token(`\*|!`, "TRANSPREFIX")
 var ytok_code = parsec.Token(`\(.*\)`, "TRANSCODE")
@@ -24,7 +25,7 @@ var ytok_persnote = parsec.Token(";[^;]+", "TRANSPNOTE")
 
 //---- Posting tokens
 
-var ytok_postacc1 = parsec.Token(`[a-zA-Z]([0-9a-zA-Z:~.,;?/-]* )*([  ]|[\t])`, "POSTACCN1")
+var ytok_postacc1 = parsec.Token(`[a-zA-Z]([0-9a-zA-Z`+accchars+`]* )*([  ]|[\t])`, "POSTACCN1")
 var ytok_postnote = parsec.Token(";[^;]+", "TRANSNOTE")
 
 //---- Price tokens

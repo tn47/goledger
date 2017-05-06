@@ -47,6 +47,10 @@ func (comm *Commodity) Amount() float64 {
 	return comm.amount
 }
 
+func (comm *Commodity) Name() string {
+	return comm.name
+}
+
 //---- ledger parser
 
 func (comm *Commodity) Yledger(db *Datastore) parsec.Parser {
@@ -80,7 +84,6 @@ func (comm *Commodity) Yledger(db *Datastore) parsec.Parser {
 					}
 
 				case "COMMODITY":
-					fmt.Println("commodity", string(t.Value))
 					comm.name, comm.currency = string(t.Value), false
 				}
 			}
@@ -106,4 +109,24 @@ func (comm *Commodity) Secondpass(
 	db *Datastore, trans *Transaction, p *Posting) error {
 
 	return nil
+}
+
+func (comm *Commodity) InverseAmount() {
+	comm.amount = -comm.amount
+}
+
+func (comm *Commodity) Add(other *Commodity) error {
+	n1, c1, n2, c2 := comm.name, comm.currency, other.name, other.currency
+	if comm.name == other.name && comm.currency == other.currency {
+		comm.amount += other.amount
+	}
+	return fmt.Errorf("can't <%v:%v> + <%v:%v>", n1, c1, n2, c2)
+}
+
+func (comm *Commodity) Deduct(other *Commodity) error {
+	n1, c1, n2, c2 := comm.name, comm.currency, other.name, other.currency
+	if comm.name == other.name && comm.currency == other.currency {
+		comm.amount -= other.amount
+	}
+	return fmt.Errorf("can't <%v:%v> - <%v:%v>", n1, c1, n2, c2)
 }

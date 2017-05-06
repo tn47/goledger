@@ -25,6 +25,8 @@ type Poster interface {
 type Commoditiser interface {
 	Amount() float64
 
+	Name() string
+
 	String() string
 }
 

@@ -142,18 +142,12 @@ func (db *Datastore) CurrentDate() time.Time {
 
 func (db *Datastore) Firstpass(obj interface{}) error {
 	if trans, ok := obj.(*Transaction); ok {
-		if trans.ShouldBalance() {
-			defaccount := db.GetAccount(db.blncingaccnt)
-			if ok, err := trans.Autobalance1(db, defaccount); err != nil {
-				return err
-			} else if ok == false {
-				return fmt.Errorf("unbalanced transaction")
-			}
-			log.Debugf("transaction balanced\n")
+		if err := trans.Firstpass(db); err != nil {
+			return err
 		}
 		db.SetCurrentDate(trans.date)
 		db.transdb.Insert(trans.date, trans)
-		return trans.Firstpass(db)
+		return nil
 
 	} else if price, ok := obj.(*Price); ok {
 		return db.pricedb.Insert(price.when, price)

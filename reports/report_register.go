@@ -32,6 +32,7 @@ func (report *ReportRegister) Transaction(
 	db api.Datastorer, trans api.Transactor) error {
 
 	date, desc := trans.Date().Format("2006-Jan-02"), trans.Description()
+	prevaccname := ""
 	for _, p := range trans.GetPostings() {
 		accname, payee := p.Account().Name(), trans.Description()
 		if report.isfiltered() {
@@ -42,15 +43,17 @@ func (report *ReportRegister) Transaction(
 				continue
 			}
 		}
+		commodity := p.Commodity()
 		row := []string{
-			date,
-			desc,
-			fmt.Sprintf("%s", accname),
-			fmt.Sprintf("%v", p.Commodity()),
-			fmt.Sprintf("%s", BalanceRepr(p.Account().Balances())),
+			date, desc, accname, commodity.String(),
+			p.Account().Balance(commodity.Name()).String(),
+		}
+		if prevaccname == accname {
+			row[2] = ""
 		}
 		report.register = append(report.register, row)
 		date, desc = "", ""
+		prevaccname = accname
 	}
 	return nil
 }

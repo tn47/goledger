@@ -172,8 +172,8 @@ func (acc *Account) Total(db *Datastore, trans *Transaction, p *Posting) error {
 		}
 		if db.HasAccount(prefix) == false {
 			consacc := db.GetAccount(prefix)
-			for _, bc := range db.GetAccount(name).balance {
-				consacc.AddBalance(bc)
+			for _, commodity := range db.GetAccount(name).balance {
+				consacc.AddBalance(commodity)
 			}
 			err := db.reporter.BubblePosting(db, trans, p, consacc)
 			if err != nil {

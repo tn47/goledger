@@ -10,14 +10,14 @@ import "github.com/prataprc/goledger/dblentry"
 type ReportBalance struct {
 	rcf            *RCformat
 	filteraccounts []string
-	balance        map[string][]string
-	finaltally     []string
+	balance        map[string][][]string
+	finaltally     [][]string
 }
 
 func NewReportBalance(args []string) *ReportBalance {
 	report := &ReportBalance{
 		rcf:     NewRCformat(),
-		balance: make(map[string][]string),
+		balance: make(map[string][][]string),
 	}
 	if len(args) > 1 {
 		report.filteraccounts = args[1:]
@@ -60,22 +60,27 @@ func (report *ReportBalance) Render(args []string) {
 
 	prevkey := ""
 	for _, key := range keys {
-		cols := report.balance[key]
-		if api.Filterstring(cols[1], report.filteraccounts) == false {
-			continue
+		for _, cols := range report.balance[key] {
+			if cols[1] == "" {
+				rcf.Addrow(cols...)
+				continue
+			}
+			prefix := dblentry.AccountLcp([]string{prevkey, key})
+			prefix = strings.Trim(prefix, ":")
+			if prefix != "" {
+				spaces := api.Repeatstr("  ", len(strings.Split(prefix, ":")))
+				cols[1] = spaces + cols[1][len(prefix)+1:]
+			}
+			rcf.Addrow(cols...)
 		}
-		prefix := strings.Trim(dblentry.AccountLcp([]string{prevkey, key}), ":")
-		if prefix != "" {
-			spaces := api.Repeatstr("  ", len(strings.Split(prefix, ":")))
-			cols[1] = spaces + cols[1][len(prefix)+1:]
-		}
-		rcf.Addrow(cols...)
 		prevkey = key
 	}
 	if report.isfiltered() == false {
 		dashes := api.Repeatstr("-", rcf.maxwidth(rcf.column(2)))
 		rcf.Addrow([]string{"", "", dashes}...)
-		rcf.Addrow(report.finaltally...)
+		for _, row := range report.finaltally {
+			rcf.Addrow(row...)
+		}
 	}
 
 	w0 := rcf.maxwidth(rcf.column(0)) // Date
@@ -100,28 +105,42 @@ func (report *ReportBalance) posting(
 	db api.Datastorer, trans api.Transactor,
 	p api.Poster, acc api.Accounter) error {
 
-	row := []string{
-		report.latestdate(acc.Name(), trans.Date().Format("2006/Jan/02")),
-		fmt.Sprintf("%s", acc.Name()),
-		fmt.Sprintf("%s", BalanceRepr(acc.Balances())),
+	// final balance
+	report.finaltally = [][]string{}
+	for _, balance := range db.Balances() {
+		row := []string{"", "", balance.String()}
+		report.finaltally = append(report.finaltally, row)
+	}
+	if ln := len(report.finaltally); ln > 0 {
+		report.finaltally[ln-1][0] = trans.Date().Format("2006/Jan/02")
 	}
 
-	report.balance[acc.Name()] = row
-	report.finaltally = []string{
-		report.latestdate("_fulltally_", trans.Date().Format("2006/Jan/02")),
-		"",
-		fmt.Sprintf("%s", BalanceRepr(db.Balances())),
+	// filter account
+	if api.Filterstring(acc.Name(), report.filteraccounts) == false {
+		return nil
 	}
-	return nil
-}
 
-func (report *ReportBalance) latestdate(accname, date string) string {
-	if cols, ok := report.balance[accname]; ok {
-		if cols[0] > date {
-			return cols[0]
+	// format account balance
+	balances, rows := acc.Balances(), [][]string{}
+	var balance api.Commoditiser
+	var i int
+	for i, balance = range balances {
+		if i == (len(balances) - 1) {
+			break
 		}
+		row := []string{"", "", balance.String()}
+		rows = append(rows, row)
 	}
-	return date
+	finb := "0"
+	if balance != nil {
+		finb = balance.String()
+	}
+	row := []string{trans.Date().Format("2006/Jan/02"), acc.Name(), finb}
+	rows = append(rows, row)
+
+	report.balance[acc.Name()] = rows
+
+	return nil
 }
 
 func (report *ReportBalance) isfiltered() bool {
