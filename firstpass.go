@@ -13,10 +13,10 @@ func firstpass(db *dblentry.Datastore, journalfile string) error {
 	lines := readlines(journalfile)
 
 	iterate := blockiterate(lines)
-	rown, block, eof, err := iterate()
+	lineno, block, eof, err := iterate()
 	for len(block) > 0 {
 		if err != nil {
-			log.Errorf("%v\n", err)
+			log.Errorf("can't identify block at lineno %v: %v\n", lineno, err)
 			return err
 		}
 
@@ -38,15 +38,15 @@ func firstpass(db *dblentry.Datastore, journalfile string) error {
 				obj.Yledgerblock(db, block[1:])
 			}
 			if err := db.Firstpass(obj); err != nil {
-				fmsg := "firstpass transaction at row(%v): %v\n"
-				log.Errorf(fmsg, rown-len(block), err)
+				fmsg := "firstpass transaction at lineno %v: %v\n"
+				log.Errorf(fmsg, lineno-len(block), err)
 				return err
 			}
 
 		case *dblentry.Price:
 			if err := db.Firstpass(obj); err != nil {
-				fmsg := "firstpass at row(%v): %v\n"
-				log.Errorf(fmsg, rown-len(block), err)
+				fmsg := "firstpass price at lineno %v: %v\n"
+				log.Errorf(fmsg, lineno-len(block), err)
 				return err
 			}
 
@@ -55,12 +55,12 @@ func firstpass(db *dblentry.Datastore, journalfile string) error {
 				obj.Yledgerblock(db, block[1:])
 			}
 			if err := db.Firstpass(obj); err != nil {
-				fmsg := "firstpass at row(%v): %v\n"
-				log.Errorf(fmsg, rown-len(block), err)
+				fmsg := "firstpass directive at lineno %v: %v\n"
+				log.Errorf(fmsg, lineno-len(block), err)
 				return err
 			}
 		}
-		rown, block, eof, err = iterate()
+		lineno, block, eof, err = iterate()
 	}
 	if eof == false {
 		log.Errorf("expected eof")
@@ -101,16 +101,16 @@ func blockiterate(lines []string) func() (int, []string, bool, error) {
 					continue
 				} else {
 					fmsg := "must be at the begnning: row:%v column: 0"
-					return row, nil, false, fmt.Errorf(fmsg, row+1)
+					return row + 1, nil, false, fmt.Errorf(fmsg, row+1)
 				}
 
 			} else { // begin block
 				row++
 				blocklines = append(blocklines, line)
 				blocklines = append(blocklines, parseblock()...)
-				return row, blocklines, row >= len(lines), nil
+				return row + 1, blocklines, row >= len(lines), nil
 			}
 		}
-		return row, blocklines, true, nil
+		return row + 1, blocklines, true, nil
 	}
 }
