@@ -3,6 +3,7 @@ package dblentry
 import "fmt"
 
 import "github.com/prataprc/goparsec"
+import "github.com/prataprc/golog"
 
 type Directive struct {
 	dtype      string
@@ -38,6 +39,7 @@ func (d *Directive) Yaccount(db *Datastore) parsec.Parser {
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			d.dtype = "account"
 			d.account = nodes[1].(*Account)
+			log.Debugf("directive %q %v\n", d.dtype, d.account)
 			return d
 		},
 		ytok_account, d.account.Yledger(db),

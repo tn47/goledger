@@ -16,7 +16,7 @@ func firstpass(db *dblentry.Datastore, journalfile string) error {
 	lineno, block, eof, err := iterate()
 	for len(block) > 0 {
 		if err != nil {
-			log.Errorf("can't identify block at lineno %v: %v\n", lineno, err)
+			log.Errorf("lineno %v: %v\n", lineno, err)
 			return err
 		}
 
@@ -38,14 +38,14 @@ func firstpass(db *dblentry.Datastore, journalfile string) error {
 				obj.Yledgerblock(db, block[1:])
 			}
 			if err := db.Firstpass(obj); err != nil {
-				fmsg := "firstpass transaction at lineno %v: %v\n"
+				fmsg := "transaction at lineno %v: %v\n"
 				log.Errorf(fmsg, lineno-len(block), err)
 				return err
 			}
 
 		case *dblentry.Price:
 			if err := db.Firstpass(obj); err != nil {
-				fmsg := "firstpass price at lineno %v: %v\n"
+				fmsg := "price at lineno %v: %v\n"
 				log.Errorf(fmsg, lineno-len(block), err)
 				return err
 			}
@@ -55,7 +55,7 @@ func firstpass(db *dblentry.Datastore, journalfile string) error {
 				obj.Yledgerblock(db, block[1:])
 			}
 			if err := db.Firstpass(obj); err != nil {
-				fmsg := "firstpass directive at lineno %v: %v\n"
+				fmsg := "directive at lineno %v: %v\n"
 				log.Errorf(fmsg, lineno-len(block), err)
 				return err
 			}

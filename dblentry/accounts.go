@@ -103,7 +103,7 @@ func (acc *Account) Yledger(db *Datastore) parsec.Parser {
 	y := parsec.OrdChoice(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			t := nodes[0].(*parsec.Terminal)
-			name := string(t.Value)
+			name := strings.Trim(string(t.Value), " \t")
 			switch t.Name {
 			case "FULLACCNM":
 				acc.name = name
@@ -121,6 +121,32 @@ func (acc *Account) Yledger(db *Datastore) parsec.Parser {
 			panic(fmt.Errorf("unreachable code: terminal(%q)", t.Name))
 		},
 		ytok_accname, ytok_vaccname, ytok_baccname,
+	)
+	return y
+}
+
+func (acc *Account) Ypostaccn(db *Datastore) parsec.Parser {
+	y := parsec.OrdChoice(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			t := nodes[0].(*parsec.Terminal)
+			name := strings.Trim(string(t.Value), " \t")
+			switch t.Name {
+			case "POSTACCNM":
+				acc.name = name
+				acc.virtual, acc.balanced = false, true
+				return acc
+			case "VFULLACCNM":
+				acc.name = name[1 : len(name)-1]
+				acc.virtual, acc.balanced = true, false
+				return acc
+			case "BFULLACCNM":
+				acc.name = name[1 : len(name)-1]
+				acc.virtual, acc.balanced = true, true
+				return acc
+			}
+			panic(fmt.Errorf("unreachable code: terminal(%q)", t.Name))
+		},
+		ytok_postaccn, ytok_vaccname, ytok_baccname,
 	)
 	return y
 }
