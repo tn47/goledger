@@ -12,7 +12,6 @@ type Commodity struct {
 	currency  bool
 	precision int
 	mark1k    bool
-	equival   map[string]float64
 }
 
 func NewCommodity(name string) *Commodity {
