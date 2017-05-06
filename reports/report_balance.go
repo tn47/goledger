@@ -64,7 +64,7 @@ func (report *ReportBalance) Render(args []string) {
 		if api.Filterstring(cols[1], report.filteraccounts) == false {
 			continue
 		}
-		prefix := strings.Trim(dblentry.Lcp([]string{prevkey, key}), ":")
+		prefix := strings.Trim(dblentry.AccountLcp([]string{prevkey, key}), ":")
 		if prefix != "" {
 			spaces := api.Repeatstr("  ", len(strings.Split(prefix, ":")))
 			cols[1] = spaces + cols[1][len(prefix)+1:]

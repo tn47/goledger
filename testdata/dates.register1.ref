@@ -1,28 +1,28 @@
 
-  By-date      Description         Account                Amount   Balance 
-                                                                           
-  2011-Jan-29  My Employer         Assets:Checking       500.00    500.00  
-                                   Income:Salary        -500.00   -500.00  
-  2011-Feb-15  Departmental store  Expenses:Groceries    100.00    100.00  
-                                   Assets:Checking      -100.00    400.00  
-  2011-Mar-15  KFC                 Expenses:Dinning       75.00     75.00  
-                                   Assets:Checking       -75.00    325.00  
-  2011-Apr-15  Chats               Expenses:Dinning       10.00     85.00  
-                                   Assets:Checking       -10.00    315.00  
-  2011-May-15  Dinner              Expenses:Dinning       25.00    110.00  
-                                   Assets:Checking       -25.00    290.00  
-  2011-Jun-15  Breakfast           Expenses:Dinning       15.00    125.00  
-                                   Assets:Checking       -15.00    275.00  
-  2011-Jul-15  Snacks              Expenses:Dinning        5.00    130.00  
-                                   Assets:Checking        -5.00    270.00  
-  2011-Aug-29  Pen                 Expenses:Stationary    10.00     10.00  
-                                   Assets:Checking       -10.00    260.00  
-  2011-Sep-15  Departmental store  Expenses:Groceries     50.00    150.00  
-                                   Assets:Checking       -50.00    210.00  
-  2011-Oct-15  KFC                 Expenses:Dinning       75.00    205.00  
-                                   Assets:Checking       -75.00    135.00  
-  2011-Nov-15  Chats               Expenses:Dinning       15.00    220.00  
-                                   Assets:Checking       -15.00    120.00  
-  2011-Dec-15  Chats               Expenses:Dinning        5.00    225.00  
-                                   Assets:Checking        -5.00    115.00  
+  By-date      Description         Account                   Amount   Balance 
+                                                                              
+  2011-Jan-29  My Employer         Assets:Checking Income   500.00    500.00  
+                                   Income:Salary           -500.00   -500.00  
+  2011-Feb-15  Departmental store  Expen                    100.00    100.00  
+                                   Assets:Checking         -100.00   -100.00  
+  2011-Mar-15  KFC                 Expenses:Dinning          75.00     75.00  
+                                   Assets:Checking          -75.00   -175.00  
+  2011-Apr-15  Chats               Expenses:Dinning          10.00     85.00  
+                                   Assets:Checking          -10.00   -185.00  
+  2011-May-15  Dinner              Expenses:Dinning          25.00    110.00  
+                                   Assets:Checking          -25.00   -210.00  
+  2011-Jun-15  Breakfast           Expenses:Dinning          15.00    125.00  
+                                   Assets:Checking          -15.00   -225.00  
+  2011-Jul-15  Snacks              Expenses:Dinning           5.00    130.00  
+                                   Assets:Checking           -5.00   -230.00  
+  2011-Aug-29  Pen                 Expenses:Stationary       10.00     10.00  
+                                   Assets:Checking          -10.00   -240.00  
+  2011-Sep-15  Departmental store  Expenses:Groceries        50.00     50.00  
+                                   Assets:Checking          -50.00   -290.00  
+  2011-Oct-15  KFC                 Expenses:Dinning          75.00    205.00  
+                                   Assets:Checking          -75.00   -365.00  
+  2011-Nov-15  Chats               Expenses:Dinning          15.00    220.00  
+                                   Assets:Checking          -15.00   -380.00  
+  2011-Dec-15  Chats               Expenses:Dinning           5.00    225.00  
+                                   Assets:Checking           -5.00   -385.00  
 

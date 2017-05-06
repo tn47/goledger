@@ -126,12 +126,22 @@ func (acc *Account) Yledger(db *Datastore) parsec.Parser {
 }
 
 func (acc *Account) Ypostaccn(db *Datastore) parsec.Parser {
+	yacconly := parsec.And(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			return nodes[0]
+		},
+		ytok_accname, parsec.Parser(parsec.End),
+	)
 	y := parsec.OrdChoice(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			t := nodes[0].(*parsec.Terminal)
 			name := strings.Trim(string(t.Value), " \t")
 			switch t.Name {
-			case "POSTACCNM":
+			case "POSTACCN1":
+				acc.name = name
+				acc.virtual, acc.balanced = false, true
+				return acc
+			case "FULLACCNM":
 				acc.name = name
 				acc.virtual, acc.balanced = false, true
 				return acc
@@ -146,7 +156,7 @@ func (acc *Account) Ypostaccn(db *Datastore) parsec.Parser {
 			}
 			panic(fmt.Errorf("unreachable code: terminal(%q)", t.Name))
 		},
-		ytok_postaccn, ytok_vaccname, ytok_baccname,
+		ytok_postacc1, ytok_vaccname, ytok_baccname, yacconly,
 	)
 	return y
 }
@@ -156,7 +166,7 @@ func (acc *Account) Ypostaccn(db *Datastore) parsec.Parser {
 func (acc *Account) Total(db *Datastore, trans *Transaction, p *Posting) error {
 	accountnames := db.Accountnames()
 	for _, name := range accountnames {
-		prefix := strings.Trim(Lcp([]string{name, acc.name}), ":")
+		prefix := strings.Trim(AccountLcp([]string{name, acc.name}), ":")
 		if name == acc.name || prefix == "" {
 			continue
 		}

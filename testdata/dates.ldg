@@ -2,11 +2,11 @@ account Assets:Checking
     default
 
 2011/Jan/29  My Employer
-    Assets:Checking ok    500.00
+    Assets:Checking Income    500.00
     Income:Salary      -500.0
 
 2011/Feb/15   Departmental store
-    Expenses:Groceries   100.00
+    Expen   100.00
 
 2011/Mar/15   KFC
     Expenses:Dinning   75.00

@@ -23,7 +23,7 @@ var ytok_persnote = parsec.Token(";[^;]+", "TRANSPNOTE")
 
 //---- Posting tokens
 
-var ytok_postaccn = parsec.Token(`[a-zA-Z]([0-9a-zA-Z:~.,;?/-]* )*([  ]|[\t])`, "POSTACCNM")
+var ytok_postacc1 = parsec.Token(`[a-zA-Z]([0-9a-zA-Z:~.,;?/-]* )*([  ]|[\t])`, "POSTACCN1")
 var ytok_postnote = parsec.Token(";[^;]+", "TRANSNOTE")
 
 //---- Price tokens
