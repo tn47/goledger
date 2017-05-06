@@ -47,7 +47,7 @@ func (trans *Transaction) GetPostings() []api.Poster {
 
 func (trans *Transaction) Yledger(db *Datastore) parsec.Parser {
 	// DATE
-	ydate := Ydate(db.Year(), db.Month(), db.Dateformat())
+	ydate := Ydate(db.Year())
 	// [=EDATE]
 	yedate := parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {

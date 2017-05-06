@@ -29,9 +29,9 @@ func (price *Price) Yledger(db *Datastore) parsec.Parser {
 			//price.other = nodes[3].(*Commodity)
 			return price
 		},
-		ytok_price, // P
-		Ydate(db.Year(), db.Month(), db.Dateformat()), // DATE
-		ytok_commodity,                                // SYMBOL
+		ytok_price,       // P
+		Ydate(db.Year()), // DATE
+		ytok_commodity,   // SYMBOL
 		comm.Yledger(db),
 	)
 	return y

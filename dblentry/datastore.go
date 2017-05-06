@@ -3,6 +3,7 @@ package dblentry
 import "fmt"
 import "sort"
 import "strings"
+import "time"
 
 import "github.com/prataprc/goledger/api"
 import "github.com/prataprc/golog"
@@ -17,9 +18,7 @@ type Datastore struct {
 	defaultcomm string
 	commodities map[string]*Commodity
 	// directive fields
-	year         int               // year
-	month        int               // month
-	dateformat   string            // dataformat
+	currdate     time.Time
 	aliases      map[string]string // alias, account-alias
 	payees       map[string]string // account-payee map[regex]->accountname
 	rootaccount  string            // apply-account
@@ -36,10 +35,8 @@ func NewDatastore(name string, reporter api.Reporter) *Datastore {
 		balance:     make(map[string]*Commodity),
 		commodities: map[string]*Commodity{},
 		// directives
-		year:       -1,
-		month:      -1,
-		dateformat: "%Y/%m/%d %h:%n:%s", // TODO: no magic string
-		aliases:    map[string]string{},
+		currdate: time.Now(),
+		aliases:  map[string]string{},
 	}
 	db.defaultprices()
 	return db
@@ -123,6 +120,24 @@ func (db *Datastore) SubAccounts(parentname string) []*Account {
 	return accounts
 }
 
+func (db *Datastore) SetYear(year int) *Datastore {
+	db.currdate = time.Date(year, 1, 1, 0, 0, 0, 0, time.Local)
+	return db
+}
+
+func (db *Datastore) Year() int {
+	return db.currdate.Year()
+}
+
+func (db *Datastore) SetCurrentDate(date time.Time) *Datastore {
+	db.currdate = date
+	return db
+}
+
+func (db *Datastore) CurrentDate() time.Time {
+	return db.currdate
+}
+
 //---- engine
 
 func (db *Datastore) Firstpass(obj interface{}) error {
@@ -136,6 +151,7 @@ func (db *Datastore) Firstpass(obj interface{}) error {
 			}
 			log.Debugf("transaction balanced\n")
 		}
+		db.SetCurrentDate(trans.date)
 		db.transdb.Insert(trans.date, trans)
 		return trans.Firstpass(db)
 
@@ -144,12 +160,6 @@ func (db *Datastore) Firstpass(obj interface{}) error {
 
 	} else if directive, ok := obj.(*Directive); ok {
 		switch directive.dtype {
-		case "year":
-			db.SetYear(directive.year)
-		case "month":
-			db.SetMonth(directive.month)
-		case "dateformat":
-			db.SetDateformat(directive.dateformat)
 		case "account":
 			db.Declare(directive.account) // NOTE: this is redundant
 		case "apply":
@@ -167,6 +177,8 @@ func (db *Datastore) Firstpass(obj interface{}) error {
 				return fmt.Errorf("dangling `end` directive")
 			}
 			db.rootaccount = ""
+		case "year":
+			db.SetYear(directive.year)
 		default:
 			panic("unreachable code")
 		}
@@ -204,39 +216,6 @@ func (db *Datastore) DeductBalance(commodity *Commodity) {
 		return
 	}
 	db.balance[commodity.name] = commodity.Similar(commodity.amount)
-}
-
-// directive-year
-
-func (db *Datastore) SetYear(year int) *Datastore {
-	db.year = year
-	return db
-}
-
-func (db *Datastore) Year() int {
-	return db.year
-}
-
-// directive-month
-
-func (db *Datastore) SetMonth(month int) *Datastore {
-	db.month = month
-	return db
-}
-
-func (db *Datastore) Month() int {
-	return db.month
-}
-
-// directive-dateformat
-
-func (db *Datastore) SetDateformat(format string) *Datastore {
-	db.dateformat = format
-	return db
-}
-
-func (db *Datastore) Dateformat() string {
-	return db.dateformat
 }
 
 // directive-alias

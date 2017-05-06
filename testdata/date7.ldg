@@ -1,0 +1,31 @@
+account Assets:Checking
+    default
+
+Apr/15   Chats
+    Expenses:Dinning   10
+
+13/Apr/15   My Employer 2013
+    Assets:Checking           500.00
+    Income:Salary            -500.0
+
+
+2/1 9:9:9 My Employer 2013 Feb
+    Assets:Checking           501.00
+    Income:Salary            -501.0
+
+May/15   Dinner
+    Expenses:Dinning   25
+
+year 2016
+
+06/15   Breakfast
+    Expenses:Dinning   15
+
+Jul/15   Snacks
+    Expenses:Dinning   5.00
+
+Sep/15  Departmental store
+    Expenses:Groceries   50.00
+
+11/15   KFC 2016
+    Expenses:Dinning   75.00

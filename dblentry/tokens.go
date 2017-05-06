@@ -8,6 +8,7 @@ var ytok_amount = parsec.Token(`[0-9,.-]+`, "AMOUNT")
 var ytok_commodity = parsec.Token("[^0-9.,/@]+", "COMMODITY")
 var ytok_assert = parsec.Token("assert", "ASSERT")
 var ytok_expr = parsec.Token(`\{.*\}`, "EXPRESSION")
+var ytok_yearval = parsec.Token(`[0-9]{4}`, "YEAR")
 
 //---- Transaction tokens
 type Transnote string
@@ -43,6 +44,7 @@ var ytok_value = parsec.Token(".*", "DRTV_VALUE")
 var ytok_apply = parsec.Token("apply", "DRTV_APPLY")
 var ytok_aliasname = parsec.Token("[^=]+", "DRTV_ALIASNAME")
 var ytok_end = parsec.Token("end", "DRTV_END")
+var ytok_year = parsec.Token("year", "DRTV_YEAR")
 
 //
 func maybenode(nodes []parsec.ParsecNode) parsec.ParsecNode {

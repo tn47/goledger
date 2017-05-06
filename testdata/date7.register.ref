@@ -1,0 +1,20 @@
+
+  By-date      Description           Account             Amount  Balance 
+                                                                         
+  2013-Feb-01  My Employer 2013 Feb  Assets:Checking       501      501  
+                                     Income:Salary        -501     -501  
+  2013-Apr-15  My Employer 2013      Assets:Checking       500     1001  
+                                     Income:Salary        -500    -1001  
+  2013-May-15  Dinner                Expenses:Dinning       25       25  
+                                     Assets:Checking       -25      976  
+  2016-Jun-15  Breakfast             Expenses:Dinning       15       40  
+                                     Assets:Checking       -15      961  
+  2016-Jul-15  Snacks                Expenses:Dinning        5       45  
+                                     Assets:Checking        -5      956  
+  2016-Sep-15  Departmental store    Expenses:Groceries     50       50  
+                                     Assets:Checking       -50      906  
+  2016-Nov-15  KFC 2016              Expenses:Dinning       75      120  
+                                     Assets:Checking       -75      831  
+  2017-Apr-15  Chats                 Expenses:Dinning       10      130  
+                                     Assets:Checking       -10      821  
+

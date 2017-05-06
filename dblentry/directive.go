@@ -1,6 +1,7 @@
 package dblentry
 
 import "fmt"
+import "strconv"
 
 import "github.com/prataprc/goparsec"
 import "github.com/prataprc/golog"
@@ -8,8 +9,6 @@ import "github.com/prataprc/golog"
 type Directive struct {
 	dtype      string
 	year       int      // year
-	month      int      // month
-	dateformat string   // dateformat
 	account    *Account // account, alias, apply
 	aliasname  string   // alias
 	expression string   // assert
@@ -30,6 +29,7 @@ func (d *Directive) Yledger(db *Datastore) parsec.Parser {
 		d.Yalias(db),
 		d.Yassert(db),
 		d.Yend(db),
+		d.Yyear(db),
 	)
 	return y
 }
@@ -89,6 +89,19 @@ func (d *Directive) Yend(db *Datastore) parsec.Parser {
 	)
 }
 
+func (d *Directive) Yyear(db *Datastore) parsec.Parser {
+	return parsec.And(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			d.dtype = "year"
+			d.year, _ = strconv.Atoi(string(nodes[1].(*parsec.Terminal).Value))
+			return d
+		},
+		ytok_year, ytok_yearval,
+	)
+}
+
+//---- subdirective parsers
+
 func (d *Directive) Yledgerblock(db *Datastore, block []string) {
 	var node parsec.ParsecNode
 	switch d.dtype {
@@ -123,32 +136,25 @@ func (d *Directive) Yledgerblock(db *Datastore, block []string) {
 		}
 		return
 
-	case "apply", "alias", "assert", "end":
+	case "apply", "alias", "assert", "end", "year":
 		return
 	}
 	panic(fmt.Errorf("unreachable code"))
 }
 
 func (d *Directive) Yaccountdirectives(db *Datastore) parsec.Parser {
-	switch d.dtype {
-	case "account":
-		ynote := parsec.And(nil, ytok_note, ytok_value)
-		yalias := parsec.And(nil, ytok_alias, ytok_value)
-		ypayee := parsec.And(nil, ytok_payee, ytok_value)
-		ycheck := parsec.And(nil, ytok_check, ytok_value)
-		yassert := parsec.And(nil, ytok_assert, ytok_value)
-		yeval := parsec.And(nil, ytok_eval, ytok_value)
-		ydefault := parsec.And(nil, ytok_default)
-		y := parsec.OrdChoice(
-			Vector2scalar,
-			ynote, yalias, ypayee, ycheck, yassert, yeval, ydefault,
-		)
-		return y
-
-	case "apply", "alias", "assert", "end":
-		return nil
-	}
-	panic("unreachable code")
+	ynote := parsec.And(nil, ytok_note, ytok_value)
+	yalias := parsec.And(nil, ytok_alias, ytok_value)
+	ypayee := parsec.And(nil, ytok_payee, ytok_value)
+	ycheck := parsec.And(nil, ytok_check, ytok_value)
+	yassert := parsec.And(nil, ytok_assert, ytok_value)
+	yeval := parsec.And(nil, ytok_eval, ytok_value)
+	ydefault := parsec.And(nil, ytok_default)
+	y := parsec.OrdChoice(
+		Vector2scalar,
+		ynote, yalias, ypayee, ycheck, yassert, yeval, ydefault,
+	)
+	return y
 }
 
 func (d *Directive) Firstpass(db *Datastore) error {
