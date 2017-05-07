@@ -153,34 +153,13 @@ func (db *Datastore) Firstpass(obj interface{}) error {
 		return db.pricedb.Insert(price.when, price)
 
 	} else if directive, ok := obj.(*Directive); ok {
-		switch directive.dtype {
-		case "account":
-			db.Declare(directive.account) // NOTE: this is redundant
-		case "apply":
-			if db.rootaccount != "" {
-				fmsg := "previous `apply` directive(%v) not closed"
-				return fmt.Errorf(fmsg, db.rootaccount)
-			}
-			db.rootaccount = directive.account.name
-		case "alias":
-			db.AddAlias(directive.aliasname, directive.account.name)
-		case "assert":
-			return fmt.Errorf("directive not-implemented")
-		case "end":
-			if db.rootaccount == "" {
-				return fmt.Errorf("dangling `end` directive")
-			}
-			db.rootaccount = ""
-		case "year":
-			db.SetYear(directive.year)
-		default:
-			panic("unreachable code")
+		if err := directive.Firstpass(db); err != nil {
+			return err
 		}
+		return
 
-	} else {
-		panic("unreachable code")
 	}
-	return nil
+	panic("unreachable code")
 }
 
 func (db *Datastore) Secondpass() error {

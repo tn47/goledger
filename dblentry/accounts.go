@@ -85,10 +85,8 @@ func (acc *Account) Balanced() bool {
 }
 
 func (acc *Account) Formatedname() string {
-	if acc.virtual && !acc.balanced {
+	if acc.virtual {
 		return fmt.Sprintf("(%s)", acc.name)
-	} else if acc.virtual {
-		return fmt.Sprintf("[%s]", acc.name)
 	}
 	return acc.name
 }
