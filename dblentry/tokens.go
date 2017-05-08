@@ -9,6 +9,8 @@ var ytok_commodity = parsec.Token("[^0-9.,/@]+", "COMMODITY")
 var ytok_assert = parsec.Token("assert", "ASSERT")
 var ytok_expr = parsec.Token(`\{.*\}`, "EXPRESSION")
 var ytok_yearval = parsec.Token(`[0-9]{4}`, "YEAR")
+var ytok_commentchar = parsec.Token(`[;|#*]`, "COMMENTCHAR")
+var ytok_commentline = parsec.Token(`.*`, "COMMENTLINE")
 
 //---- Transaction tokens
 type Transnote string

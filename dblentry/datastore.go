@@ -153,10 +153,10 @@ func (db *Datastore) Firstpass(obj interface{}) error {
 		return db.pricedb.Insert(price.when, price)
 
 	} else if directive, ok := obj.(*Directive); ok {
-		if err := directive.Firstpass(db); err != nil {
-			return err
-		}
-		return nil
+		return directive.Firstpass(db)
+
+	} else if comment, ok := obj.(*Comment); ok {
+		return comment.Firstpass(db)
 	}
 	panic("unreachable code")
 }

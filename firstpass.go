@@ -25,9 +25,10 @@ func firstpass(db *dblentry.Datastore, journalfile string) error {
 		ytrans := dblentry.NewTransaction().Yledger(db)
 		yprice := dblentry.NewPrice().Yledger(db)
 		ydirective := dblentry.NewDirective().Yledger(db)
+		ycomment := dblentry.NewComment().Yledger(db)
 		y := parsec.OrdChoice(
 			dblentry.Vector2scalar,
-			ytrans, yprice, ydirective,
+			ytrans, yprice, ydirective, ycomment,
 		)
 
 		node, scanner = y(scanner)
@@ -37,28 +38,18 @@ func firstpass(db *dblentry.Datastore, journalfile string) error {
 			if len(block[1:]) > 0 {
 				obj.Yledgerblock(db, block[1:])
 			}
-			if err := db.Firstpass(obj); err != nil {
-				fmsg := "transaction at lineno %v: %v\n"
-				log.Errorf(fmsg, lineno-len(block), err)
-				return err
-			}
-
-		case *dblentry.Price:
-			if err := db.Firstpass(obj); err != nil {
-				fmsg := "price at lineno %v: %v\n"
-				log.Errorf(fmsg, lineno-len(block), err)
-				return err
-			}
 
 		case *dblentry.Directive:
 			if len(block[1:]) > 0 {
 				obj.Yledgerblock(db, block[1:])
 			}
-			if err := db.Firstpass(obj); err != nil {
-				fmsg := "directive at lineno %v: %v\n"
-				log.Errorf(fmsg, lineno-len(block), err)
-				return err
-			}
+
+		case *dblentry.Comment, *dblentry.Price:
+		}
+		if err := db.Firstpass(node); err != nil {
+			fmsg := "%T at lineno %v: %v\n"
+			log.Errorf(fmsg, node, lineno-len(block), err)
+			return err
 		}
 		lineno, block, eof, err = iterate()
 	}
