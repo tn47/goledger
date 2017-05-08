@@ -10,14 +10,12 @@ type Posting struct {
 	direction string // "source", target"
 	// post entry
 	account   *Account
-	virtual   bool
-	balanced  bool
 	commodity *Commodity
 	note      string
 }
 
 func NewPosting() *Posting {
-	return &Posting{virtual: false, balanced: true}
+	return &Posting{}
 }
 
 //---- accessor
@@ -48,10 +46,10 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 			case []parsec.ParsecNode:
 				// account
 				account := items[0].(*Account)
-				p.virtual = account.Virtual()
-				p.balanced = account.Balanced()
 				accname := db.Applyroot(db.LookupAlias(account.name))
 				p.account = db.GetAccount(accname)
+				p.account.virtual = account.virtual
+				p.account.balanced = account.balanced
 
 				// first commodity
 				commodity, _ := items[1].(*Commodity)

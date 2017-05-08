@@ -156,8 +156,7 @@ func (db *Datastore) Firstpass(obj interface{}) error {
 		if err := directive.Firstpass(db); err != nil {
 			return err
 		}
-		return
-
+		return nil
 	}
 	panic("unreachable code")
 }
@@ -216,7 +215,7 @@ func (db *Datastore) Rootaccount() string {
 
 // directive-account
 
-func (db *Datastore) Declare(value interface{}) {
+func (db *Datastore) Declare(value interface{}) error {
 	switch v := value.(type) {
 	case *Account:
 		account := db.GetAccount(v.name)
@@ -224,7 +223,7 @@ func (db *Datastore) Declare(value interface{}) {
 		if v.defblns {
 			db.SetBalancingaccount(v.name)
 		}
-		return
+		return nil
 
 	default:
 		panic("unreachable code")

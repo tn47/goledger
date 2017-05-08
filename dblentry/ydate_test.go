@@ -22,7 +22,7 @@ func TestYmdy(t *testing.T) {
 	for _, icase := range testcases {
 		t.Logf("input %v", icase[0])
 		scanner := parsec.NewScanner([]byte(icase[0].(string)))
-		node, _ := Ydate(-1)(scanner)
+		node, _ := Ydate(2014)(scanner)
 		if node == nil && icase[1].(string) == "" {
 			continue
 		}
@@ -47,7 +47,7 @@ func TestYhms(t *testing.T) {
 	for _, icase := range testcases {
 		t.Logf("input %v", icase[0])
 		scanner := parsec.NewScanner([]byte(icase[0].(string)))
-		node, _ := Ydate(-1)(scanner)
+		node, _ := Ydate(2014)(scanner)
 		if node == nil && icase[1].(string) == "" {
 			continue
 		}

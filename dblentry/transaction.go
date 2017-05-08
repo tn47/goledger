@@ -102,9 +102,11 @@ func (trans *Transaction) Yledgerblock(db *Datastore, block []string) {
 
 func (trans *Transaction) ShouldBalance() bool {
 	for _, posting := range trans.postings {
-		if posting.virtual == true && posting.balanced == false {
+		virtual := posting.account.Virtual()
+		balanced := posting.account.Balanced()
+		if virtual == true && balanced == false {
 			return false
-		} else if posting.balanced == false {
+		} else if balanced == false {
 			return false
 		}
 	}

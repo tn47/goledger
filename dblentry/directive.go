@@ -160,7 +160,7 @@ func (d *Directive) Yaccountdirectives(db *Datastore) parsec.Parser {
 func (d *Directive) Firstpass(db *Datastore) error {
 	switch d.dtype {
 	case "account":
-		db.Declare(d.account) // NOTE: this is redundant
+		return db.Declare(d.account) // NOTE: this is redundant
 
 	case "apply":
 		if db.rootaccount != "" {
@@ -168,9 +168,11 @@ func (d *Directive) Firstpass(db *Datastore) error {
 			return fmt.Errorf(fmsg, db.rootaccount)
 		}
 		db.rootaccount = d.account.name
+		return nil
 
 	case "alias":
 		db.AddAlias(d.aliasname, d.account.name)
+		return nil
 
 	case "assert":
 		return fmt.Errorf("directive not-implemented")
@@ -180,13 +182,13 @@ func (d *Directive) Firstpass(db *Datastore) error {
 			return fmt.Errorf("dangling `end` directive")
 		}
 		db.rootaccount = ""
+		return nil
 
 	case "year":
 		db.SetYear(d.year)
-
-	default:
-		panic("unreachable code")
+		return nil
 	}
+	panic("unreachable code")
 }
 
 func (d *Directive) Secondpass(db *Datastore) error {
