@@ -31,7 +31,7 @@ func (comm *Commodity) Similar(amount float64) *Commodity {
 
 func (comm *Commodity) String() string {
 	amountstr := fmt.Sprintf("%v", comm.amount)
-	if comm.precision > 0 {
+	if comm.precision >= 0 {
 		fmsg := fmt.Sprintf("%%.%vf", comm.precision)
 		amountstr = fmt.Sprintf(fmsg, comm.amount)
 	}

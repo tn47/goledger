@@ -3,9 +3,9 @@ package dblentry
 import "github.com/prataprc/goparsec"
 
 var ytok_equal = parsec.Token("=", "EQUAL")
-var ytok_currency = parsec.Token("[^0-9 \t\r\n-]+", "CURRENCY")
+var ytok_currency = parsec.Token(`[^0-9 \t\r\n.,;:?!/@+*/^&|=<>(){}\[\]-]+`, "CURRENCY")
 var ytok_amount = parsec.Token(`[0-9,.-]+`, "AMOUNT")
-var ytok_commodity = parsec.Token("[^0-9.,/@]+", "COMMODITY")
+var ytok_commodity = parsec.Token(`[^0-9 \t\r\n.,;:?!/@+*/^&|=<>(){}\[\]-]+`, "COMMODITY")
 var ytok_assert = parsec.Token("assert", "ASSERT")
 var ytok_expr = parsec.Token(`\{.*\}`, "EXPRESSION")
 var ytok_yearval = parsec.Token(`[0-9]{4}`, "YEAR")
