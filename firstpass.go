@@ -8,6 +8,7 @@ import "github.com/prataprc/golog"
 import "github.com/prataprc/goledger/dblentry"
 
 func firstpass(db *dblentry.Datastore, journalfile string) error {
+	log.Debugf("firstpass %v\n", journalfile)
 	var node parsec.ParsecNode
 
 	lines := readlines(journalfile)

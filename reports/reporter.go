@@ -45,21 +45,20 @@ func (reports *Reports) Transaction(
 }
 
 func (reports *Reports) Posting(
-	db api.Datastorer, trans api.Transactor,
-	p api.Poster, account api.Accounter) error {
+	db api.Datastorer, trans api.Transactor, p api.Poster) error {
 
-	n, ok := reports.accounts[account.Name()]
+	n, ok := reports.accounts[p.Account().Name()]
 	if ok {
 		n += 1
 	} else {
 		n = 0
 	}
-	reports.accounts[account.Name()] = n
+	reports.accounts[p.Account().Name()] = n
 
 	reports.n_postings += 1
 
 	for _, reporter := range reports.reporters {
-		if err := reporter.Posting(db, trans, p, account); err != nil {
+		if err := reporter.Posting(db, trans, p); err != nil {
 			return err
 		}
 	}
@@ -78,7 +77,7 @@ func (reports *Reports) BubblePosting(
 	return nil
 }
 
-func (reports *Reports) Render(args []string) {
+func (reports *Reports) Render(db api.Datastorer, args []string) {
 	if len(args) == 0 {
 		fmt.Printf("  No. of transactions: %5v\n", reports.n_transactions)
 		fmt.Printf("  No. of postings:     %5v\n", reports.n_postings)
@@ -92,7 +91,7 @@ func (reports *Reports) Render(args []string) {
 	}
 
 	for _, reporter := range reports.reporters {
-		reporter.Render(args)
+		reporter.Render(db, args)
 	}
 }
 

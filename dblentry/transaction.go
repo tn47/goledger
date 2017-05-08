@@ -27,12 +27,12 @@ func NewTransaction() *Transaction {
 
 //---- accessor
 
-func (trans *Transaction) Description() string {
-	return trans.desc
-}
-
 func (trans *Transaction) Date() time.Time {
 	return trans.date
+}
+
+func (trans *Transaction) Description() string {
+	return trans.desc
 }
 
 func (trans *Transaction) GetPostings() []api.Poster {
@@ -198,7 +198,7 @@ func (trans *Transaction) DoBalance() []*Commodity {
 
 func (trans *Transaction) Firstpass(db *Datastore) error {
 	if trans.ShouldBalance() {
-		defaccount := db.GetAccount(db.blncingaccnt)
+		defaccount := db.GetAccount(db.blncingaccnt).(*Account)
 		if ok, err := trans.Autobalance1(db, defaccount); err != nil {
 			return err
 		} else if ok == false {
@@ -206,6 +206,7 @@ func (trans *Transaction) Firstpass(db *Datastore) error {
 		}
 		log.Debugf("transaction balanced\n")
 	}
+
 	for _, posting := range trans.postings {
 		if err := posting.Firstpass(db, trans); err != nil {
 			return err

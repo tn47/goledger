@@ -3,9 +3,19 @@ package api
 import "time"
 
 type Datastorer interface {
+	GetAccount(name string) Accounter
+
+	// After firstpass
+
+	Accountnames() []string
+
 	Balance(obj interface{}) Commoditiser
 
 	Balances() []Commoditiser
+
+	SubAccounts(name string) []Accounter
+
+	Formatter
 }
 
 type Transactor interface {
@@ -36,14 +46,24 @@ type Accounter interface {
 	Balance(obj interface{}) Commoditiser
 
 	Balances() []Commoditiser
+
+	HasPosting() bool
+
+	Formatter
 }
 
 type Reporter interface {
 	Transaction(Datastorer, Transactor) error
 
-	Posting(Datastorer, Transactor, Poster, Accounter) error
+	Posting(Datastorer, Transactor, Poster) error
 
 	BubblePosting(Datastorer, Transactor, Poster, Accounter) error
 
-	Render(args []string)
+	Render(db Datastorer, args []string)
+}
+
+type Formatter interface {
+	FmtBalances(Datastorer, Transactor, Poster, Accounter) [][]string
+
+	FmtRegister(Datastorer, Transactor, Poster, Accounter) [][]string
 }

@@ -8,6 +8,14 @@ import "time"
 import "github.com/prataprc/goledger/api"
 import "github.com/prataprc/golog"
 
+type Pass int
+
+const (
+	DBSTART Pass = iota + 1
+	DBFIRSTPASS
+	DBSECONDPASS
+)
+
 type Datastore struct {
 	name        string
 	reporter    api.Reporter
@@ -17,6 +25,7 @@ type Datastore struct {
 	balance     map[string]*Commodity
 	defaultcomm string
 	commodities map[string]*Commodity
+	pass        Pass
 	// directive fields
 	currdate     time.Time
 	aliases      map[string]string // alias, account-alias
@@ -34,6 +43,7 @@ func NewDatastore(name string, reporter api.Reporter) *Datastore {
 		accntdb:     map[string]*Account{},
 		balance:     make(map[string]*Commodity),
 		commodities: map[string]*Commodity{},
+		pass:        DBSTART,
 		// directives
 		currdate: time.Now(),
 		aliases:  map[string]string{},
@@ -62,9 +72,9 @@ func (db *Datastore) GetCommodity(name string, defcomm *Commodity) *Commodity {
 	return defcomm
 }
 
-func (db *Datastore) GetAccount(name string) *Account {
+func (db *Datastore) GetAccount(name string) api.Accounter {
 	if name == "" {
-		return nil
+		return (*Account)(nil)
 	}
 	account, ok := db.accntdb[name]
 	if ok == false {
@@ -74,7 +84,16 @@ func (db *Datastore) GetAccount(name string) *Account {
 	return account
 }
 
+func (db *Datastore) HasAccount(name string) bool {
+	_, ok := db.accntdb[name]
+	return ok
+}
+
 func (db *Datastore) Accountnames() []string {
+	if db.pass < DBFIRSTPASS {
+		panic("impossible situation")
+	}
+
 	accnames := []string{}
 	for name := range db.accntdb {
 		accnames = append(accnames, name)
@@ -82,12 +101,11 @@ func (db *Datastore) Accountnames() []string {
 	return accnames
 }
 
-func (db *Datastore) HasAccount(name string) bool {
-	_, ok := db.accntdb[name]
-	return ok
-}
-
 func (db *Datastore) Balance(obj interface{}) (balance api.Commoditiser) {
+	if db.pass < DBFIRSTPASS {
+		panic("impossible situation")
+	}
+
 	switch v := obj.(type) {
 	case *Commodity:
 		balance, _ = db.balance[v.name]
@@ -98,6 +116,10 @@ func (db *Datastore) Balance(obj interface{}) (balance api.Commoditiser) {
 }
 
 func (db *Datastore) Balances() []api.Commoditiser {
+	if db.pass < DBFIRSTPASS {
+		panic("impossible situation")
+	}
+
 	keys := []string{}
 	for name := range db.balance {
 		keys = append(keys, name)
@@ -110,10 +132,15 @@ func (db *Datastore) Balances() []api.Commoditiser {
 	return comms
 }
 
-func (db *Datastore) SubAccounts(parentname string) []*Account {
-	accounts := []*Account{}
+func (db *Datastore) SubAccounts(parentname string) []api.Accounter {
+	if db.pass < DBFIRSTPASS {
+		panic("impossible situation")
+	}
+
+	parentname = strings.Trim(parentname, ":") + ":"
+	accounts := []api.Accounter{}
 	for name, account := range db.accntdb {
-		if strings.HasPrefix(parentname, name) {
+		if strings.HasPrefix(name, parentname) {
 			accounts = append(accounts, account)
 		}
 	}
@@ -138,30 +165,43 @@ func (db *Datastore) CurrentDate() time.Time {
 	return db.currdate
 }
 
+func (db *Datastore) PrintAccounts() {
+	for _, accname := range db.Accountnames() {
+		log.Debugf("-- %v\n", db.accntdb[accname])
+	}
+}
+
 //---- engine
 
-func (db *Datastore) Firstpass(obj interface{}) error {
+func (db *Datastore) Firstpass(obj interface{}) (err error) {
+	defer func() {
+		db.pass = DBFIRSTPASS
+	}()
+
 	if trans, ok := obj.(*Transaction); ok {
 		if err := trans.Firstpass(db); err != nil {
 			return err
 		}
 		db.SetCurrentDate(trans.date)
 		db.transdb.Insert(trans.date, trans)
-		return nil
 
 	} else if price, ok := obj.(*Price); ok {
-		return db.pricedb.Insert(price.when, price)
+		err = db.pricedb.Insert(price.when, price)
 
 	} else if directive, ok := obj.(*Directive); ok {
-		return directive.Firstpass(db)
+		err = directive.Firstpass(db)
 
 	} else if comment, ok := obj.(*Comment); ok {
-		return comment.Firstpass(db)
+		err = comment.Firstpass(db)
 	}
-	panic("unreachable code")
+	return err
 }
 
 func (db *Datastore) Secondpass() error {
+	defer func() {
+		db.pass = DBSECONDPASS
+	}()
+
 	kvfull := make([]KV, 0)
 	for _, kv := range db.transdb.Range(nil, nil, "both", kvfull) {
 		trans := kv.v.(*Transaction)
@@ -218,7 +258,7 @@ func (db *Datastore) Rootaccount() string {
 func (db *Datastore) Declare(value interface{}) error {
 	switch v := value.(type) {
 	case *Account:
-		account := db.GetAccount(v.name)
+		account := db.GetAccount(v.name).(*Account)
 		account.SetDirective(v)
 		if v.defblns {
 			db.SetBalancingaccount(v.name)
@@ -253,6 +293,35 @@ func (db *Datastore) Applyroot(name string) string {
 		return db.rootaccount + ":" + name
 	}
 	return name
+}
+
+//---- Reporting
+
+func (db *Datastore) FmtBalances(
+	_ api.Datastorer, trans api.Transactor, p api.Poster,
+	acc api.Accounter) [][]string {
+
+	rows := make([][]string, 0)
+
+	if len(db.Balances()) == 0 {
+		return append(rows, []string{"", "", "-"})
+	}
+
+	balances := db.Balances()
+	for _, balance := range balances[:len(balances)-1] {
+		rows = append(rows, []string{"", "", balance.String()})
+	}
+	balance := balances[len(balances)-1]
+	date := trans.Date().Format("2006/Jan/02")
+	rows = append(rows, []string{date, "", balance.String()})
+	return rows
+}
+
+func (db *Datastore) FmtRegister(
+	_ api.Datastorer, trans api.Transactor, p api.Poster,
+	acc api.Accounter) [][]string {
+
+	panic("not supported")
 }
 
 func (db *Datastore) defaultprices() {

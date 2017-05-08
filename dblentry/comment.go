@@ -16,7 +16,6 @@ func (cmt *Comment) Yledger(db *Datastore) parsec.Parser {
 	y := parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			cmt.line = string(nodes[1].(*parsec.Terminal).Value)
-			fmt.Println(cmt.line)
 			return cmt
 		},
 		ytok_commentchar, ytok_commentline,

@@ -1,8 +1,8 @@
 package reports
 
+import "strings"
 import "sort"
 import "fmt"
-import "strings"
 
 import "github.com/prataprc/goledger/api"
 import "github.com/prataprc/goledger/dblentry"
@@ -32,20 +32,52 @@ func (report *ReportBalance) Transaction(
 }
 
 func (report *ReportBalance) Posting(
-	db api.Datastorer, trans api.Transactor,
-	p api.Poster, account api.Accounter) error {
+	db api.Datastorer, trans api.Transactor, p api.Poster) error {
 
-	return report.posting(db, trans, p, account)
+	acc := p.Account()
+
+	// final balance
+	report.finaltally = db.FmtBalances(db, trans, p, acc)
+	// filter account
+	if api.Filterstring(acc.Name(), report.filteraccounts) == false {
+		return nil
+	}
+	// format account balance
+	report.balance[acc.Name()] = acc.FmtBalances(db, trans, p, acc)
+
+	return nil
 }
 
 func (report *ReportBalance) BubblePosting(
 	db api.Datastorer, trans api.Transactor,
 	p api.Poster, account api.Accounter) error {
 
-	return report.posting(db, trans, p, account)
+	children, bbname := map[string]bool{}, account.Name()
+	for accname := range report.balance {
+		if accname == bbname || strings.HasPrefix(accname, bbname) == false {
+			continue
+		}
+		parts := dblentry.SplitAccount(strings.Trim(accname[len(bbname):], ":"))
+		children[parts[0]] = true
+	}
+
+	if len(children) > 1 {
+		// final balance
+		report.finaltally = db.FmtBalances(db, trans, p, account)
+		// filter account
+		if api.Filterstring(bbname, report.filteraccounts) == false {
+			return nil
+		}
+		// format account balance
+		report.balance[bbname] = account.FmtBalances(db, trans, p, account)
+
+	} else {
+		delete(report.balance, bbname)
+	}
+	return nil
 }
 
-func (report *ReportBalance) Render(args []string) {
+func (report *ReportBalance) Render(db api.Datastorer, args []string) {
 	rcf := report.rcf
 
 	// sort
@@ -55,25 +87,16 @@ func (report *ReportBalance) Render(args []string) {
 	}
 	sort.Strings(keys)
 
+	report.indent("", "", keys)
+
 	rcf.Addrow([]string{"By-date", "Account", "Balance"}...)
 	rcf.Addrow([]string{"", "", ""}...) // empty line
 
-	prevkey := ""
 	for _, key := range keys {
-		for _, cols := range report.balance[key] {
-			if cols[1] == "" {
-				rcf.Addrow(cols...)
-				continue
-			}
-			prefix := dblentry.AccountLcp([]string{prevkey, key})
-			prefix = strings.Trim(prefix, ":")
-			if prefix != "" {
-				spaces := api.Repeatstr("  ", len(strings.Split(prefix, ":")))
-				cols[1] = spaces + cols[1][len(prefix)+1:]
-			}
-			rcf.Addrow(cols...)
+		rows := report.balance[key]
+		for _, row := range rows {
+			rcf.Addrow(row...)
 		}
-		prevkey = key
 	}
 	if report.isfiltered() == false {
 		dashes := api.Repeatstr("-", rcf.maxwidth(rcf.column(2)))
@@ -101,46 +124,47 @@ func (report *ReportBalance) Render(args []string) {
 	fmt.Println()
 }
 
-func (report *ReportBalance) posting(
-	db api.Datastorer, trans api.Transactor,
-	p api.Poster, acc api.Accounter) error {
-
-	// final balance
-	report.finaltally = [][]string{}
-	for _, balance := range db.Balances() {
-		row := []string{"", "", balance.String()}
-		report.finaltally = append(report.finaltally, row)
-	}
-	if ln := len(report.finaltally); ln > 0 {
-		report.finaltally[ln-1][0] = trans.Date().Format("2006/Jan/02")
-	}
-
-	// filter account
-	if api.Filterstring(acc.Name(), report.filteraccounts) == false {
-		return nil
-	}
-
-	// format account balance
-	balances, rows := acc.Balances(), [][]string{}
-	var balance api.Commoditiser
-	var i int
-	for i, balance = range balances {
-		if i == (len(balances) - 1) {
-			break
+func (report *ReportBalance) indent(indent, prefix string, keys []string) {
+	adjustname := func(key string) {
+		rows := report.balance[key]
+		name := rows[len(rows)-1][1]
+		if prefix != "" {
+			name = strings.Trim(name[len(prefix):], ":")
+			name = indent + name
 		}
-		row := []string{"", "", balance.String()}
-		rows = append(rows, row)
+		rows[len(rows)-1][1] = name
 	}
-	finb := "0"
-	if balance != nil {
-		finb = balance.String()
+
+	if len(keys) == 0 || len(keys) == 1 {
+		return
 	}
-	row := []string{trans.Date().Format("2006/Jan/02"), acc.Name(), finb}
-	rows = append(rows, row)
 
-	report.balance[acc.Name()] = rows
+	newargs := func(start int) (int, int, string, int) {
+		rows := report.balance[keys[start]]
+		first := rows[len(rows)-1][1] // accountname
+		return start + 1, start + 1, first, len(first)
+	}
 
-	return nil
+	start, end, first, fln := newargs(0)
+	//fmt.Printf("enter %q %v %v\n", first, start, end)
+	for end < len(keys) {
+		if strings.HasPrefix(keys[end], first) && keys[start][fln] == ':' {
+			end++
+			continue
+		}
+		if end > start {
+			report.indent(indent+"  ", first, keys[start:end])
+		}
+		start, end, first, fln = newargs(end)
+	}
+	if end > start {
+		report.indent(indent+"  ", first, keys[start:end])
+	}
+
+	//fmt.Printf("adjustname %q %q \n", indent, prefix)
+	for _, key := range keys {
+		adjustname(key)
+	}
 }
 
 func (report *ReportBalance) isfiltered() bool {

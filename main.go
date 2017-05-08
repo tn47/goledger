@@ -68,8 +68,9 @@ func main() {
 			os.Exit(1)
 		}
 	}
+	db.PrintAccounts()
 	if err := secondpass(db); err != nil {
 		os.Exit(2)
 	}
-	reporter.Render(args)
+	reporter.Render(db, args)
 }

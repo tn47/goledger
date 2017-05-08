@@ -59,8 +59,7 @@ func (report *ReportRegister) Transaction(
 }
 
 func (report *ReportRegister) Posting(
-	db api.Datastorer, trans api.Transactor,
-	p api.Poster, account api.Accounter) error {
+	db api.Datastorer, trans api.Transactor, p api.Poster) error {
 
 	return nil
 }
@@ -72,7 +71,7 @@ func (report *ReportRegister) BubblePosting(
 	return nil
 }
 
-func (report *ReportRegister) Render(args []string) {
+func (report *ReportRegister) Render(db api.Datastorer, args []string) {
 	rcf := report.rcf
 
 	cols := []string{"By-date", "Description", "Account", "Amount", "Balance"}

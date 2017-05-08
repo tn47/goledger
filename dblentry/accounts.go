@@ -12,10 +12,12 @@ var inclusives = []string{
 }
 
 type Account struct {
-	name     string
-	virtual  bool
-	balanced bool
-	balance  map[string]*Commodity
+	name       string
+	virtual    bool
+	balanced   bool
+	hasposting bool
+	balance    map[string]*Commodity
+	children   map[string]*Account
 	// from account directive
 	note      string
 	aliasname string
@@ -28,10 +30,15 @@ type Account struct {
 
 func NewAccount(name string) *Account {
 	acc := &Account{
-		name:    name,
-		balance: make(map[string]*Commodity),
+		name:     name,
+		balance:  make(map[string]*Commodity),
+		children: make(map[string]*Account, 0),
 	}
 	return acc
+}
+
+func (acc *Account) SetPosting() {
+	acc.hasposting = true
 }
 
 //---- accessors
@@ -82,6 +89,10 @@ func (acc *Account) Virtual() bool {
 
 func (acc *Account) Balanced() bool {
 	return acc.balanced
+}
+
+func (acc *Account) HasPosting() bool {
+	return acc.hasposting
 }
 
 func (acc *Account) Formatedname() string {
@@ -162,36 +173,16 @@ func (acc *Account) Ypostaccn(db *Datastore) parsec.Parser {
 //---- engine
 
 func (acc *Account) Total(db *Datastore, trans *Transaction, p *Posting) error {
-	accountnames := db.Accountnames()
-	for _, name := range accountnames {
-		prefix := strings.Trim(AccountLcp([]string{name, acc.name}), ":")
-		if name == acc.name || prefix == "" {
-			continue
-		}
-		if db.HasAccount(prefix) == false {
-			consacc := db.GetAccount(prefix)
-			for _, commodity := range db.GetAccount(name).balance {
-				consacc.AddBalance(commodity)
-			}
-			err := db.reporter.BubblePosting(db, trans, p, consacc)
-			if err != nil {
-				return err
-			}
-
-			consacc = db.GetAccount(prefix)
-			consacc.AddBalance(p.commodity)
-			err = db.reporter.BubblePosting(db, trans, p, consacc)
-			if err != nil {
-				return err
-			}
-
-		} else if prefix == name {
-			consacc := db.GetAccount(prefix)
-			consacc.AddBalance(p.commodity)
-			err := db.reporter.BubblePosting(db, trans, p, consacc)
-			if err != nil {
-				return err
-			}
+	names := SplitAccount(acc.name)
+	parts := []string{}
+	for _, name := range names[:len(names)-1] {
+		parts = append(parts, name)
+		fullname := strings.Join(parts, ":")
+		consacc := db.GetAccount(fullname).(*Account)
+		consacc.AddBalance(p.commodity)
+		err := db.reporter.BubblePosting(db, trans, p, consacc)
+		if err != nil {
+			return err
 		}
 	}
 	return nil
@@ -206,12 +197,10 @@ func (acc *Account) Firstpass(
 func (acc *Account) Secondpass(
 	db *Datastore, trans *Transaction, p *Posting) error {
 
-	db.AddBalance(p.commodity)
-	acc.AddBalance(p.commodity)
-	if err := db.reporter.Posting(db, trans, p, acc); err != nil {
+	p.account.AddBalance(p.commodity)
+	if err := db.reporter.Posting(db, trans, p); err != nil {
 		return err
 	}
-
 	if err := acc.Total(db, trans, p); err != nil {
 		return err
 	}
@@ -242,7 +231,7 @@ func FitAccountname(name string, maxwidth int) string {
 	}
 	scraplen := maxwidth - len(name)
 	names := []string{}
-	for _, name := range strings.Split(name, ":") {
+	for _, name := range SplitAccount(name) {
 		if scraplen <= 0 {
 			names = append(names, name)
 		}
@@ -254,5 +243,40 @@ func FitAccountname(name string, maxwidth int) string {
 		names = append(names, name[:len(name)-scraplen])
 		scraplen = 0
 	}
+	return JoinAccounts(names)
+}
+
+func SplitAccount(name string) []string {
+	return strings.Split(strings.Trim(name, ":"), ":")
+}
+
+func JoinAccounts(names []string) string {
 	return strings.Join(names, ":")
+}
+
+//---- Reporting
+
+func (acc *Account) FmtBalances(
+	db api.Datastorer, trans api.Transactor, p api.Poster,
+	_ api.Accounter) [][]string {
+
+	if len(acc.Balances()) == 0 {
+		return nil
+	}
+
+	balances, rows := acc.Balances(), make([][]string, 0)
+	for _, balance := range balances[:len(balances)-1] {
+		rows = append(rows, []string{"", "", balance.String()})
+	}
+	balance := balances[len(balances)-1]
+	date := trans.Date().Format("2006/Jan/02")
+	rows = append(rows, []string{date, acc.Name(), balance.String()})
+	return rows
+}
+
+func (acc *Account) FmtRegister(
+	db api.Datastorer, trans api.Transactor, p api.Poster,
+	_ api.Accounter) [][]string {
+
+	panic("not supported")
 }

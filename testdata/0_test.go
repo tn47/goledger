@@ -80,6 +80,7 @@ func TestDrewr3(t *testing.T) {
 	//	fmt.Println(testcase[0], "................")
 	//	fmt.Println(string(ref))
 	//	if bytes.Compare(out, ref) != 0 {
+	//		t.Logf(strings.Join(args, " "))
 	//		t.Logf("expected %q", ref)
 	//		t.Errorf("got %q", out)
 	//	}
@@ -159,10 +160,12 @@ func TestFirst(t *testing.T) {
 	}
 	for _, testcase := range testcases {
 		ref := testdataFile(testcase[1].(string))
-		cmd := exec.Command(LEDGEREXEC, testcase[0].([]string)...)
+		args := testcase[0].([]string)
+		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
 		//ioutil.WriteFile(testcase[1].(string), out, 0660)
 		if bytes.Compare(out, ref) != 0 {
+			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
 			t.Errorf("got %s", out)
 		}
@@ -182,10 +185,12 @@ func TestReimburse(t *testing.T) {
 	}
 	for _, testcase := range testcases {
 		ref := testdataFile(testcase[1].(string))
-		cmd := exec.Command(LEDGEREXEC, testcase[0].([]string)...)
+		args := testcase[0].([]string)
+		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
 		//ioutil.WriteFile(testcase[1].(string), out, 0660)
 		if bytes.Compare(out, ref) != 0 {
+			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
 			t.Errorf("got %s", out)
 		}
@@ -231,10 +236,12 @@ func TestSecond(t *testing.T) {
 	}
 	for _, testcase := range testcases {
 		ref := testdataFile(testcase[1].(string))
-		cmd := exec.Command(LEDGEREXEC, testcase[0].([]string)...)
+		args := testcase[0].([]string)
+		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
 		//ioutil.WriteFile(testcase[1].(string), out, 0660)
 		if bytes.Compare(out, ref) != 0 {
+			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
 			t.Errorf("got %s", out)
 		}
@@ -254,10 +261,12 @@ func TestMixedComm1(t *testing.T) {
 	}
 	for _, testcase := range testcases {
 		ref := testdataFile(testcase[1].(string))
-		cmd := exec.Command(LEDGEREXEC, testcase[0].([]string)...)
+		args := testcase[0].([]string)
+		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
 		//ioutil.WriteFile(testcase[1].(string), out, 0660)
 		if bytes.Compare(out, ref) != 0 {
+			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
 			t.Errorf("got %s", out)
 		}

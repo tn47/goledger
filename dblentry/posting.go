@@ -7,8 +7,6 @@ import "github.com/prataprc/golog"
 import "github.com/prataprc/goledger/api"
 
 type Posting struct {
-	direction string // "source", target"
-	// post entry
 	account   *Account
 	commodity *Commodity
 	note      string
@@ -47,7 +45,7 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 				// account
 				account := items[0].(*Account)
 				accname := db.Applyroot(db.LookupAlias(account.name))
-				p.account = db.GetAccount(accname)
+				p.account = db.GetAccount(accname).(*Account)
 				p.account.virtual = account.virtual
 				p.account.balanced = account.balanced
 
@@ -94,11 +92,32 @@ func (p *Posting) Firstpass(db *Datastore, trans *Transaction) error {
 }
 
 func (p *Posting) Secondpass(db *Datastore, trans *Transaction) error {
+
+	db.AddBalance(p.commodity)
+	p.account.SetPosting()
+
 	if err := p.account.Secondpass(db, trans, p); err != nil {
 		return err
 	}
 	if err := p.commodity.Secondpass(db, trans, p); err != nil {
 		return err
 	}
+
 	return nil
+}
+
+//---- Reporting
+
+func (p *Posting) FmtBalances(
+	db api.Datastorer, trans api.Transactor, _ api.Poster,
+	_ api.Accounter) [][]string {
+
+	panic("not supported")
+}
+
+func (p *Posting) FmtRegister(
+	db api.Datastorer, trans api.Transactor, _ api.Poster,
+	_ api.Accounter) [][]string {
+
+	panic("not supported")
 }
