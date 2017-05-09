@@ -272,7 +272,7 @@ func TestMixedComm(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		ioutil.WriteFile(testcase[1].(string), out, 0660)
+		//ioutil.WriteFile(testcase[1].(string), out, 0660)
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -283,10 +283,10 @@ func TestMixedComm(t *testing.T) {
 
 func TestUnbalanced(t *testing.T) {
 	testcases := [][]interface{}{
-		[]interface{}{
-			[]string{"-f", "emptytrans.ldg", "balance"},
-			"refdata/emptytrans.ref",
-		},
+		//[]interface{}{
+		//	[]string{"-f", "emptytrans.ldg", "balance"},
+		//	"refdata/emptytrans.ref",
+		//},
 		[]interface{}{
 			[]string{"-f", "emptytrans.ldg", "register"},
 			"refdata/emptytrans.ref",
@@ -313,7 +313,7 @@ func TestUnbalanced(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		ioutil.WriteFile(testcase[1].(string), out, 0660)
+		//ioutil.WriteFile(testcase[1].(string), out, 0660)
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)

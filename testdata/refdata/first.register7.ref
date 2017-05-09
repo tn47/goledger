@@ -1,6 +1,6 @@
 
-  By-date      Description  Account           Amount  Balance 
-                                                              
-  2011-Mar-15  KFC          Expenses:Dinning  75.00    75.00  
-  2011-Mar-15  Chats        Expenses:Dinning  75.00   150.00  
+  By-date      Payee  Account           Amount  Balance 
+                                                        
+  2011-Mar-15  KFC    Expenses:Dinning  75.00    75.00  
+  2011-Mar-15  Chats  Expenses:Dinning  75.00   150.00  
 

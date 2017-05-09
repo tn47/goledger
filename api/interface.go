@@ -21,13 +21,15 @@ type Datastorer interface {
 type Transactor interface {
 	Date() time.Time
 
-	Description() string
+	Payee() string
 
 	GetPostings() []Poster
 }
 
 type Poster interface {
 	Commodity() Commoditiser
+
+	Payee() string
 
 	Account() Accounter
 }

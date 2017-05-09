@@ -31,9 +31,9 @@ func (rcf *RCformat) FitAccountname(index, maxwidth int) int {
 	return maxwidth
 }
 
-func (rcf *RCformat) FitDescription(index, maxwidth int) int {
+func (rcf *RCformat) FitPayee(index, maxwidth int) int {
 	for i, row := range rcf.rows {
-		row[index] = dblentry.FitDescription(row[index], maxwidth)
+		row[index] = dblentry.FitPayee(row[index], maxwidth)
 		rcf.rows[i] = row
 	}
 	return maxwidth

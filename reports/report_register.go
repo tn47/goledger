@@ -31,28 +31,31 @@ func NewReportRegister(args []string) *ReportRegister {
 func (report *ReportRegister) Transaction(
 	db api.Datastorer, trans api.Transactor) error {
 
-	date, desc := trans.Date().Format("2006-Jan-02"), trans.Description()
+	date, transpayee := trans.Date().Format("2006-Jan-02"), trans.Payee()
 	prevaccname := ""
 	for _, p := range trans.GetPostings() {
-		accname, payee := p.Account().Name(), trans.Description()
+		accname := p.Account().Name()
 		if report.isfiltered() {
 			if api.Filterstring(accname, report.filteraccounts) == false {
 				continue
 			}
-			if api.Filterstring(payee, report.filterpayees) == false {
+			if api.Filterstring(p.Payee(), report.filterpayees) == false {
 				continue
 			}
 		}
 		commodity := p.Commodity()
 		row := []string{
-			date, desc, accname, commodity.String(),
+			date, transpayee, accname, commodity.String(),
 			p.Account().Balance(commodity.Name()).String(),
+		}
+		if p.Payee() != trans.Payee() {
+			row[1] = p.Payee()
 		}
 		if prevaccname == accname {
 			row[2] = ""
 		}
 		report.register = append(report.register, row)
-		date, desc = "", ""
+		date, transpayee = "", ""
 		prevaccname = accname
 	}
 	return nil
@@ -74,7 +77,7 @@ func (report *ReportRegister) BubblePosting(
 func (report *ReportRegister) Render(db api.Datastorer, args []string) {
 	rcf := report.rcf
 
-	cols := []string{"By-date", "Description", "Account", "Amount", "Balance"}
+	cols := []string{"By-date", "Payee", "Account", "Amount", "Balance"}
 	rcf.Addrow(cols...)
 	rcf.Addrow([]string{"", "", "", "", ""}...)
 
@@ -83,12 +86,12 @@ func (report *ReportRegister) Render(db api.Datastorer, args []string) {
 	}
 
 	w0 := rcf.maxwidth(rcf.column(0)) // Date
-	w1 := rcf.maxwidth(rcf.column(1)) // Description
+	w1 := rcf.maxwidth(rcf.column(1)) // Payee
 	w2 := rcf.maxwidth(rcf.column(2)) // Account name
 	w3 := rcf.maxwidth(rcf.column(3)) // Amount
 	w4 := rcf.maxwidth(rcf.column(4)) // Balance (amount)
 	if (w0 + w1 + w2 + w3 + w4) > 70 {
-		w1 = rcf.FitDescription(1, 70-w0-w2-w3-w4)
+		w1 = rcf.FitPayee(1, 70-w0-w2-w3-w4)
 		if (w0 + w1 + w2 + w3 + w4) > 70 {
 			w2 = rcf.FitAccountname(1, 70-w0-w1-w3-w4)
 		}

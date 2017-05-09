@@ -16,13 +16,18 @@ type Transaction struct {
 	edate    time.Time
 	prefix   byte
 	code     string
-	desc     string
 	postings []*Posting
-	note     string
+	tags     []string
+	metadata map[string]interface{}
+	notes    []string
 }
 
 func NewTransaction() *Transaction {
-	trans := &Transaction{}
+	trans := &Transaction{
+		tags:     []string{},
+		metadata: map[string]interface{}{},
+		notes:    []string{},
+	}
 	return trans
 }
 
@@ -32,8 +37,8 @@ func (trans *Transaction) Date() time.Time {
 	return trans.date
 }
 
-func (trans *Transaction) Description() string {
-	return trans.desc
+func (trans *Transaction) Payee() string {
+	return trans.Metadata("payee").(string)
 }
 
 func (trans *Transaction) GetPostings() []api.Poster {
@@ -42,6 +47,17 @@ func (trans *Transaction) GetPostings() []api.Poster {
 		postings = append(postings, p)
 	}
 	return postings
+}
+
+func (trans *Transaction) Metadata(key string) interface{} {
+	if value, ok := trans.metadata[key]; ok {
+		return value
+	}
+	return nil
+}
+
+func (trans *Transaction) SetMetadata(key string, value interface{}) {
+	trans.metadata[key] = value
 }
 
 //---- ledger parser
@@ -70,15 +86,17 @@ func (trans *Transaction) Yledger(db *Datastore) parsec.Parser {
 			if t, ok := nodes[3].(*parsec.Terminal); ok {
 				trans.code = string(t.Value[1 : len(t.Value)-1])
 			}
-			trans.desc = string(nodes[4].(*parsec.Terminal).Value)
-			log.Debugf("trans.yledger %v %v\n", trans.date, trans.desc)
+
+			payee := string(nodes[4].(*parsec.Terminal).Value)
+			trans.SetMetadata("payee", payee)
+			log.Debugf("trans.yledger %v %v\n", trans.date, payee)
 			return trans
 		},
 		ydate,
 		parsec.Maybe(maybenode, yedate),
 		parsec.Maybe(maybenode, ytok_prefix),
 		parsec.Maybe(maybenode, ytok_code),
-		ytok_desc,
+		ytok_payeestr,
 	)
 	return y
 }
@@ -88,13 +106,21 @@ func (trans *Transaction) Yledgerblock(db *Datastore, block []string) {
 
 	for _, line := range block {
 		scanner := parsec.NewScanner([]byte(line))
-		posting := NewPosting()
-		node, scanner = posting.Yledger(db)(scanner)
+		posting := NewPosting(trans)
+		if node, _ = posting.Yledger(db)(scanner); node == nil {
+			trans.notes = append(trans.notes, line)
+			continue
+		}
 		switch val := node.(type) {
 		case *Posting:
 			trans.postings = append(trans.postings, val)
+		case *Tags:
+			trans.tags = append(trans.tags, val.tags...)
+			for k, v := range val.tagm {
+				trans.metadata[k] = v
+			}
 		case Transnote:
-			trans.note = string(val)
+			trans.notes = append(trans.notes, string(val))
 		}
 	}
 }
@@ -117,7 +143,7 @@ func (trans *Transaction) ShouldBalance() bool {
 func (trans *Transaction) Defaultposting(
 	db *Datastore, defacc *Account, commodity *Commodity) *Posting {
 
-	posting := NewPosting()
+	posting := NewPosting(trans)
 	posting.account = defacc
 	posting.commodity = commodity.Similar(commodity.amount)
 	return posting
@@ -238,13 +264,13 @@ func (trans *Transaction) Secondpass(db *Datastore) error {
 	return db.reporter.Transaction(db, trans)
 }
 
-func FitDescription(desc string, maxwidth int) string {
-	if len(desc) < maxwidth {
-		return desc
+func FitPayee(payee string, maxwidth int) string {
+	if len(payee) < maxwidth {
+		return payee
 	}
-	scraplen := len(desc) - maxwidth
+	scraplen := len(payee) - maxwidth
 	fields := []string{}
-	for _, field := range strings.Fields(desc) {
+	for _, field := range strings.Fields(payee) {
 		if scraplen <= 0 || len(field) <= 3 {
 			fields = append(fields, field)
 			continue

@@ -22,17 +22,17 @@ var ytok_baccname = parsec.Token(`\[[a-zA-Z][0-9a-zA-Z: `+accchars+`]*\]`, "BFUL
 
 var ytok_prefix = parsec.Token(`\*|!`, "TRANSPREFIX")
 var ytok_code = parsec.Token(`\(.*\)`, "TRANSCODE")
-var ytok_desc = parsec.Token(".+", "TRANSDESC")
-var ytok_persnote = parsec.Token(";[^;]+", "TRANSPNOTE")
+var ytok_payeestr = parsec.Token(".+", "TRANSPAYEE")
+var ytok_transnote = parsec.Token(";.*", "TRANSNOTE")
 
 //---- Posting tokens
 
 var ytok_postacc1 = parsec.Token(`[a-zA-Z]([0-9a-zA-Z`+accchars+`]* )*([  ]|[\t])`, "POSTACCN1")
-var ytok_postnote = parsec.Token(";[^;]+", "TRANSNOTE")
+var ytok_postnote = parsec.Token(";[^;]+", "POSTNOTE")
 
 //---- Price tokens
 
-var ytok_price = parsec.Token(";[^;]+", "TRANSNOTE")
+var ytok_price = parsec.Token(";[^;]+", "TRANSPRICE")
 
 //---- Directives
 var ytok_account = parsec.Token("account", "DRTV_ACCOUNT")
@@ -48,6 +48,12 @@ var ytok_apply = parsec.Token("apply", "DRTV_APPLY")
 var ytok_aliasname = parsec.Token("[^=]+", "DRTV_ALIASNAME")
 var ytok_end = parsec.Token("end", "DRTV_END")
 var ytok_year = parsec.Token("year", "DRTV_YEAR")
+
+// tags
+var ytok_colon = parsec.Token(":", "COLON")
+var ytok_tag = parsec.Token(":[^ \t\r\n]", "TAG")
+var ytok_tagk = parsec.Token("[^ \t\r\n]:[ \t]", "TAGKEY")
+var ytok_tagv = parsec.Token(".+", "TAGVALUE")
 
 //
 func maybenode(nodes []parsec.ParsecNode) parsec.ParsecNode {

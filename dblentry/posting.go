@@ -1,19 +1,27 @@
 package dblentry
 
 import "fmt"
+import "strings"
 
 import "github.com/prataprc/goparsec"
 import "github.com/prataprc/golog"
 import "github.com/prataprc/goledger/api"
 
 type Posting struct {
+	trans     *Transaction
 	account   *Account
 	commodity *Commodity
+	tags      []string
+	metadata  map[string]interface{}
 	note      string
 }
 
-func NewPosting() *Posting {
-	return &Posting{}
+func NewPosting(trans *Transaction) *Posting {
+	return &Posting{
+		trans:    trans,
+		tags:     []string{},
+		metadata: map[string]interface{}{},
+	}
 }
 
 //---- accessor
@@ -24,6 +32,21 @@ func (p *Posting) Commodity() api.Commoditiser {
 
 func (p *Posting) Account() api.Accounter {
 	return p.account
+}
+
+func (p *Posting) Payee() string {
+	payee := p.Metadata("payee")
+	if payee == nil {
+		return ""
+	}
+	return payee.(string)
+}
+
+func (p *Posting) Metadata(key string) interface{} {
+	if value, ok := p.metadata[key]; ok {
+		return value
+	}
+	return p.trans.Metadata(key)
 }
 
 //---- ledger parser
@@ -56,9 +79,19 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 						commodity.name, commodity,
 					).Similar(commodity.amount)
 				}
-				// optionally note
+				// optionally tags or tagkv or note
 				if note, ok := items[2].(*parsec.Terminal); ok {
-					p.note = string(note.Value)
+					scanner := parsec.NewScanner([]byte(note.Value))
+					if node, _ := NewTag().Yledger(db)(scanner); node == nil {
+						p.note = string(note.Value)
+
+					} else {
+						tag := node.(*Tags)
+						p.tags = append(p.tags, tag.tags...)
+						for k, v := range tag.tagm {
+							p.metadata[k] = v
+						}
+					}
 				}
 
 				fmsg := "posting.yledger account:%v commodity:%v\n"
@@ -66,15 +99,21 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 				return p
 
 			case *parsec.Terminal:
-				note := Transnote(string(items.Value))
-				log.Debugf("posting.yledger %v\n", note)
-				return note
+				inp := []byte(strings.TrimLeft(items.Value, ";"))
+				scanner := parsec.NewScanner(inp)
+				node, _ := NewTag().Yledger(db)(scanner)
+				if node == nil {
+					log.Debugf("posting.yledger %v\n", string(items.Value))
+					return Transnote(items.Value)
+				}
+				log.Debugf("posting.yledger %v\n", node)
+				return node.(*Tags)
 			}
 			fmsg := "unreachable code posting: len(nodes): %v"
 			panic(fmt.Errorf(fmsg, len(nodes)))
 		},
 		yposting,
-		ytok_persnote,
+		ytok_transnote,
 	)
 	return y
 }
