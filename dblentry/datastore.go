@@ -17,33 +17,40 @@ const (
 )
 
 type Datastore struct {
-	name        string
-	reporter    api.Reporter
+	name     string
+	reporter api.Reporter
+
 	transdb     *DB
 	pricedb     *DB
 	accntdb     map[string]*Account // full account-name -> account
-	balance     map[string]*Commodity
-	defaultcomm string
 	commodities map[string]*Commodity
+
+	defaultcomm string
+	comments    []string
 	pass        Pass
+	balance     map[string]*Commodity
+
 	// directive fields
 	currdate     time.Time
-	aliases      map[string]string // alias, account-alias
-	payees       map[string]string // account-payee map[regex]->accountname
 	rootaccount  string            // apply-account
 	blncingaccnt string            // account
+	aliases      map[string]string // alias, account-alias
+	payees       map[string]string // account-payee map[regex]->accountname
 }
 
 func NewDatastore(name string, reporter api.Reporter) *Datastore {
 	db := &Datastore{
-		name:        name,
-		reporter:    reporter,
+		name:     name,
+		reporter: reporter,
+
 		transdb:     NewDB(fmt.Sprintf("%v-transactions", name)),
 		pricedb:     NewDB(fmt.Sprintf("%v-pricedb", name)),
 		accntdb:     map[string]*Account{},
-		balance:     make(map[string]*Commodity),
 		commodities: map[string]*Commodity{},
-		pass:        DBSTART,
+
+		comments: []string{},
+		balance:  make(map[string]*Commodity),
+		pass:     DBSTART,
 		// directives
 		currdate: time.Now(),
 		aliases:  map[string]string{},
@@ -193,6 +200,7 @@ func (db *Datastore) Firstpass(obj interface{}) (err error) {
 
 	} else if comment, ok := obj.(*Comment); ok {
 		err = comment.Firstpass(db)
+		db.comments = append(db.comments, comment.line)
 	}
 	return err
 }
