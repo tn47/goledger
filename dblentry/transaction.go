@@ -3,6 +3,7 @@ package dblentry
 import "time"
 import "fmt"
 import "strings"
+import "sort"
 
 import "github.com/prataprc/goparsec"
 import "github.com/prataprc/golog"
@@ -123,16 +124,16 @@ func (trans *Transaction) Defaultposting(
 }
 
 func (trans *Transaction) Endposting(postings []*Posting) (*Posting, error) {
-	var tallywith *Posting
+	var tallypost *Posting
 	for _, posting := range postings {
-		if posting.commodity == nil && tallywith != nil {
+		if posting.commodity == nil && tallypost != nil {
 			err := fmt.Errorf("Only one null posting allowed per transaction")
 			return nil, err
 		} else if posting.commodity == nil {
-			tallywith = posting
+			tallypost = posting
 		}
 	}
-	return tallywith, nil
+	return tallypost, nil
 }
 
 func (trans *Transaction) Autobalance1(
@@ -152,15 +153,19 @@ func (trans *Transaction) Autobalance1(
 		return false, fmt.Errorf("unbalanced transaction")
 	}
 
+	unbcs, _ := trans.DoBalance()
+	if len(unbcs) == 0 {
+		return true, nil
+	}
+
 	tallypost, err := trans.Endposting(trans.postings)
 	if err != nil {
 		return false, err
 	}
-
-	unbcs := trans.DoBalance()
-	if len(unbcs) == 0 {
-		return true, nil
+	if len(unbcs) == 1 && tallypost == nil {
+		return false, fmt.Errorf("unbalanced transaction")
 	}
+
 	tallypost.commodity = unbcs[0]
 	tallypost.commodity.InverseAmount()
 	if len(unbcs) > 1 {
@@ -174,7 +179,7 @@ func (trans *Transaction) Autobalance1(
 	return true, nil
 }
 
-func (trans *Transaction) DoBalance() []*Commodity {
+func (trans *Transaction) DoBalance() ([]*Commodity, bool) {
 	unbalanced := map[string]*Commodity{}
 	for _, posting := range trans.postings {
 		if posting.commodity == nil {
@@ -187,13 +192,20 @@ func (trans *Transaction) DoBalance() []*Commodity {
 		unbc.Add(posting.commodity)
 		unbalanced[unbc.name] = unbc
 	}
+	commnames := []string{}
+	for name := range unbalanced {
+		commnames = append(commnames, name)
+	}
+	sort.Strings(commnames)
+
 	unbcs := []*Commodity{}
-	for _, unbc := range unbalanced {
+	for _, name := range commnames {
+		unbc := unbalanced[name]
 		if unbc.amount != 0 {
 			unbcs = append(unbcs, unbc)
 		}
 	}
-	return unbcs
+	return unbcs, len(unbcs) > 1
 }
 
 func (trans *Transaction) Firstpass(db *Datastore) error {

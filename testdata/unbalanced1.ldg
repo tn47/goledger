@@ -1,0 +1,4 @@
+10/2  TV
+    Asset:Cash                     10000
+    Asset:Checking                 20000
+    Inventory:Home:TV              -35000
