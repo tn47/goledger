@@ -101,7 +101,11 @@ func (trans *Transaction) Yledger(db *Datastore) parsec.Parser {
 	return y
 }
 
-func (trans *Transaction) Yledgerblock(db *Datastore, block []string) {
+func (trans *Transaction) Yledgerblock(db *Datastore, block []string) error {
+	if len(block) == 0 {
+		return nil
+	}
+
 	var node parsec.ParsecNode
 
 	for _, line := range block {
@@ -123,6 +127,7 @@ func (trans *Transaction) Yledgerblock(db *Datastore, block []string) {
 			trans.notes = append(trans.notes, string(val))
 		}
 	}
+	return nil
 }
 
 //---- engine

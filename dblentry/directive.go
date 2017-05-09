@@ -102,7 +102,7 @@ func (d *Directive) Yyear(db *Datastore) parsec.Parser {
 
 //---- subdirective parsers
 
-func (d *Directive) Yledgerblock(db *Datastore, block []string) {
+func (d *Directive) Yledgerblock(db *Datastore, block []string) error {
 	var node parsec.ParsecNode
 	switch d.dtype {
 	case "account":
@@ -134,10 +134,10 @@ func (d *Directive) Yledgerblock(db *Datastore, block []string) {
 				d.account.defblns = true
 			}
 		}
-		return
+		return nil
 
 	case "apply", "alias", "assert", "end", "year":
-		return
+		return nil
 	}
 	panic(fmt.Errorf("unreachable code"))
 }

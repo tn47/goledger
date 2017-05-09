@@ -29,6 +29,8 @@ var ytok_transnote = parsec.Token(";.*", "TRANSNOTE")
 
 var ytok_postacc1 = parsec.Token(`[a-zA-Z]([0-9a-zA-Z`+accchars+`]* )*([  ]|[\t])`, "POSTACCN1")
 var ytok_postnote = parsec.Token(";[^;]+", "POSTNOTE")
+var ytok_at = parsec.Token("@", "POSTAT")
+var ytok_atat = parsec.Token("@@", "POSTATAT")
 
 //---- Price tokens
 

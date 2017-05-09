@@ -36,16 +36,19 @@ func firstpass(db *dblentry.Datastore, journalfile string) error {
 
 		switch obj := node.(type) {
 		case *dblentry.Transaction:
-			if len(block[1:]) > 0 {
-				obj.Yledgerblock(db, block[1:])
-			}
+			err = obj.Yledgerblock(db, block[1:])
 
 		case *dblentry.Directive:
-			if len(block[1:]) > 0 {
-				obj.Yledgerblock(db, block[1:])
-			}
+			err = obj.Yledgerblock(db, block[1:])
+
+		case error:
+			err = obj
 
 		case *dblentry.Comment, *dblentry.Price:
+		}
+		if err != nil {
+			log.Errorf("lineno %v: %v\n", lineno, err)
+			return err
 		}
 		if err := db.Firstpass(node); err != nil {
 			fmsg := "%T at lineno %v: %v\n"

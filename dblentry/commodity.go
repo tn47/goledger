@@ -12,10 +12,11 @@ type Commodity struct {
 	currency  bool
 	precision int
 	mark1k    bool
+	pricedb   map[string]*Commodity
 }
 
 func NewCommodity(name string) *Commodity {
-	return &Commodity{name: name}
+	return &Commodity{name: name, pricedb: map[string]*Commodity{}}
 }
 
 func (comm *Commodity) Similar(amount float64) *Commodity {
@@ -93,6 +94,15 @@ func (comm *Commodity) Yledger(db *Datastore) parsec.Parser {
 		parsec.Maybe(maybenode, ytok_currency),
 		ytok_amount,
 		parsec.Maybe(maybenode, ytok_commodity),
+	)
+	return y
+}
+
+func (comm *Commodity) Yatprice(db *Datastore) parsec.Parser {
+	y := parsec.And(
+		nil,
+		parsec.OrdChoice(Vector2scalar, ytok_at, ytok_atat),
+		comm.Yledger(db),
 	)
 	return y
 }
