@@ -1,0 +1,11 @@
+
+  By-date      Payee           Account                         Amount    Balance 
+                                                                                 
+  2004-May-01  Stock purchase  Assets:Broker                  50 AAPL    50 AAPL 
+                               Expenses:Broker:Commissions     $19.95     $19.95 
+                               Assets:Broker                $-1519.95  $-1519.95 
+  2005-Aug-01  Stock sale      Assets:Broker                 -50 AAPL     0 AAPL 
+                               Expenses:Broker:Commissions     $19.95     $39.90 
+                               Income:Capital Gains         $-1000.00  $-1000.00 
+                               Assets:Broker                 $2480.05    $960.10 
+

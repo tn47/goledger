@@ -31,6 +31,10 @@ var ytok_postacc1 = parsec.Token(`[a-zA-Z]([0-9a-zA-Z`+accchars+`]* )*([  ]|[\t]
 var ytok_postnote = parsec.Token(";[^;]+", "POSTNOTE")
 var ytok_at = parsec.Token("@", "POSTAT")
 var ytok_atat = parsec.Token("@@", "POSTATAT")
+var ytok_openparan = parsec.Token("{", "OPENPARAN")
+var ytok_closeparan = parsec.Token("}", "CLOSEPARAN")
+var ytok_openbrack = parsec.Token("@", "OPENBRACK")
+var ytok_closebrack = parsec.Token("@", "CLOSEBRACK")
 
 //---- Price tokens
 

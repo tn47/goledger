@@ -111,10 +111,7 @@ func (trans *Transaction) Yledgerblock(db *Datastore, block []string) error {
 	for _, line := range block {
 		scanner := parsec.NewScanner([]byte(line))
 		posting := NewPosting(trans)
-		if node, _ = posting.Yledger(db)(scanner); node == nil {
-			trans.notes = append(trans.notes, line)
-			continue
-		}
+		node, scanner = posting.Yledger(db)(scanner)
 		switch val := node.(type) {
 		case *Posting:
 			trans.postings = append(trans.postings, val)
@@ -125,6 +122,9 @@ func (trans *Transaction) Yledgerblock(db *Datastore, block []string) error {
 			}
 		case Transnote:
 			trans.notes = append(trans.notes, string(val))
+		}
+		if scanner.Endof() == false {
+			return fmt.Errorf("unable to parse posting")
 		}
 	}
 	return nil

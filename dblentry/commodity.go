@@ -12,11 +12,10 @@ type Commodity struct {
 	currency  bool
 	precision int
 	mark1k    bool
-	pricedb   map[string]*Commodity
 }
 
 func NewCommodity(name string) *Commodity {
-	return &Commodity{name: name, pricedb: map[string]*Commodity{}}
+	return &Commodity{name: name}
 }
 
 func (comm *Commodity) Similar(amount float64) *Commodity {

@@ -1,6 +1,7 @@
 package dblentry
 
 import "fmt"
+import "time"
 import "strings"
 
 import "github.com/prataprc/goparsec"
@@ -11,6 +12,9 @@ type Posting struct {
 	trans     *Transaction
 	account   *Account
 	commodity *Commodity
+	atprice   *Commodity
+	lotprice  *Commodity
+	lotdate   time.Time
 	tags      []string
 	metadata  map[string]interface{}
 	note      string
@@ -55,10 +59,21 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 	account := NewAccount("")
 	comm := NewCommodity("")
 	atprice := NewCommodity("")
+	lotprice := NewCommodity("")
+
+	ylotprice := parsec.And(
+		nil,
+		ytok_openparan, lotprice.Yledger(db), ytok_closeparan)
+	ylotdate := parsec.And(
+		nil,
+		ytok_openbrack, Ydate(db.Year()), ytok_closebrack)
+
 	yposting := parsec.And(
 		nil,
 		account.Ypostaccn(db),
 		parsec.Maybe(maybenode, comm.Yledger(db)),
+		parsec.Maybe(maybenode, ylotprice),
+		parsec.Maybe(maybenode, ylotdate),
 		parsec.Maybe(maybenode, atprice.Yatprice(db)),
 		parsec.Maybe(maybenode, ytok_postnote),
 	)
@@ -82,8 +97,20 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 					).Similar(commodity.amount)
 				}
 
+				// lot price
+				lotnodes, _ := items[2].([]parsec.ParsecNode)
+				if lotnodes != nil {
+					p.lotprice = lotnodes[1].(*Commodity)
+				}
+
+				// lot date
+				lotnodes, _ = items[3].([]parsec.ParsecNode)
+				if lotnodes != nil {
+					p.lotdate = lotnodes[1].(time.Time)
+				}
+
 				// atprice
-				atnodes, _ := items[2].([]parsec.ParsecNode)
+				atnodes, _ := items[4].([]parsec.ParsecNode)
 				if atnodes != nil {
 					at := atnodes[0].(*parsec.Terminal)
 					atprice := atnodes[1].(*Commodity)
@@ -93,11 +120,11 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 					if at.Name == "POSTATAT" {
 						atprice.amount /= commodity.amount
 					}
-					commodity.pricedb[atprice.name] = atprice
+					p.atprice = atprice
 				}
 
 				// optionally tags or tagkv or note
-				if note, ok := items[3].(*parsec.Terminal); ok {
+				if note, ok := items[5].(*parsec.Terminal); ok {
 					scanner := parsec.NewScanner([]byte(note.Value))
 					if node, _ := NewTag().Yledger(db)(scanner); node == nil {
 						p.note = string(note.Value)
