@@ -16,19 +16,19 @@ func TestDates(t *testing.T) {
 	testcases := [][]interface{}{
 		[]interface{}{
 			[]string{"-f", "dates.ldg", "balance"},
-			"dates.balance.ref",
+			"refdata/dates.balance.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "dates.ldg", "register"},
-			"dates.register1.ref",
+			"refdata/dates.register1.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "dates.ldg", "register", "Expenses"},
-			"dates.register2.ref",
+			"refdata/dates.register2.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "dates.ldg", "register", "Expenses:Sta"},
-			"dates.register3.ref",
+			"refdata/dates.register3.ref",
 		},
 	}
 	for _, testcase := range testcases {
@@ -49,7 +49,7 @@ func TestDate7(t *testing.T) {
 	testcases := [][]interface{}{
 		[]interface{}{
 			[]string{"-f", "date7.ldg", "register"},
-			"date7.register.ref",
+			"refdata/date7.register.ref",
 		},
 	}
 	for _, testcase := range testcases {
@@ -70,7 +70,7 @@ func TestDrewr3(t *testing.T) {
 	//testcases := [][]interface{}{
 	//	[]interface{}{
 	//		[]string{"-f", "drewr3.ldg", "balance"},
-	//		"drewr3.balance.ref",
+	//		"refdata/drewr3.balance.ref",
 	//	},
 	//}
 	//for _, testcase := range testcases {
@@ -91,71 +91,71 @@ func TestFirst(t *testing.T) {
 	testcases := [][]interface{}{
 		[]interface{}{
 			[]string{"-f", "first.ldg", "balance"},
-			"first.balance1.ref",
+			"refdata/first.balance1.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "first.ldg", "balance", "Assets"},
-			"first.balance2.ref",
+			"refdata/first.balance2.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "first.ldg", "balance", "Expenses"},
-			"first.balance3.ref",
+			"refdata/first.balance3.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "first.ldg", "register"},
-			"first.register1.ref",
+			"refdata/first.register1.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "first.ldg", "register", "Expens|Check"},
-			"first.register2.ref",
+			"refdata/first.register2.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "first.ldg", "register", "@", "KFC"},
-			"first.register3.ref",
+			"refdata/first.register3.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "first.ldg", "register", "@", "^KFC"},
-			"first.register4.ref",
+			"refdata/first.register4.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "first.ldg", "register", "Assets"},
-			"first.register5.ref",
+			"refdata/first.register5.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "first.ldg", "register", "Check"},
-			"first.register6.ref",
+			"refdata/first.register6.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "first.ldg", "register", "Dinning"},
-			"first.register7.ref",
+			"refdata/first.register7.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "first.ldg", "register", "Expenses"},
-			"first.register8.ref",
+			"refdata/first.register8.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "first.ldg", "register", "Expenses:Din"},
-			"first.register9.ref",
+			"refdata/first.register9.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "first.ldg", "register", "Expenses:Sta"},
-			"first.register10.ref",
+			"refdata/first.register10.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "first.ldg", "register", "Expens|Check"},
-			"first.register11.ref",
+			"refdata/first.register11.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "first.ldg", "register", "^Check"},
-			"first.register12.ref",
+			"refdata/first.register12.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "first.ldg", "register", "^nses"},
-			"first.register13.ref",
+			"refdata/first.register13.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "first.ldg", "register", "nses"},
-			"first.register14.ref",
+			"refdata/first.register14.ref",
 		},
 	}
 	for _, testcase := range testcases {
@@ -176,11 +176,11 @@ func TestReimburse(t *testing.T) {
 	testcases := [][]interface{}{
 		[]interface{}{
 			[]string{"-f", "reimburse.ldg", "balance"},
-			"reimburse.balance1.ref",
+			"refdata/reimburse.balance1.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "reimburse.ldg", "register"},
-			"reimburse.register1.ref",
+			"refdata/reimburse.register1.ref",
 		},
 	}
 	for _, testcase := range testcases {
@@ -201,37 +201,37 @@ func TestSecond(t *testing.T) {
 	testcases := [][]interface{}{
 		[]interface{}{
 			[]string{"-f", "second.ldg", "balance"},
-			"second.balance1.ref",
+			"refdata/second.balance1.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "second.ldg", "balance",
 				"^Assets", "^Liabilities"},
-			"second.balance2.ref",
+			"refdata/second.balance2.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "second.ldg", "balance",
 				"Assets", "Liabilities.*"},
-			"second.balance3.ref",
+			"refdata/second.balance3.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "second.ldg", "balance",
 				"Assets", "Liabilities"},
-			"second.balance4.ref",
+			"refdata/second.balance4.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "second.ldg", "balance",
 				"Assets", "Liabilities.*"},
-			"second.balance5.ref",
+			"refdata/second.balance5.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "second.ldg", "balance",
 				"^Assets", "^Liabilities"},
-			"second.balance6.ref",
+			"refdata/second.balance6.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "second.ldg", "balance",
 				"^assets", "^liabilities"},
-			"second.balance7.ref",
+			"refdata/second.balance7.ref",
 		},
 	}
 	for _, testcase := range testcases {
@@ -248,15 +248,15 @@ func TestSecond(t *testing.T) {
 	}
 }
 
-func TestMixedComm1(t *testing.T) {
+func TestMixedComm(t *testing.T) {
 	testcases := [][]interface{}{
 		[]interface{}{
 			[]string{"-f", "mixedcomm1.ldg", "balance"},
-			"mixedcomm1.balance.ref",
+			"refdata/mixedcomm1.balance.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "mixedcomm1.ldg", "register"},
-			"mixedcomm1.register.ref",
+			"refdata/mixedcomm1.register.ref",
 		},
 	}
 	for _, testcase := range testcases {
@@ -264,7 +264,7 @@ func TestMixedComm1(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		ioutil.WriteFile(testcase[1].(string), out, 0660)
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
