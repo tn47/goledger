@@ -11,7 +11,7 @@ test: clean build
 		echo $$dir "..."; \
 		$(MAKE) -C $$dir test; \
 	done
-	go test -race -test.run=. -test.bench=. -test.benchmem=true
+	go test -v -race -test.run=. -test.bench=. -test.benchmem=true
 
 
 clean:
