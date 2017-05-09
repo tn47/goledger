@@ -164,6 +164,8 @@ func (trans *Transaction) Autobalance1(
 	}
 	if len(unbcs) == 1 && tallypost == nil {
 		return false, fmt.Errorf("unbalanced transaction")
+	} else if tallypost == nil {
+		return true, nil
 	}
 
 	tallypost.commodity = unbcs[0]

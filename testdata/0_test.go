@@ -258,6 +258,14 @@ func TestMixedComm(t *testing.T) {
 			[]string{"-f", "mixedcomm1.ldg", "register"},
 			"refdata/mixedcomm1.register.ref",
 		},
+		[]interface{}{
+			[]string{"-f", "mixedcomm2.ldg", "balance"},
+			"refdata/mixedcomm2.balance.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "mixedcomm2.ldg", "register"},
+			"refdata/mixedcomm2.register.ref",
+		},
 	}
 	for _, testcase := range testcases {
 		ref := testdataFile(testcase[1].(string))
