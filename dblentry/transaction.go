@@ -9,12 +9,9 @@ import "github.com/prataprc/goparsec"
 import "github.com/prataprc/golog"
 import "github.com/prataprc/goledger/api"
 
-var _ = fmt.Sprintf("dummy")
-
 type Transaction struct {
 	date     time.Time
 	edate    time.Time
-	state    string
 	code     string
 	postings []*Posting
 	tags     []string
@@ -37,10 +34,6 @@ func (trans *Transaction) Date() time.Time {
 	return trans.date
 }
 
-func (trans *Transaction) Payee() string {
-	return trans.Metadata("payee").(string)
-}
-
 func (trans *Transaction) GetPostings() []api.Poster {
 	postings := []api.Poster{}
 	for _, p := range trans.postings {
@@ -58,6 +51,22 @@ func (trans *Transaction) Metadata(key string) interface{} {
 
 func (trans *Transaction) SetMetadata(key string, value interface{}) {
 	trans.metadata[key] = value
+}
+
+func (trans *Transaction) Payee() string {
+	payee := trans.Metadata("payee")
+	if payee != nil {
+		return payee.(string)
+	}
+	return ""
+}
+
+func (trans *Transaction) State() string {
+	state := trans.Metadata("state")
+	if state != nil {
+		return state.(string)
+	}
+	return ""
 }
 
 //---- ledger parser
@@ -81,7 +90,7 @@ func (trans *Transaction) Yledger(db *Datastore) parsec.Parser {
 				trans.edate = edate
 			}
 			if t, ok := nodes[2].(*parsec.Terminal); ok {
-				trans.prefix = t.Value[0]
+				trans.SetMetadata("state", prefix2state[[]rune(t.Value)[0]])
 			}
 			if t, ok := nodes[3].(*parsec.Terminal); ok {
 				trans.code = string(t.Value[1 : len(t.Value)-1])

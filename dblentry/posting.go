@@ -8,6 +8,17 @@ import "github.com/prataprc/goparsec"
 import "github.com/prataprc/golog"
 import "github.com/prataprc/goledger/api"
 
+const (
+	PostUncleared = "uncleared"
+	PostCleared   = "cleared"
+	PostPending   = "pending"
+)
+
+var prefix2state = map[rune]string{
+	'*': PostCleared,
+	'!': PostPending,
+}
+
 type Posting struct {
 	trans     *Transaction
 	account   *Account
@@ -39,6 +50,17 @@ func (p *Posting) Account() api.Accounter {
 	return p.account
 }
 
+func (p *Posting) Metadata(key string) interface{} {
+	if value, ok := p.metadata[key]; ok {
+		return value
+	}
+	return p.trans.Metadata(key)
+}
+
+func (p *Posting) SetMetadata(key string, value interface{}) {
+	p.metadata[key] = value
+}
+
 func (p *Posting) Payee() string {
 	payee := p.Metadata("payee")
 	if payee == nil {
@@ -47,11 +69,12 @@ func (p *Posting) Payee() string {
 	return payee.(string)
 }
 
-func (p *Posting) Metadata(key string) interface{} {
-	if value, ok := p.metadata[key]; ok {
-		return value
+func (p *Posting) State() string {
+	state := p.Metadata("state")
+	if state == nil {
+		return ""
 	}
-	return p.trans.Metadata(key)
+	return state.(string)
 }
 
 //---- ledger parser
@@ -74,6 +97,7 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 
 	yposting := parsec.And(
 		nil,
+		parsec.Maybe(maybenode, ytok_prefix),
 		account.Ypostaccn(db),
 		parsec.Maybe(maybenode, comm.Yledger(db)),
 		parsec.Maybe(maybenode, ylotprice),
@@ -86,15 +110,20 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			switch items := nodes[0].(type) {
 			case []parsec.ParsecNode:
+				// prefix
+				if t, ok := items[0].(*parsec.Terminal); ok {
+					p.SetMetadata("state", prefix2state[[]rune(t.Value)[0]])
+				}
+
 				// account
-				account := items[0].(*Account)
+				account := items[1].(*Account)
 				accname := db.Applyroot(db.LookupAlias(account.name))
 				p.account = db.GetAccount(accname).(*Account)
 				p.account.virtual = account.virtual
 				p.account.balanced = account.balanced
 
 				// first commodity
-				commodity, _ := items[1].(*Commodity)
+				commodity, _ := items[2].(*Commodity)
 				if commodity != nil { // setup commodity profiles
 					p.commodity = db.GetCommodity(
 						commodity.name, commodity,
@@ -102,7 +131,7 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 				}
 
 				// lot price
-				lotnodes, _ := items[2].([]parsec.ParsecNode)
+				lotnodes, _ := items[3].([]parsec.ParsecNode)
 				if lotnodes != nil {
 					equalt, ok := lotnodes[1].(*parsec.Terminal)
 					if ok && equalt.Name == "EQUAL" {
@@ -113,13 +142,13 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 				}
 
 				// lot date
-				lotnodes, _ = items[3].([]parsec.ParsecNode)
+				lotnodes, _ = items[4].([]parsec.ParsecNode)
 				if lotnodes != nil {
 					p.lotdate = lotnodes[1].(time.Time)
 				}
 
 				// atprice
-				atnodes, _ := items[4].([]parsec.ParsecNode)
+				atnodes, _ := items[5].([]parsec.ParsecNode)
 				if atnodes != nil {
 					at := atnodes[0].(*parsec.Terminal)
 					atprice := atnodes[1].(*Commodity)
@@ -133,7 +162,7 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 				}
 
 				// optionally tags or tagkv or note
-				if note, ok := items[5].(*parsec.Terminal); ok {
+				if note, ok := items[6].(*parsec.Terminal); ok {
 					scanner := parsec.NewScanner([]byte(note.Value))
 					if node, _ := NewTag().Yledger(db)(scanner); node == nil {
 						p.note = string(note.Value)
@@ -142,7 +171,7 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 						tag := node.(*Tags)
 						p.tags = append(p.tags, tag.tags...)
 						for k, v := range tag.tagm {
-							p.metadata[k] = v
+							p.SetMetadata(k, v)
 						}
 					}
 				}
