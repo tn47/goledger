@@ -23,13 +23,15 @@ type Posting struct {
 	trans     *Transaction
 	account   *Account
 	commodity *Commodity
-	atprice   *Commodity
+
 	lotprice  *Commodity
-	fixprice  *Commodity
 	lotdate   time.Time
-	tags      []string
-	metadata  map[string]interface{}
-	note      string
+	costprice *Commodity
+	balprice  *Commodity
+
+	tags     []string
+	metadata map[string]interface{}
+	note     string
 }
 
 func NewPosting(trans *Transaction) *Posting {
@@ -82,27 +84,21 @@ func (p *Posting) State() string {
 func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 	account := NewAccount("")
 	comm := NewCommodity("")
-	atprice := NewCommodity("")
 	lotprice := NewCommodity("")
+	costprice := NewCommodity("")
+	balprice := NewCommodity("")
 
-	ylotprice := parsec.And(
-		nil,
-		ytok_openparan,
-		parsec.Maybe(maybenode, ytok_equal),
-		lotprice.Yledger(db),
-		ytok_closeparan)
-	ylotdate := parsec.And(
-		nil,
-		ytok_openbrack, Ydate(db.Year()), ytok_closebrack)
+	ylotdate := parsec.And(nil, ytok_opensqrt, Ydate(db.Year()), ytok_closesqrt)
 
 	yposting := parsec.And(
 		nil,
 		parsec.Maybe(maybenode, ytok_prefix),
 		account.Ypostaccn(db),
 		parsec.Maybe(maybenode, comm.Yledger(db)),
-		parsec.Maybe(maybenode, ylotprice),
+		parsec.Maybe(maybenode, lotprice.Ylotprice(db)),
 		parsec.Maybe(maybenode, ylotdate),
-		parsec.Maybe(maybenode, atprice.Yatprice(db)),
+		parsec.Maybe(maybenode, costprice.Ycostprice(db)),
+		parsec.Maybe(maybenode, balprice.Ybalprice(db)),
 		parsec.Maybe(maybenode, ytok_postnote),
 	)
 
@@ -115,54 +111,23 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 					p.SetMetadata("state", prefix2state[[]rune(t.Value)[0]])
 				}
 
-				// account
-				account := items[1].(*Account)
-				accname := db.Applyroot(db.LookupAlias(account.name))
-				p.account = db.GetAccount(accname).(*Account)
-				p.account.virtual = account.virtual
-				p.account.balanced = account.balanced
+				p.account = p.fixaccount(db, items[1])     // account
+				p.commodity = p.fixcommodity(db, items[2]) // commodity
+				p.lotprice = p.fixlotprice(items[3])       // lot price
+				p.lotdate = p.fixlotdate(items[4])         // lot date
+				p.costprice = p.fixcostprice(items[5])     // cost price
+				p.balprice = p.fixbalprice(items[6])       // balance price
 
-				// first commodity
-				commodity, _ := items[2].(*Commodity)
-				if commodity != nil { // setup commodity profiles
-					p.commodity = db.GetCommodity(
-						commodity.name, commodity,
-					).Similar(commodity.amount)
-				}
-
-				// lot price
-				lotnodes, _ := items[3].([]parsec.ParsecNode)
-				if lotnodes != nil {
-					equalt, ok := lotnodes[1].(*parsec.Terminal)
-					if ok && equalt.Name == "EQUAL" {
-						p.fixprice = lotnodes[2].(*Commodity)
-					} else {
-						p.lotprice = lotnodes[2].(*Commodity)
-					}
-				}
-
-				// lot date
-				lotnodes, _ = items[4].([]parsec.ParsecNode)
-				if lotnodes != nil {
-					p.lotdate = lotnodes[1].(time.Time)
-				}
-
-				// atprice
-				atnodes, _ := items[5].([]parsec.ParsecNode)
-				if atnodes != nil {
-					at := atnodes[0].(*parsec.Terminal)
-					atprice := atnodes[1].(*Commodity)
-					if atprice.currency == false {
-						return fmt.Errorf("at price should be currency")
-					}
-					if at.Name == "POSTATAT" {
-						atprice.amount /= commodity.amount
-					}
-					p.atprice = atprice
+				if p.lotprice != nil && lotprice.currency == false {
+					return fmt.Errorf("lot price must be currency")
+				} else if p.costprice != nil && costprice.currency == false {
+					return fmt.Errorf("cost price must be currency")
+				} else if p.balprice != nil && p.balprice.currency == false {
+					return fmt.Errorf("balance price must be currency")
 				}
 
 				// optionally tags or tagkv or note
-				if note, ok := items[6].(*parsec.Terminal); ok {
+				if note, ok := items[7].(*parsec.Terminal); ok {
 					scanner := parsec.NewScanner([]byte(note.Value))
 					if node, _ := NewTag().Yledger(db)(scanner); node == nil {
 						p.note = string(note.Value)
@@ -200,11 +165,57 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 	return y
 }
 
+func (p *Posting) fixaccount(db *Datastore, item interface{}) *Account {
+	account := item.(*Account)
+	accname := db.Applyroot(db.LookupAlias(account.name))
+	paccount := db.GetAccount(accname).(*Account)
+	paccount.virtual = account.virtual
+	paccount.balanced = account.balanced
+	return paccount
+}
+
+func (p *Posting) fixcommodity(db *Datastore, item interface{}) *Commodity {
+	if commodity, ok := item.(*Commodity); ok {
+		return db.GetCommodity(
+			commodity.name, commodity,
+		).Similar(commodity.amount)
+	}
+	return nil
+}
+
+func (p *Posting) fixlotprice(item interface{}) *Commodity {
+	if lotprice, ok := item.(*Commodity); ok {
+		return lotprice
+	}
+	return nil
+}
+
+func (p *Posting) fixlotdate(item interface{}) (tm time.Time) {
+	if lotnodes, ok := item.([]parsec.ParsecNode); ok {
+		return lotnodes[1].(time.Time)
+	}
+	return
+}
+
+func (p *Posting) fixcostprice(item interface{}) *Commodity {
+	if costprice, ok := item.(*Commodity); ok {
+		return costprice
+	}
+	return nil
+}
+
+func (p *Posting) fixbalprice(item interface{}) *Commodity {
+	if balprice, ok := item.(*Commodity); ok {
+		return balprice
+	}
+	return nil
+}
+
 //---- engine
 
 func (p *Posting) TryAtPrice() *Commodity {
-	if p.atprice != nil && p.commodity.currency == false {
-		return p.atprice.Similar(p.commodity.amount * p.atprice.amount)
+	if p.costprice != nil && p.commodity.currency == false {
+		return p.costprice.Similar(p.commodity.amount * p.costprice.amount)
 	}
 	return p.commodity.Similar(p.commodity.amount)
 }

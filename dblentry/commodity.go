@@ -14,6 +14,8 @@ type Commodity struct {
 	currency  bool
 	precision int
 	mark1k    bool
+	fixprice  bool
+	total     bool
 }
 
 func NewCommodity(name string) *Commodity {
@@ -40,6 +42,22 @@ func (comm *Commodity) Amount() float64 {
 
 func (comm *Commodity) Name() string {
 	return comm.name
+}
+
+func (comm *Commodity) SetFixprice() {
+	comm.fixprice = true
+}
+
+func (comm *Commodity) IsFixedprice() bool {
+	return comm.fixprice
+}
+
+func (comm *Commodity) SetTotal() {
+	comm.fixprice = true
+}
+
+func (comm *Commodity) IsTotal() bool {
+	return comm.total
 }
 
 //---- ledger parser
@@ -88,10 +106,61 @@ func (comm *Commodity) Yledger(db *Datastore) parsec.Parser {
 	return y
 }
 
-func (comm *Commodity) Yatprice(db *Datastore) parsec.Parser {
-	y := parsec.And(
+func (comm *Commodity) Ylotprice(db *Datastore) parsec.Parser {
+	ylotprice := parsec.And(
 		nil,
+		ytok_openparan,
+		parsec.Maybe(maybenode, ytok_equal),
+		comm.Yledger(db),
+		ytok_closeparan)
+	ylottotal := parsec.And(
+		nil,
+		ytok_openopenparan,
+		parsec.Maybe(maybenode, ytok_equal),
+		comm.Yledger(db),
+		ytok_closecloseparan)
+	y := parsec.OrdChoice(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			commodity := nodes[2].(*Commodity)
+			// total ?
+			if nodes[0].(*parsec.Terminal).Name == "OPENOPENPARAN" {
+				commodity.SetTotal()
+			}
+			// fixed ?
+			if t, ok := nodes[1].(*parsec.Terminal); ok && t.Name == "EQUAL" {
+				commodity.SetFixprice()
+			}
+			return commodity
+		},
+		ylotprice, ylottotal)
+	return y
+}
+
+func (comm *Commodity) Ycostprice(db *Datastore) parsec.Parser {
+	y := parsec.And(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			commodity := nodes[2].(*Commodity)
+			if nodes[0].(*parsec.Terminal).Name == "COSTATAT" {
+				commodity.SetTotal()
+			}
+			if nodes[1].(*parsec.Terminal).Name == "EQUAL" {
+				commodity.SetFixprice()
+			}
+			return commodity
+		},
 		parsec.OrdChoice(Vector2scalar, ytok_at, ytok_atat),
+		parsec.Maybe(maybenode, ytok_equal),
+		comm.Yledger(db),
+	)
+	return y
+}
+
+func (comm *Commodity) Ybalprice(db *Datastore) parsec.Parser {
+	y := parsec.And(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			return nodes[1].(*Commodity)
+		},
+		ytok_equal,
 		comm.Yledger(db),
 	)
 	return y
