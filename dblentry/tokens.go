@@ -22,7 +22,7 @@ var ytok_baccname = parsec.Token(`\[[a-zA-Z][0-9a-zA-Z: `+accchars+`]*\]`, "BFUL
 
 var ytok_prefix = parsec.Token(`\*|!`, "TRANSPREFIX")
 var ytok_code = parsec.Token(`\(.*\)`, "TRANSCODE")
-var ytok_payeestr = parsec.Token(".+", "TRANSPAYEE")
+var ytok_payeestr = parsec.Token("([^ \t]+[ ]?)+", "TRANSPAYEE")
 var ytok_transnote = parsec.Token(";.*", "TRANSNOTE")
 
 //---- Posting tokens

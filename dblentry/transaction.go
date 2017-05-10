@@ -98,6 +98,12 @@ func (trans *Transaction) Yledger(db *Datastore) parsec.Parser {
 
 			payee := string(nodes[4].(*parsec.Terminal).Value)
 			trans.SetMetadata("payee", payee)
+
+			if t, ok := nodes[5].(*parsec.Terminal); ok {
+				note := string(t.Value)[1:]
+				trans.notes = append(trans.notes, note)
+			}
+
 			fmsg := "trans.yledger date:%v code:%v payee:%v\n"
 			log.Debugf(fmsg, trans.date, trans.code, payee)
 			return trans
@@ -107,6 +113,7 @@ func (trans *Transaction) Yledger(db *Datastore) parsec.Parser {
 		parsec.Maybe(maybenode, ytok_prefix),
 		parsec.Maybe(maybenode, ytok_code),
 		ytok_payeestr,
+		parsec.Maybe(maybenode, ytok_transnote),
 	)
 	return y
 }

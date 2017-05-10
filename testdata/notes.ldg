@@ -1,0 +1,23 @@
+2012-03-10 * KFC ; note a note
+    Expenses:Food                $20.00
+    Assets:Cash
+
+2012-03-10 * KFC one  ; note - yum, chicken...
+    Expenses:Food                $20.00
+    Assets:Cash
+
+2012-03-10 * KFC two               ; yum, chicken...
+    ; and more notes...
+    Expenses:Food                $20.00
+    Assets:Cash
+    ; one more note at the end ...
+
+2012-03-10 * KFC three
+    ;just these notes...
+    Expenses:Food                $20.00
+    Assets:Cash
+
+2012-03-10 * KFC four
+    Expenses:Food                $20.00  ; posting #1 note
+    Assets:Cash
+      ; posting #2 note, extra indentation is optional
