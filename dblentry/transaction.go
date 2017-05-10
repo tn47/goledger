@@ -17,6 +17,7 @@ type Transaction struct {
 	tags     []string
 	metadata map[string]interface{}
 	notes    []string
+	lineno   int
 }
 
 func NewTransaction() *Transaction {
@@ -67,6 +68,14 @@ func (trans *Transaction) State() string {
 		return state.(string)
 	}
 	return ""
+}
+
+func (trans *Transaction) SetLineno(lineno int) {
+	trans.lineno = lineno
+}
+
+func (trans *Transaction) Lineno() int {
+	return trans.lineno
 }
 
 //---- ledger parser
@@ -132,13 +141,18 @@ func (trans *Transaction) Yledgerblock(db *Datastore, block []string) error {
 		switch val := node.(type) {
 		case *Posting:
 			trans.postings = append(trans.postings, val)
+
 		case *Tags:
 			trans.tags = append(trans.tags, val.tags...)
 			for k, v := range val.tagm {
 				trans.metadata[k] = v
 			}
+
 		case Transnote:
 			trans.notes = append(trans.notes, string(val))
+
+		case error:
+			return val
 		}
 		if scanner.Endof() == false {
 			return fmt.Errorf("unable to parse posting")
@@ -282,7 +296,7 @@ func (trans *Transaction) Firstpass(db *Datastore) error {
 func (trans *Transaction) Secondpass(db *Datastore) error {
 	for _, posting := range trans.postings {
 		if err := posting.Secondpass(db, trans); err != nil {
-			return err
+			return fmt.Errorf("lineno: %v; %v", trans.lineno, err)
 		}
 	}
 	return db.reporter.Transaction(db, trans)

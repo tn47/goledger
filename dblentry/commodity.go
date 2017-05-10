@@ -5,6 +5,7 @@ import "strconv"
 import "strings"
 
 import "github.com/prataprc/goparsec"
+import "github.com/prataprc/goledger/api"
 
 type Commodity struct {
 	name string
@@ -36,12 +37,16 @@ func (comm *Commodity) String() string {
 
 //---- accessors
 
+func (comm *Commodity) Name() string {
+	return comm.name
+}
+
 func (comm *Commodity) Amount() float64 {
 	return comm.amount
 }
 
-func (comm *Commodity) Name() string {
-	return comm.name
+func (comm *Commodity) Currency() bool {
+	return comm.currency
 }
 
 func (comm *Commodity) SetFixprice() {
@@ -198,6 +203,15 @@ func (comm *Commodity) Deduct(other *Commodity) error {
 		comm.amount -= other.amount
 	}
 	return fmt.Errorf("can't <%v:%v> - <%v:%v>", n1, c1, n2, c2)
+}
+
+func (comm *Commodity) BalanceEqual(other api.Commoditiser) bool {
+	if comm.name != other.Name() {
+		panic("impossible situation")
+	} else if comm.currency != other.Currency() {
+		panic("impossible situation")
+	}
+	return comm.amount == other.Amount()
 }
 
 func (comm *Commodity) Similar(amount float64) *Commodity {

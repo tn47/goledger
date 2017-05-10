@@ -35,9 +35,13 @@ type Poster interface {
 }
 
 type Commoditiser interface {
+	Name() string
+
 	Amount() float64
 
-	Name() string
+	Currency() bool
+
+	BalanceEqual(Commoditiser) bool
 
 	String() string
 }

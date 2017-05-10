@@ -37,6 +37,7 @@ func firstpass(db *dblentry.Datastore, journalfile string) error {
 		switch obj := node.(type) {
 		case *dblentry.Transaction:
 			err = obj.Yledgerblock(db, block[1:])
+			obj.SetLineno(lineno - len(block))
 
 		case *dblentry.Directive:
 			err = obj.Yledgerblock(db, block[1:])

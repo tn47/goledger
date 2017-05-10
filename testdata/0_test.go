@@ -120,6 +120,56 @@ func TestTranscode(t *testing.T) {
 	}
 }
 
+func TestBalanceErr(t *testing.T) {
+	testcases := [][]interface{}{
+		[]interface{}{
+			[]string{"-f", "balerr1.ldg", "balance"},
+			"refdata/balerr1.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "balerr2.ldg", "balance"},
+			"refdata/balerr2.ref",
+		},
+	}
+	for _, testcase := range testcases {
+		ref := testdataFile(testcase[1].(string))
+		args := testcase[0].([]string)
+		cmd := exec.Command(LEDGEREXEC, args...)
+		out, _ := cmd.CombinedOutput()
+		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if bytes.Compare(out, ref) != 0 {
+			t.Logf(strings.Join(args, " "))
+			t.Logf("expected %s", ref)
+			t.Errorf("got %s", out)
+		}
+	}
+}
+
+func TestBalanceAssert(t *testing.T) {
+	testcases := [][]interface{}{
+		[]interface{}{
+			[]string{"-f", "balassert.ldg", "balance"},
+			"refdata/balassert.balance.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "balassert.ldg", "register"},
+			"refdata/balassert.register.ref",
+		},
+	}
+	for _, testcase := range testcases {
+		ref := testdataFile(testcase[1].(string))
+		args := testcase[0].([]string)
+		cmd := exec.Command(LEDGEREXEC, args...)
+		out, _ := cmd.CombinedOutput()
+		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if bytes.Compare(out, ref) != 0 {
+			t.Logf(strings.Join(args, " "))
+			t.Logf("expected %s", ref)
+			t.Errorf("got %s", out)
+		}
+	}
+}
+
 func TestDates(t *testing.T) {
 	testcases := [][]interface{}{
 		[]interface{}{

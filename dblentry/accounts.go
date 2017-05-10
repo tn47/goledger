@@ -198,6 +198,13 @@ func (acc *Account) Secondpass(
 	db *Datastore, trans *Transaction, p *Posting) error {
 
 	p.account.AddBalance(p.commodity)
+	balance := p.account.Balance(p.commodity.name)
+	if p.balprice != nil && balance.BalanceEqual(p.balprice) == false {
+		accname := p.account.name
+		fmsg := "account(%v) should balance as %s, got %s\n"
+		return fmt.Errorf(fmsg, accname, p.balprice.String(), balance.String())
+	}
+
 	if err := db.reporter.Posting(db, trans, p); err != nil {
 		return err
 	}

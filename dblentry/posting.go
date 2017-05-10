@@ -122,8 +122,12 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 					return fmt.Errorf("lot price must be currency")
 				} else if p.costprice != nil && costprice.currency == false {
 					return fmt.Errorf("cost price must be currency")
-				} else if p.balprice != nil && p.balprice.currency == false {
-					return fmt.Errorf("balance price must be currency")
+				}
+				if x, y := p.balprice, p.commodity; x != nil && y != nil {
+					if x.name != y.name {
+						fmsg := "balance-commodity(%v) != posting-commodity(%v)"
+						return fmt.Errorf(fmsg, x.name, y.name)
+					}
 				}
 
 				// optionally tags or tagkv or note
