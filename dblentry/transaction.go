@@ -205,7 +205,7 @@ func (trans *Transaction) Autobalance1(
 		return false, fmt.Errorf("empty transaction")
 
 	} else if len(trans.postings) == 1 && defaccount != nil {
-		commodity := trans.postings[0].TryAtPrice()
+		commodity := trans.postings[0].Costprice()
 		posting := trans.Defaultposting(db, defaccount, commodity)
 		posting.commodity.InverseAmount()
 		trans.postings = append(trans.postings, posting)
@@ -249,7 +249,7 @@ func (trans *Transaction) DoBalance() ([]*Commodity, bool) {
 		if posting.commodity == nil {
 			continue
 		}
-		commodity := posting.TryAtPrice()
+		commodity := posting.Costprice()
 		unbc, ok := unbalanced[commodity.name]
 		if ok {
 			unbc.Add(commodity)

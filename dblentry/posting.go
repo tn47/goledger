@@ -145,8 +145,8 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 					}
 				}
 
-				fmsg := "posting.yledger account:%v commodity:%v\n"
-				log.Debugf(fmsg, p.account, p.commodity)
+				fmsg := "posting.yledger account:%v commodity:%v %v\n"
+				log.Debugf(fmsg, p.account, p.commodity, p.costprice)
 				return p
 
 			case *parsec.Terminal:
@@ -217,11 +217,39 @@ func (p *Posting) fixbalprice(item interface{}) *Commodity {
 
 //---- engine
 
-func (p *Posting) TryAtPrice() *Commodity {
-	if p.costprice != nil && p.commodity.currency == false {
+func (p *Posting) Costprice() *Commodity {
+	checkdebit := p.IsDebit() && p.commodity.currency == false
+	if checkdebit && p.costprice != nil {
+		if p.costprice.IsTotal() { // first compute per unit price
+			p.costprice.amount /= p.commodity.amount
+		}
 		return p.costprice.Similar(p.commodity.amount * p.costprice.amount)
+
 	}
+
+	checkcredit := p.IsCredit() && p.commodity.currency == false
+	if checkcredit && p.lotprice != nil {
+		if p.lotprice.IsTotal() { // first compute per unit price
+			p.lotprice.amount /= p.commodity.amount
+		}
+		return p.lotprice.Similar(p.commodity.amount * p.lotprice.amount)
+	}
+
 	return p.commodity.Similar(p.commodity.amount)
+}
+
+func (p *Posting) IsCredit() bool {
+	if p.commodity == nil {
+		panic("impossible situation")
+	}
+	if p.commodity.amount < 0 {
+		return true
+	}
+	return false
+}
+
+func (p *Posting) IsDebit() bool {
+	return !p.IsCredit()
 }
 
 func (p *Posting) Firstpass(db *Datastore, trans *Transaction) error {

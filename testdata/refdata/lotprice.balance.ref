@@ -1,0 +1,11 @@
+
+  By-date      Account                 Balance 
+                                               
+                                       $750.00 
+  2012/Apr/10  Assets:Brokerage       -10 AAPL 
+  2012/Apr/10  Assets:Brokerage:Cash   $750.00 
+  2012/Apr/10  Income:Capital gains   $-250.00 
+                                      -------- 
+                                       $500.00 
+  2012/Apr/10                         -10 AAPL 
+

@@ -170,6 +170,56 @@ func TestBalanceAssert(t *testing.T) {
 	}
 }
 
+func TestExplicitCost(t *testing.T) {
+	testcases := [][]interface{}{
+		[]interface{}{
+			[]string{"-f", "explicitcost.ldg", "balance"},
+			"refdata/explicitcost.balance.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "explicitcost.ldg", "register"},
+			"refdata/explicitcost.register.ref",
+		},
+	}
+	for _, testcase := range testcases {
+		ref := testdataFile(testcase[1].(string))
+		args := testcase[0].([]string)
+		cmd := exec.Command(LEDGEREXEC, args...)
+		out, _ := cmd.CombinedOutput()
+		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if bytes.Compare(out, ref) != 0 {
+			t.Logf(strings.Join(args, " "))
+			t.Logf("expected %s", ref)
+			t.Errorf("got %s", out)
+		}
+	}
+}
+
+func TestTotalCost(t *testing.T) {
+	testcases := [][]interface{}{
+		[]interface{}{
+			[]string{"-f", "totalcost.ldg", "balance"},
+			"refdata/totalcost.balance.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "totalcost.ldg", "register"},
+			"refdata/totalcost.register.ref",
+		},
+	}
+	for _, testcase := range testcases {
+		ref := testdataFile(testcase[1].(string))
+		args := testcase[0].([]string)
+		cmd := exec.Command(LEDGEREXEC, args...)
+		out, _ := cmd.CombinedOutput()
+		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if bytes.Compare(out, ref) != 0 {
+			t.Logf(strings.Join(args, " "))
+			t.Logf("expected %s", ref)
+			t.Errorf("got %s", out)
+		}
+	}
+}
+
 func TestDates(t *testing.T) {
 	testcases := [][]interface{}{
 		[]interface{}{
@@ -530,30 +580,59 @@ func TestPostingErr(t *testing.T) {
 	}
 }
 
-//func TestAtprice(t *testing.T) {
-//	testcases := [][]interface{}{
-//		[]interface{}{
-//			[]string{"-f", "atprice.ldg", "balance"},
-//			"refdata/atprice.balance.ref",
-//		},
-//		[]interface{}{
-//			[]string{"-f", "atprice.ldg", "register"},
-//			"refdata/atprice.register.ref",
-//		},
-//	}
-//	for _, testcase := range testcases {
-//		ref := testdataFile(testcase[1].(string))
-//		args := testcase[0].([]string)
-//		cmd := exec.Command(LEDGEREXEC, args...)
-//		out, _ := cmd.CombinedOutput()
-//		//ioutil.WriteFile(testcase[1].(string), out, 0660)
-//		if bytes.Compare(out, ref) != 0 {
-//			t.Logf(strings.Join(args, " "))
-//			t.Logf("expected %s", ref)
-//			t.Errorf("got %s", out)
-//		}
-//	}
-//}
+func TestLotPrice(t *testing.T) {
+	testcases := [][]interface{}{
+		[]interface{}{
+			[]string{"-f", "lotpriceerr.ldg", "balance"},
+			"refdata/lotpriceerr.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "lotprice.ldg", "balance"},
+			"refdata/lotprice.balance.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "lotprice.ldg", "register"},
+			"refdata/lotprice.register.ref",
+		},
+	}
+	for _, testcase := range testcases {
+		ref := testdataFile(testcase[1].(string))
+		args := testcase[0].([]string)
+		cmd := exec.Command(LEDGEREXEC, args...)
+		out, _ := cmd.CombinedOutput()
+		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if bytes.Compare(out, ref) != 0 {
+			t.Logf(strings.Join(args, " "))
+			t.Logf("expected %s", ref)
+			t.Errorf("got %s", out)
+		}
+	}
+}
+
+func TestShare(t *testing.T) {
+	testcases := [][]interface{}{
+		[]interface{}{
+			[]string{"-f", "share.ldg", "balance"},
+			"refdata/share.balance.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "share.ldg", "register"},
+			"refdata/share.register.ref",
+		},
+	}
+	for _, testcase := range testcases {
+		ref := testdataFile(testcase[1].(string))
+		args := testcase[0].([]string)
+		cmd := exec.Command(LEDGEREXEC, args...)
+		out, _ := cmd.CombinedOutput()
+		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if bytes.Compare(out, ref) != 0 {
+			t.Logf(strings.Join(args, " "))
+			t.Logf("expected %s", ref)
+			t.Errorf("got %s", out)
+		}
+	}
+}
 
 func testdataFile(filename string) []byte {
 	f, err := os.Open(filename)

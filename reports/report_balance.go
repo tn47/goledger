@@ -71,8 +71,6 @@ func (report *ReportBalance) BubblePosting(
 		// format account balance
 		report.balance[bbname] = account.FmtBalances(db, trans, p, account)
 
-	} else {
-		delete(report.balance, bbname)
 	}
 	return nil
 }

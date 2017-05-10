@@ -58,7 +58,7 @@ func (comm *Commodity) IsFixedprice() bool {
 }
 
 func (comm *Commodity) SetTotal() {
-	comm.fixprice = true
+	comm.total = true
 }
 
 func (comm *Commodity) IsTotal() bool {
@@ -126,13 +126,14 @@ func (comm *Commodity) Ylotprice(db *Datastore) parsec.Parser {
 		ytok_closecloseparan)
 	y := parsec.OrdChoice(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
-			commodity := nodes[2].(*Commodity)
+			items := nodes[0].([]parsec.ParsecNode)
+			commodity := items[2].(*Commodity)
 			// total ?
-			if nodes[0].(*parsec.Terminal).Name == "OPENOPENPARAN" {
+			if items[0].(*parsec.Terminal).Name == "OPENOPENPARAN" {
 				commodity.SetTotal()
 			}
 			// fixed ?
-			if t, ok := nodes[1].(*parsec.Terminal); ok && t.Name == "EQUAL" {
+			if t, ok := items[1].(*parsec.Terminal); ok && t.Name == "EQUAL" {
 				commodity.SetFixprice()
 			}
 			return commodity
@@ -148,12 +149,12 @@ func (comm *Commodity) Ycostprice(db *Datastore) parsec.Parser {
 			if nodes[0].(*parsec.Terminal).Name == "COSTATAT" {
 				commodity.SetTotal()
 			}
-			if nodes[1].(*parsec.Terminal).Name == "EQUAL" {
+			if t, ok := nodes[1].(*parsec.Terminal); ok && t.Name == "EQUAL" {
 				commodity.SetFixprice()
 			}
 			return commodity
 		},
-		parsec.OrdChoice(Vector2scalar, ytok_at, ytok_atat),
+		parsec.OrdChoice(Vector2scalar, ytok_atat, ytok_at),
 		parsec.Maybe(maybenode, ytok_equal),
 		comm.Yledger(db),
 	)
@@ -221,6 +222,8 @@ func (comm *Commodity) Similar(amount float64) *Commodity {
 		currency:  comm.currency,
 		precision: comm.precision,
 		mark1k:    comm.mark1k,
+		fixprice:  comm.fixprice,
+		total:     comm.total,
 	}
 	return newcomm
 }

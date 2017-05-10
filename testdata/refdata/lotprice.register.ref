@@ -1,0 +1,7 @@
+
+  By-date      Payee      Account                  Amount   Balance 
+                                                                    
+  2012-Apr-10  My Broker  Assets:Brokerage:Cash   $750.00   $750.00 
+                          Assets:Brokerage       -10 AAPL  -10 AAPL 
+                          Income:Capital gains   $-250.00  $-250.00 
+

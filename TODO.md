@@ -1,2 +1,3 @@
 - test cases for testdata/mixedcomm2.ldg
 - test cases for testdata/notes.ldg
+- test cases for testdata/postingcost.ldg
