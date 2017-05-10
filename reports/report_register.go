@@ -55,6 +55,7 @@ func (report *ReportRegister) Transaction(
 			row[2] = ""
 		}
 		report.register = append(report.register, row)
+
 		date, transpayee = "", ""
 		prevaccname = accname
 	}

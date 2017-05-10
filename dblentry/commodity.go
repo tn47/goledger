@@ -7,7 +7,9 @@ import "strings"
 import "github.com/prataprc/goparsec"
 
 type Commodity struct {
-	name      string
+	name string
+	// amount is more like quantity,
+	// or in pricing context it says the per unit price.
 	amount    float64
 	currency  bool
 	precision int
@@ -16,17 +18,6 @@ type Commodity struct {
 
 func NewCommodity(name string) *Commodity {
 	return &Commodity{name: name}
-}
-
-func (comm *Commodity) Similar(amount float64) *Commodity {
-	newcomm := &Commodity{
-		name:      comm.name,
-		amount:    amount,
-		currency:  comm.currency,
-		precision: comm.precision,
-		mark1k:    comm.mark1k,
-	}
-	return newcomm
 }
 
 func (comm *Commodity) String() string {
@@ -138,4 +129,15 @@ func (comm *Commodity) Deduct(other *Commodity) error {
 		comm.amount -= other.amount
 	}
 	return fmt.Errorf("can't <%v:%v> - <%v:%v>", n1, c1, n2, c2)
+}
+
+func (comm *Commodity) Similar(amount float64) *Commodity {
+	newcomm := &Commodity{
+		name:      comm.name,
+		amount:    amount,
+		currency:  comm.currency,
+		precision: comm.precision,
+		mark1k:    comm.mark1k,
+	}
+	return newcomm
 }

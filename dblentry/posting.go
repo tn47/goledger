@@ -14,6 +14,7 @@ type Posting struct {
 	commodity *Commodity
 	atprice   *Commodity
 	lotprice  *Commodity
+	fixprice  *Commodity
 	lotdate   time.Time
 	tags      []string
 	metadata  map[string]interface{}
@@ -63,7 +64,10 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 
 	ylotprice := parsec.And(
 		nil,
-		ytok_openparan, lotprice.Yledger(db), ytok_closeparan)
+		ytok_openparan,
+		parsec.Maybe(maybenode, ytok_equal),
+		lotprice.Yledger(db),
+		ytok_closeparan)
 	ylotdate := parsec.And(
 		nil,
 		ytok_openbrack, Ydate(db.Year()), ytok_closebrack)
@@ -100,7 +104,12 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 				// lot price
 				lotnodes, _ := items[2].([]parsec.ParsecNode)
 				if lotnodes != nil {
-					p.lotprice = lotnodes[1].(*Commodity)
+					equalt, ok := lotnodes[1].(*parsec.Terminal)
+					if ok && equalt.Name == "EQUAL" {
+						p.fixprice = lotnodes[2].(*Commodity)
+					} else {
+						p.lotprice = lotnodes[2].(*Commodity)
+					}
 				}
 
 				// lot date
@@ -163,6 +172,13 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 }
 
 //---- engine
+
+func (p *Posting) TryAtPrice() *Commodity {
+	if p.atprice != nil && p.commodity.currency == false {
+		return p.atprice.Similar(p.commodity.amount * p.atprice.amount)
+	}
+	return p.commodity.Similar(p.commodity.amount)
+}
 
 func (p *Posting) Firstpass(db *Datastore, trans *Transaction) error {
 	if err := p.account.Firstpass(db, trans, p); err != nil {

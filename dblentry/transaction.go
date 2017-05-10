@@ -14,7 +14,7 @@ var _ = fmt.Sprintf("dummy")
 type Transaction struct {
 	date     time.Time
 	edate    time.Time
-	prefix   byte
+	state    string
 	code     string
 	postings []*Posting
 	tags     []string
@@ -89,7 +89,8 @@ func (trans *Transaction) Yledger(db *Datastore) parsec.Parser {
 
 			payee := string(nodes[4].(*parsec.Terminal).Value)
 			trans.SetMetadata("payee", payee)
-			log.Debugf("trans.yledger %v %v\n", trans.date, payee)
+			fmsg := "trans.yledger date:%v code:%v payee:%v\n"
+			log.Debugf(fmsg, trans.date, trans.code, payee)
 			return trans
 		},
 		ydate,
@@ -150,7 +151,7 @@ func (trans *Transaction) Defaultposting(
 
 	posting := NewPosting(trans)
 	posting.account = defacc
-	posting.commodity = commodity.Similar(commodity.amount)
+	posting.commodity = commodity
 	return posting
 }
 
@@ -174,7 +175,7 @@ func (trans *Transaction) Autobalance1(
 		return false, fmt.Errorf("empty transaction")
 
 	} else if len(trans.postings) == 1 && defaccount != nil {
-		commodity := trans.postings[0].commodity
+		commodity := trans.postings[0].TryAtPrice()
 		posting := trans.Defaultposting(db, defaccount, commodity)
 		posting.commodity.InverseAmount()
 		trans.postings = append(trans.postings, posting)
@@ -218,11 +219,13 @@ func (trans *Transaction) DoBalance() ([]*Commodity, bool) {
 		if posting.commodity == nil {
 			continue
 		}
-		unbc, ok := unbalanced[posting.commodity.name]
-		if ok == false {
-			unbc = posting.commodity.Similar(0)
+		commodity := posting.TryAtPrice()
+		unbc, ok := unbalanced[commodity.name]
+		if ok {
+			unbc.Add(commodity)
+		} else {
+			unbc = commodity
 		}
-		unbc.Add(posting.commodity)
 		unbalanced[unbc.name] = unbc
 	}
 	commnames := []string{}

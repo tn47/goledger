@@ -12,6 +12,114 @@ import "os/exec"
 var _ = fmt.Sprintf("dummy")
 var LEDGEREXEC = "../ledger"
 
+func TestBasic(t *testing.T) {
+	testcases := [][]interface{}{
+		[]interface{}{
+			[]string{"-f", "basic.ldg", "balance"},
+			"refdata/basic.balance.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "basic.ldg", "register"},
+			"refdata/basic.register.ref",
+		},
+	}
+	for _, testcase := range testcases {
+		ref := testdataFile(testcase[1].(string))
+		args := testcase[0].([]string)
+		cmd := exec.Command(LEDGEREXEC, args...)
+		out, _ := cmd.CombinedOutput()
+		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if bytes.Compare(out, ref) != 0 {
+			t.Logf(strings.Join(args, " "))
+			t.Logf("expected %s", ref)
+			t.Errorf("got %s", out)
+		}
+	}
+}
+
+func TestElidingAmount(t *testing.T) {
+	testcases := [][]interface{}{
+		[]interface{}{
+			[]string{"-f", "elidingamount1.ldg", "balance"},
+			"refdata/elidingamount1.balance.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "elidingamount1.ldg", "register"},
+			"refdata/elidingamount1.register.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "elidingamount2.ldg", "balance"},
+			"refdata/elidingamount2.balance.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "elidingamount2.ldg", "register"},
+			"refdata/elidingamount2.register.ref",
+		},
+	}
+	for _, testcase := range testcases {
+		ref := testdataFile(testcase[1].(string))
+		args := testcase[0].([]string)
+		cmd := exec.Command(LEDGEREXEC, args...)
+		out, _ := cmd.CombinedOutput()
+		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if bytes.Compare(out, ref) != 0 {
+			t.Logf(strings.Join(args, " "))
+			t.Logf("expected %s", ref)
+			t.Errorf("got %s", out)
+		}
+	}
+}
+
+func TestAuxdate(t *testing.T) {
+	testcases := [][]interface{}{
+		[]interface{}{
+			[]string{"-f", "auxdate.ldg", "balance"},
+			"refdata/auxdate.balance.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "auxdate.ldg", "register"},
+			"refdata/auxdate.register.ref",
+		},
+	}
+	for _, testcase := range testcases {
+		ref := testdataFile(testcase[1].(string))
+		args := testcase[0].([]string)
+		cmd := exec.Command(LEDGEREXEC, args...)
+		out, _ := cmd.CombinedOutput()
+		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if bytes.Compare(out, ref) != 0 {
+			t.Logf(strings.Join(args, " "))
+			t.Logf("expected %s", ref)
+			t.Errorf("got %s", out)
+		}
+	}
+}
+
+func TestTranscode(t *testing.T) {
+	testcases := [][]interface{}{
+		[]interface{}{
+			[]string{"-f", "transcode.ldg", "balance"},
+			"refdata/transcode.balance.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "transcode.ldg", "register"},
+			"refdata/transcode.register.ref",
+		},
+	}
+	for _, testcase := range testcases {
+		ref := testdataFile(testcase[1].(string))
+		args := testcase[0].([]string)
+		cmd := exec.Command(LEDGEREXEC, args...)
+		out, _ := cmd.CombinedOutput()
+		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if bytes.Compare(out, ref) != 0 {
+			t.Logf(strings.Join(args, " "))
+			t.Logf("expected %s", ref)
+			t.Errorf("got %s", out)
+		}
+	}
+}
+
 func TestDates(t *testing.T) {
 	testcases := [][]interface{}{
 		[]interface{}{
@@ -372,30 +480,30 @@ func TestPostingErr(t *testing.T) {
 	}
 }
 
-func TestAtprice(t *testing.T) {
-	testcases := [][]interface{}{
-		[]interface{}{
-			[]string{"-f", "atprice.ldg", "balance"},
-			"refdata/atprice.balance.ref",
-		},
-		[]interface{}{
-			[]string{"-f", "atprice.ldg", "register"},
-			"refdata/atprice.register.ref",
-		},
-	}
-	for _, testcase := range testcases {
-		ref := testdataFile(testcase[1].(string))
-		args := testcase[0].([]string)
-		cmd := exec.Command(LEDGEREXEC, args...)
-		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
-		if bytes.Compare(out, ref) != 0 {
-			t.Logf(strings.Join(args, " "))
-			t.Logf("expected %s", ref)
-			t.Errorf("got %s", out)
-		}
-	}
-}
+//func TestAtprice(t *testing.T) {
+//	testcases := [][]interface{}{
+//		[]interface{}{
+//			[]string{"-f", "atprice.ldg", "balance"},
+//			"refdata/atprice.balance.ref",
+//		},
+//		[]interface{}{
+//			[]string{"-f", "atprice.ldg", "register"},
+//			"refdata/atprice.register.ref",
+//		},
+//	}
+//	for _, testcase := range testcases {
+//		ref := testdataFile(testcase[1].(string))
+//		args := testcase[0].([]string)
+//		cmd := exec.Command(LEDGEREXEC, args...)
+//		out, _ := cmd.CombinedOutput()
+//		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+//		if bytes.Compare(out, ref) != 0 {
+//			t.Logf(strings.Join(args, " "))
+//			t.Logf("expected %s", ref)
+//			t.Errorf("got %s", out)
+//		}
+//	}
+//}
 
 func testdataFile(filename string) []byte {
 	f, err := os.Open(filename)
