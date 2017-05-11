@@ -15,7 +15,7 @@ var ytok_commentline = parsec.Token(`.*`, "COMMENTLINE")
 //---- Transaction tokens
 type Transnote string
 
-var accchars = `~!^()_\{}\[\]:;"'<>,.?/-`
+var accchars = `\&~!^()_\{}\[\]:;"'<>,.?/-`
 var ytok_accname = parsec.Token(`[a-zA-Z][0-9a-zA-Z `+accchars+`]*`, "FULLACCNM")
 var ytok_vaccname = parsec.Token(`\([a-zA-Z][0-9a-zA-Z: `+accchars+`]*\)`, "VFULLACCNM")
 var ytok_baccname = parsec.Token(`\[[a-zA-Z][0-9a-zA-Z: `+accchars+`]*\]`, "BFULLACCNM")
