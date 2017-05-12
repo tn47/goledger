@@ -2,7 +2,7 @@ package reports
 
 import "fmt"
 
-import "github.com/prataprc/goledger/dblentry"
+import "github.com/tn47/goledger/dblentry"
 
 type RCformat struct {
 	rows    [][]string

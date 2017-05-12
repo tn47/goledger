@@ -2,7 +2,7 @@ package reports
 
 import "fmt"
 
-import "github.com/prataprc/goledger/api"
+import "github.com/tn47/goledger/api"
 
 type Reports struct {
 	reporters []api.Reporter

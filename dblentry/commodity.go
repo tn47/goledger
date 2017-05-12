@@ -5,7 +5,7 @@ import "strconv"
 import "strings"
 
 import "github.com/prataprc/goparsec"
-import "github.com/prataprc/goledger/api"
+import "github.com/tn47/goledger/api"
 
 type Commodity struct {
 	name string

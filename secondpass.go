@@ -1,6 +1,6 @@
 package main
 
-import "github.com/prataprc/goledger/dblentry"
+import "github.com/tn47/goledger/dblentry"
 import "github.com/prataprc/golog"
 
 func secondpass(db *dblentry.Datastore) error {

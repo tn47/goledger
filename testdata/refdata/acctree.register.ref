@@ -1,0 +1,18 @@
+
+  By-date      Payee        Account              Amount   Balance 
+                                                                  
+  2011-Jan-29  My Employer  Assets              500.00    500.00  
+                            Incomes            -500.00   -500.00  
+  2011-Jan-29  My Employer  Asset               500.00    500.00  
+                            Income:Contract1   -500.00   -500.00  
+  2011-Jan-29  My Employer  Asset               500.00   1000.00  
+                            Incomes:Contract2  -500.00   -500.00  
+  2011-Jan-29  My Employer  Asset               500.00   1500.00  
+                            Incomes:Contract3  -500.00   -500.00  
+  2011-Feb-15  Withdrawal   Asset:Cash          100.00    100.00  
+                            Asset:FD           -100.00   -100.00  
+  2011-Mar-15  Deposit      Asset:FD:KVB1        75.00     75.00  
+                            Asset:Cash          -75.00     25.00  
+  2011-Mar-15  Deposit      Asset:FD:KVB2        75.00     75.00  
+                            Asset:Cash          -75.00    -50.00  
+

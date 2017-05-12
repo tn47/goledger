@@ -5,7 +5,7 @@ import "sort"
 import "strings"
 import "time"
 
-import "github.com/prataprc/goledger/api"
+import "github.com/tn47/goledger/api"
 import "github.com/prataprc/golog"
 
 type Pass int

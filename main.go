@@ -5,9 +5,9 @@ import "fmt"
 import "flag"
 
 import "github.com/prataprc/golog"
-import "github.com/prataprc/goledger/dblentry"
-import "github.com/prataprc/goledger/reports"
-import "github.com/prataprc/goledger/api"
+import "github.com/tn47/goledger/dblentry"
+import "github.com/tn47/goledger/reports"
+import "github.com/tn47/goledger/api"
 
 var options struct {
 	dbname   string

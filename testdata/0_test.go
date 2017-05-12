@@ -10,7 +10,7 @@ import "io/ioutil"
 import "os/exec"
 
 var _ = fmt.Sprintf("dummy")
-var LEDGEREXEC = "../ledger"
+var LEDGEREXEC = "../goledger"
 
 func TestBasic(t *testing.T) {
 	testcases := [][]interface{}{
@@ -593,6 +593,31 @@ func TestLotPrice(t *testing.T) {
 		[]interface{}{
 			[]string{"-f", "lotprice.ldg", "register"},
 			"refdata/lotprice.register.ref",
+		},
+	}
+	for _, testcase := range testcases {
+		ref := testdataFile(testcase[1].(string))
+		args := testcase[0].([]string)
+		cmd := exec.Command(LEDGEREXEC, args...)
+		out, _ := cmd.CombinedOutput()
+		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if bytes.Compare(out, ref) != 0 {
+			t.Logf(strings.Join(args, " "))
+			t.Logf("expected %s", ref)
+			t.Errorf("got %s", out)
+		}
+	}
+}
+
+func TestAcctree(t *testing.T) {
+	testcases := [][]interface{}{
+		[]interface{}{
+			[]string{"-f", "acctree.ldg", "balance"},
+			"refdata/acctree.balance.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "acctree.ldg", "register"},
+			"refdata/acctree.register.ref",
 		},
 	}
 	for _, testcase := range testcases {

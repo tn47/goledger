@@ -5,7 +5,7 @@ import "strings"
 
 import "github.com/prataprc/goparsec"
 import "github.com/prataprc/golog"
-import "github.com/prataprc/goledger/dblentry"
+import "github.com/tn47/goledger/dblentry"
 
 func firstpass(db *dblentry.Datastore, journalfile string) error {
 	log.Debugf("firstpass %v\n", journalfile)

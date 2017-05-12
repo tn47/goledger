@@ -5,7 +5,7 @@ import "sort"
 import "strings"
 
 import "github.com/prataprc/goparsec"
-import "github.com/prataprc/goledger/api"
+import "github.com/tn47/goledger/api"
 
 var inclusives = []string{
 	"asset", "liability", "capital", "equity", "income", "expense",

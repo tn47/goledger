@@ -1,7 +1,10 @@
 SUBDIRS := api dblentry reports testdata
 
 build: clean
-	go build -o ledger
+	go build
+
+install: clean
+	go install
 
 dev: build
 	./ledger -f examples/first.ldg balance

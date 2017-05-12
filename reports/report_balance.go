@@ -4,20 +4,24 @@ import "strings"
 import "sort"
 import "fmt"
 
-import "github.com/prataprc/goledger/api"
-import "github.com/prataprc/goledger/dblentry"
+import "github.com/tn47/goledger/api"
+import "github.com/tn47/goledger/dblentry"
 
 type ReportBalance struct {
 	rcf            *RCformat
 	filteraccounts []string
 	balance        map[string][][]string
 	finaltally     [][]string
+	postings       map[string]bool
+	bubbleacc      map[string]bool
 }
 
 func NewReportBalance(args []string) *ReportBalance {
 	report := &ReportBalance{
-		rcf:     NewRCformat(),
-		balance: make(map[string][][]string),
+		rcf:       NewRCformat(),
+		balance:   make(map[string][][]string),
+		postings:  map[string]bool{},
+		bubbleacc: map[string]bool{},
 	}
 	if len(args) > 1 {
 		report.filteraccounts = args[1:]
@@ -45,6 +49,7 @@ func (report *ReportBalance) Posting(
 	// format account balance
 	report.balance[acc.Name()] = acc.FmtBalances(db, trans, p, acc)
 
+	report.postings[acc.Name()] = true
 	return nil
 }
 
@@ -52,32 +57,24 @@ func (report *ReportBalance) BubblePosting(
 	db api.Datastorer, trans api.Transactor,
 	p api.Poster, account api.Accounter) error {
 
-	children, bbname := map[string]bool{}, account.Name()
-	for accname := range report.balance {
-		if accname == bbname || strings.HasPrefix(accname, bbname) == false {
-			continue
-		}
-		parts := dblentry.SplitAccount(strings.Trim(accname[len(bbname):], ":"))
-		children[parts[0]] = true
+	bbname := account.Name()
+	// final balance
+	report.finaltally = db.FmtBalances(db, trans, p, account)
+	// filter account
+	if api.Filterstring(bbname, report.filteraccounts) == false {
+		return nil
 	}
+	// format account balance
+	report.balance[bbname] = account.FmtBalances(db, trans, p, account)
 
-	if len(children) > 1 {
-		// final balance
-		report.finaltally = db.FmtBalances(db, trans, p, account)
-		// filter account
-		if api.Filterstring(bbname, report.filteraccounts) == false {
-			return nil
-		}
-		// format account balance
-		report.balance[bbname] = account.FmtBalances(db, trans, p, account)
-
-	}
+	report.bubbleacc[bbname] = true
 	return nil
 }
 
 func (report *ReportBalance) Render(db api.Datastorer, args []string) {
-	rcf := report.rcf
+	report.prunebubbled()
 
+	rcf := report.rcf
 	// sort
 	keys := []string{}
 	for name := range report.balance {
@@ -122,7 +119,28 @@ func (report *ReportBalance) Render(db api.Datastorer, args []string) {
 	fmt.Println()
 }
 
-func (report *ReportBalance) indent(indent, prefix string, keys []string) {
+func (report *ReportBalance) prunebubbled() {
+	for bbname := range report.bubbleacc {
+		ln, selfpost, children := len(bbname), 0, map[string]bool{}
+		for postname := range report.postings {
+			if postname == bbname {
+				selfpost += 1
+			} else if strings.HasPrefix(postname, bbname) {
+				parts := dblentry.SplitAccount(postname[ln+1:])
+				if postname[ln] == ':' {
+					children[parts[0]] = true
+				}
+			}
+		}
+		if selfpost+len(children) < 2 {
+			delete(report.balance, bbname)
+		}
+	}
+}
+
+func (report *ReportBalance) indent(
+	indent, prefix string, keys []string) []string {
+
 	adjustname := func(key string) {
 		rows := report.balance[key]
 		name := rows[len(rows)-1][1]
@@ -133,36 +151,43 @@ func (report *ReportBalance) indent(indent, prefix string, keys []string) {
 		rows[len(rows)-1][1] = name
 	}
 
-	if len(keys) == 0 || len(keys) == 1 {
-		return
-	}
-
-	newargs := func(start int) (int, int, string, int) {
+	newargs := func(start int, keys []string) (int, int, string, int) {
 		rows := report.balance[keys[start]]
 		first := rows[len(rows)-1][1] // accountname
 		return start + 1, start + 1, first, len(first)
 	}
 
-	start, end, first, fln := newargs(0)
-	//fmt.Printf("enter %q %v %v\n", first, start, end)
-	for end < len(keys) {
-		if strings.HasPrefix(keys[end], first) && keys[start][fln] == ':' {
-			end++
-			continue
+	var okkeys []string
+
+	if len(keys) > 1 {
+		start, end, first, fln := newargs(0, keys)
+		//fmt.Printf("enter %q %v %v\n", first, start, end)
+		for end < len(keys) {
+			if strings.HasPrefix(keys[end], first) && keys[end][fln] == ':' {
+				end++
+				continue
+			}
+			if end > start {
+				okkeys = report.indent(indent+"  ", first, keys[start:end])
+			}
+			start, end, first, fln = newargs(end, keys)
 		}
 		if end > start {
-			report.indent(indent+"  ", first, keys[start:end])
+			okkeys = report.indent(indent+"  ", first, keys[start:end])
 		}
-		start, end, first, fln = newargs(end)
-	}
-	if end > start {
-		report.indent(indent+"  ", first, keys[start:end])
 	}
 
 	//fmt.Printf("adjustname %q %q \n", indent, prefix)
+outer:
 	for _, key := range keys {
+		for _, okkey := range okkeys {
+			if key == okkey {
+				continue outer
+			}
+		}
 		adjustname(key)
 	}
+	return keys
 }
 
 func (report *ReportBalance) isfiltered() bool {

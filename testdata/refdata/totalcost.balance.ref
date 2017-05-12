@@ -1,9 +1,10 @@
 
-  By-date      Account                 Balance 
-                                               
-  2012/Mar/10  Assets:Brokerage        10 AAPL 
-  2012/Mar/10  Assets:Brokerage:Cash  $-500.00 
-                                      -------- 
-                                      $-500.00 
-  2012/Mar/10                          10 AAPL 
+  By-date      Account            Balance 
+                                          
+                                 $-500.00 
+  2012/Mar/10  Assets:Brokerage   10 AAPL 
+  2012/Mar/10    Cash            $-500.00 
+                                 -------- 
+                                 $-500.00 
+  2012/Mar/10                     10 AAPL 
 
