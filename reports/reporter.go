@@ -24,9 +24,9 @@ func NewReporter(args []string) (reporter api.Reporter) {
 	}
 
 	switch args[0] {
-	case "balance":
+	case "balance", "bal":
 		reports.reporters = append(reports.reporters, NewReportBalance(args))
-	case "register":
+	case "register", "reg":
 		reports.reporters = append(reports.reporters, NewReportRegister(args))
 	}
 	return reports
