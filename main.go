@@ -19,7 +19,7 @@ func argparse() []string {
 
 	f := flag.NewFlagSet("ledger", flag.ExitOnError)
 	f.Usage = func() {
-		fmsg := "Usage of command: %v [ARGS]\n"
+		fmsg := "Usage of command: %v [OPTIONS] COMMAND [ARGS]\n"
 		fmt.Printf(fmsg, os.Args[0])
 		f.PrintDefaults()
 	}
@@ -28,7 +28,7 @@ func argparse() []string {
 		"comma separated list of input files")
 	f.StringVar(&options.dbname, "db", "devjournal",
 		"provide datastore name")
-	f.StringVar(&options.loglevel, "log", "warn",
+	f.StringVar(&options.loglevel, "log", "info",
 		"console log level")
 	f.Parse(os.Args[1:])
 
@@ -71,6 +71,10 @@ func main() {
 	}
 	log.SetLogger(nil, logsetts)
 
+	if trycommand(args) {
+		os.Exit(0)
+	}
+
 	reporter := NewReporter(args)
 	db := dblentry.NewDatastore(options.dbname, reporter)
 
@@ -90,4 +94,16 @@ func main() {
 	db.Secondpassok()
 
 	reporter.Render(db, args)
+}
+
+func trycommand(args []string) bool {
+	if len(args) == 0 {
+		return false
+	}
+	switch args[0] {
+	case "version", "ver":
+		log.Consolef("goledger version - goledger%v\n", api.LedgerVersion)
+		return true
+	}
+	return false
 }
