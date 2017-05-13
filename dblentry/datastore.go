@@ -59,6 +59,20 @@ func NewDatastore(name string, reporter api.Reporter) *Datastore {
 	return db
 }
 
+func (db *Datastore) Firstpassok() {
+	db.pass = DBFIRSTPASS
+}
+
+func (db *Datastore) Secondpassok() {
+	db.pass = DBSECONDPASS
+}
+
+func (db *Datastore) assertfirstpass() {
+	if db.pass < DBFIRSTPASS {
+		panic("impossible situation")
+	}
+}
+
 //---- accessor
 
 func (db *Datastore) GetCommodity(name string, defcomm *Commodity) *Commodity {
@@ -97,9 +111,7 @@ func (db *Datastore) HasAccount(name string) bool {
 }
 
 func (db *Datastore) Accountnames() []string {
-	if db.pass < DBFIRSTPASS {
-		panic("impossible situation")
-	}
+	db.assertfirstpass()
 
 	accnames := []string{}
 	for name := range db.accntdb {
@@ -109,9 +121,7 @@ func (db *Datastore) Accountnames() []string {
 }
 
 func (db *Datastore) Balance(obj interface{}) (balance api.Commoditiser) {
-	if db.pass < DBFIRSTPASS {
-		panic("impossible situation")
-	}
+	db.assertfirstpass()
 
 	switch v := obj.(type) {
 	case *Commodity:
@@ -123,9 +133,7 @@ func (db *Datastore) Balance(obj interface{}) (balance api.Commoditiser) {
 }
 
 func (db *Datastore) Balances() []api.Commoditiser {
-	if db.pass < DBFIRSTPASS {
-		panic("impossible situation")
-	}
+	db.assertfirstpass()
 
 	keys := []string{}
 	for name := range db.balance {
@@ -140,9 +148,7 @@ func (db *Datastore) Balances() []api.Commoditiser {
 }
 
 func (db *Datastore) SubAccounts(parentname string) []api.Accounter {
-	if db.pass < DBFIRSTPASS {
-		panic("impossible situation")
-	}
+	db.assertfirstpass()
 
 	parentname = strings.Trim(parentname, ":") + ":"
 	accounts := []api.Accounter{}
@@ -181,10 +187,6 @@ func (db *Datastore) PrintAccounts() {
 //---- engine
 
 func (db *Datastore) Firstpass(obj interface{}) (err error) {
-	defer func() {
-		db.pass = DBFIRSTPASS
-	}()
-
 	if trans, ok := obj.(*Transaction); ok {
 		if err := trans.Firstpass(db); err != nil {
 			return err
@@ -206,10 +208,6 @@ func (db *Datastore) Firstpass(obj interface{}) (err error) {
 }
 
 func (db *Datastore) Secondpass() error {
-	defer func() {
-		db.pass = DBSECONDPASS
-	}()
-
 	kvfull := make([]KV, 0)
 	for _, kv := range db.transdb.Range(nil, nil, "both", kvfull) {
 		trans := kv.v.(*Transaction)

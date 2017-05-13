@@ -6,6 +6,7 @@ import "path"
 import "bufio"
 import "strings"
 import "io/ioutil"
+import "path/filepath"
 
 import "github.com/prataprc/golog"
 
@@ -23,16 +24,17 @@ func readlines(filepath string) []string {
 	return lines
 }
 
-func getjournals(cwd string) (files []string) {
+func coveringjournals(cwd string) (files []string) {
+	files = []string{}
+
 	log.Debugf("gathering journals from %q\n", cwd)
-	dirs := parentpaths(cwd, []string{})
+	dirs := parentpaths(cwd, []string{})[1:]
 	for _, dir := range dirs {
 		entries, err := ioutil.ReadDir(dir)
 		if err != nil {
 			fmt.Printf("%v\n", err)
 			continue
 		}
-		files = []string{}
 		for _, entry := range entries {
 			if entry.IsDir() {
 				continue
@@ -40,7 +42,7 @@ func getjournals(cwd string) (files []string) {
 			filename := entry.Name()
 			ok := filename == "ledgerrc"
 			ok = ok || filename == ".ledgerrc"
-			ok = ok || strings.HasPrefix(filename, "ledger_")
+			ok = ok || path.Ext(filename) == ".ldg"
 			if ok {
 				includefile := path.Join(dir, filename)
 				log.Debugf("auto including %q\n", includefile)
@@ -49,6 +51,35 @@ func getjournals(cwd string) (files []string) {
 		}
 	}
 	return files
+}
+
+func listjournals(cwd string) ([]string, error) {
+	files := []string{}
+	items, err := ioutil.ReadDir(cwd)
+	if err != nil {
+		log.Errorf("%v", err)
+		return nil, err
+	}
+	for _, item := range items {
+		if path.Ext(item.Name()) == ".ldg" {
+			files = append(files, filepath.Join(cwd, item.Name()))
+		}
+	}
+	return files, nil
+}
+
+func findjournals(cwd string) ([]string, error) {
+	files := []string{}
+	filepath.Walk(
+		cwd,
+		func(pathdir string, info os.FileInfo, err error) error {
+			if path.Ext(info.Name()) == ".ldg" {
+				files = append(files, filepath.Join(pathdir, info.Name()))
+			}
+			return nil
+		},
+	)
+	return files, nil
 }
 
 func parentpaths(dirpath string, acc []string) (dirs []string) {

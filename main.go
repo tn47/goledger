@@ -33,7 +33,28 @@ func argparse() []string {
 		"console log level")
 	f.Parse(os.Args[1:])
 
-	options.journals = api.Parsecsv(journals)
+	cwd, err := os.Getwd()
+	if err != nil {
+		fmt.Printf("os.Getwd(): %v\n", err)
+		os.Exit(1)
+	}
+
+	if journals == "list" {
+		options.journals, err = listjournals(cwd)
+		if err != nil {
+			os.Exit(1)
+		}
+
+	} else if journals == "find" {
+		options.journals, err = findjournals(cwd)
+		if err != nil {
+			os.Exit(1)
+		}
+
+	} else {
+		options.journals = api.Parsecsv(journals)
+	}
+	options.journals = append(options.journals, coveringjournals(cwd)...)
 
 	args := f.Args()
 
@@ -51,26 +72,23 @@ func main() {
 	}
 	log.SetLogger(nil, logsetts)
 
-	cwd, err := os.Getwd()
-	if err != nil {
-		fmt.Printf("os.Getwd(): %v\n", err)
-		os.Exit(1)
-	}
-
 	reporter := reports.NewReporter(args)
 	db := dblentry.NewDatastore(options.dbname, reporter)
 
-	journals := getjournals(cwd)
-	journals = append(journals, options.journals...)
-	for _, journal := range journals {
+	for _, journal := range options.journals {
 		log.Debugf("processing journal %q\n", journal)
 		if err := firstpass(db, journal); err != nil {
 			os.Exit(1)
 		}
 	}
+	db.Firstpassok()
+
 	db.PrintAccounts()
+
 	if err := secondpass(db); err != nil {
 		os.Exit(2)
 	}
+	db.Secondpassok()
+
 	reporter.Render(db, args)
 }
