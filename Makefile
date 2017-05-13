@@ -7,7 +7,7 @@ install: clean
 	go install
 
 dev: build
-	./ledger -f examples/first.ldg balance
+	./goledger -f examples/first.ldg balance
 
 test: clean build
 	@for dir in $(SUBDIRS); do \
@@ -18,4 +18,4 @@ test: clean build
 
 
 clean:
-	rm -rf ledger
+	rm -rf ledger goledger
