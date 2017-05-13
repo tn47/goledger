@@ -1,4 +1,4 @@
-package reports
+package main
 
 import "strings"
 import "sort"

@@ -1,4 +1,4 @@
-package reports
+package main
 
 import "github.com/tn47/goledger/dblentry"
 

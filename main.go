@@ -6,7 +6,6 @@ import "flag"
 
 import "github.com/prataprc/golog"
 import "github.com/tn47/goledger/dblentry"
-import "github.com/tn47/goledger/reports"
 import "github.com/tn47/goledger/api"
 
 var options struct {
@@ -72,7 +71,7 @@ func main() {
 	}
 	log.SetLogger(nil, logsetts)
 
-	reporter := reports.NewReporter(args)
+	reporter := NewReporter(args)
 	db := dblentry.NewDatastore(options.dbname, reporter)
 
 	for _, journal := range options.journals {
