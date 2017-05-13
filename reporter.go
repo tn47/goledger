@@ -28,6 +28,8 @@ func NewReporter(args []string) (reporter api.Reporter) {
 		reports.reporters = append(reports.reporters, NewReportBalance(args))
 	case "register", "reg":
 		reports.reporters = append(reports.reporters, NewReportRegister(args))
+	case "equity":
+		reports.reporters = append(reports.reporters, NewReportEquity(args))
 	}
 	return reports
 }

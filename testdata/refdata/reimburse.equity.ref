@@ -1,0 +1,9 @@
+
+  2004/Oct/15  Opening Balance                                
+               Assets:Checking                        $100.00 
+               Assets:Reimbursements:MyCompany          $0.00 
+               Liabilities:MasterCard                $-100.00 
+               MyCompany:Assets:Checking             $-100.00 
+               MyCompany:Expenses:Computer:Software   $100.00 
+               MyCompany:Liabilities:Payable:Myname     $0.00 
+

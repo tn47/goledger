@@ -72,4 +72,6 @@ type Formatter interface {
 	FmtBalances(Datastorer, Transactor, Poster, Accounter) [][]string
 
 	FmtRegister(Datastorer, Transactor, Poster, Accounter) [][]string
+
+	FmtEquity(Datastorer, Transactor, Poster, Accounter) [][]string
 }

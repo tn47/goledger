@@ -22,6 +22,10 @@ func TestBasic(t *testing.T) {
 			[]string{"-f", "basic.ldg", "register"},
 			"refdata/basic.register.ref",
 		},
+		[]interface{}{
+			[]string{"-f", "basic.ldg", "equity"},
+			"refdata/basic.equity.ref",
+		},
 	}
 	for _, testcase := range testcases {
 		ref := testdataFile(testcase[1].(string))
@@ -48,12 +52,20 @@ func TestElidingAmount(t *testing.T) {
 			"refdata/elidingamount1.register.ref",
 		},
 		[]interface{}{
+			[]string{"-f", "elidingamount1.ldg", "equity"},
+			"refdata/elidingamount1.equity.ref",
+		},
+		[]interface{}{
 			[]string{"-f", "elidingamount2.ldg", "balance"},
 			"refdata/elidingamount2.balance.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "elidingamount2.ldg", "register"},
 			"refdata/elidingamount2.register.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "elidingamount2.ldg", "equity"},
+			"refdata/elidingamount2.equity.ref",
 		},
 	}
 	for _, testcase := range testcases {
@@ -80,6 +92,10 @@ func TestAuxdate(t *testing.T) {
 			[]string{"-f", "auxdate.ldg", "register"},
 			"refdata/auxdate.register.ref",
 		},
+		[]interface{}{
+			[]string{"-f", "auxdate.ldg", "equity"},
+			"refdata/auxdate.equity.ref",
+		},
 	}
 	for _, testcase := range testcases {
 		ref := testdataFile(testcase[1].(string))
@@ -104,6 +120,10 @@ func TestTranscode(t *testing.T) {
 		[]interface{}{
 			[]string{"-f", "transcode.ldg", "register"},
 			"refdata/transcode.register.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "transcode.ldg", "equity"},
+			"refdata/transcode.equity.ref",
 		},
 	}
 	for _, testcase := range testcases {
@@ -155,6 +175,10 @@ func TestBalanceAssert(t *testing.T) {
 			[]string{"-f", "balassert.ldg", "register"},
 			"refdata/balassert.register.ref",
 		},
+		[]interface{}{
+			[]string{"-f", "balassert.ldg", "equity"},
+			"refdata/balassert.equity.ref",
+		},
 	}
 	for _, testcase := range testcases {
 		ref := testdataFile(testcase[1].(string))
@@ -180,6 +204,10 @@ func TestExplicitCost(t *testing.T) {
 			[]string{"-f", "explicitcost.ldg", "register"},
 			"refdata/explicitcost.register.ref",
 		},
+		[]interface{}{
+			[]string{"-f", "explicitcost.ldg", "equity"},
+			"refdata/explicitcost.equity.ref",
+		},
 	}
 	for _, testcase := range testcases {
 		ref := testdataFile(testcase[1].(string))
@@ -204,6 +232,10 @@ func TestTotalCost(t *testing.T) {
 		[]interface{}{
 			[]string{"-f", "totalcost.ldg", "register"},
 			"refdata/totalcost.register.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "totalcost.ldg", "equity"},
+			"refdata/totalcost.equity.ref",
 		},
 	}
 	for _, testcase := range testcases {
@@ -238,6 +270,10 @@ func TestDates(t *testing.T) {
 			[]string{"-f", "dates.ldg", "register", "Expenses:Sta"},
 			"refdata/dates.register3.ref",
 		},
+		[]interface{}{
+			[]string{"-f", "dates.ldg", "equity"},
+			"refdata/dates.equity.ref",
+		},
 	}
 	for _, testcase := range testcases {
 		ref := testdataFile(testcase[1].(string))
@@ -258,6 +294,10 @@ func TestDate7(t *testing.T) {
 		[]interface{}{
 			[]string{"-f", "date7.ldg", "register"},
 			"refdata/date7.register.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "date7.ldg", "equity"},
+			"refdata/date7.equity.ref",
 		},
 	}
 	for _, testcase := range testcases {
@@ -365,6 +405,10 @@ func TestFirst(t *testing.T) {
 			[]string{"-f", "first.ldg", "register", "nses"},
 			"refdata/first.register14.ref",
 		},
+		[]interface{}{
+			[]string{"-f", "first.ldg", "equity"},
+			"refdata/first.equity.ref",
+		},
 	}
 	for _, testcase := range testcases {
 		ref := testdataFile(testcase[1].(string))
@@ -389,6 +433,10 @@ func TestReimburse(t *testing.T) {
 		[]interface{}{
 			[]string{"-f", "reimburse.ldg", "register"},
 			"refdata/reimburse.register1.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "reimburse.ldg", "equity"},
+			"refdata/reimburse.equity.ref",
 		},
 	}
 	for _, testcase := range testcases {
@@ -467,12 +515,20 @@ func TestMixedComm(t *testing.T) {
 			"refdata/mixedcomm1.register.ref",
 		},
 		[]interface{}{
+			[]string{"-f", "mixedcomm1.ldg", "equity"},
+			"refdata/mixedcomm1.equity.ref",
+		},
+		[]interface{}{
 			[]string{"-f", "mixedcomm2.ldg", "balance"},
 			"refdata/mixedcomm2.balance.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "mixedcomm2.ldg", "register"},
 			"refdata/mixedcomm2.register.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "mixedcomm2.ldg", "equity"},
+			"refdata/mixedcomm2.equity.ref",
 		},
 	}
 	for _, testcase := range testcases {
@@ -540,6 +596,10 @@ func TestTrip(t *testing.T) {
 			[]string{"-f", "trip.ldg", "register"},
 			"refdata/trip.register.ref",
 		},
+		[]interface{}{
+			[]string{"-f", "trip.ldg", "equity"},
+			"refdata/trip.equity.ref",
+		},
 	}
 	for _, testcase := range testcases {
 		ref := testdataFile(testcase[1].(string))
@@ -594,6 +654,10 @@ func TestLotPrice(t *testing.T) {
 			[]string{"-f", "lotprice.ldg", "register"},
 			"refdata/lotprice.register.ref",
 		},
+		[]interface{}{
+			[]string{"-f", "lotprice.ldg", "equity"},
+			"refdata/lotprice.equity.ref",
+		},
 	}
 	for _, testcase := range testcases {
 		ref := testdataFile(testcase[1].(string))
@@ -619,6 +683,10 @@ func TestAcctree(t *testing.T) {
 			[]string{"-f", "acctree.ldg", "register"},
 			"refdata/acctree.register.ref",
 		},
+		[]interface{}{
+			[]string{"-f", "acctree.ldg", "equity"},
+			"refdata/acctree.equity.ref",
+		},
 	}
 	for _, testcase := range testcases {
 		ref := testdataFile(testcase[1].(string))
@@ -643,6 +711,10 @@ func TestShare(t *testing.T) {
 		[]interface{}{
 			[]string{"-f", "share.ldg", "register"},
 			"refdata/share.register.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "share.ldg", "equity"},
+			"refdata/share.equity.ref",
 		},
 	}
 	for _, testcase := range testcases {

@@ -282,6 +282,21 @@ func (acc *Account) FmtBalances(
 	return rows
 }
 
+func (acc *Account) FmtEquity(
+	db api.Datastorer, trans api.Transactor, p api.Poster,
+	_ api.Accounter) [][]string {
+
+	if len(acc.Balances()) == 0 {
+		return nil
+	}
+
+	rows := make([][]string, 0)
+	for _, balance := range acc.Balances() {
+		rows = append(rows, []string{"", acc.Name(), balance.String()})
+	}
+	return rows
+}
+
 func (acc *Account) FmtRegister(
 	db api.Datastorer, trans api.Transactor, p api.Poster,
 	_ api.Accounter) [][]string {

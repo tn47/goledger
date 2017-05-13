@@ -323,6 +323,13 @@ func (db *Datastore) FmtBalances(
 	return rows
 }
 
+func (db *Datastore) FmtEquity(
+	_ api.Datastorer, trans api.Transactor, _ api.Poster,
+	_ api.Accounter) [][]string {
+
+	panic("not supported")
+}
+
 func (db *Datastore) FmtRegister(
 	_ api.Datastorer, trans api.Transactor, p api.Poster,
 	acc api.Accounter) [][]string {

@@ -292,3 +292,10 @@ func (p *Posting) FmtRegister(
 
 	panic("not supported")
 }
+
+func (p *Posting) FmtEquity(
+	db api.Datastorer, trans api.Transactor, _ api.Poster,
+	_ api.Accounter) [][]string {
+
+	panic("not supported")
+}
