@@ -270,9 +270,6 @@ func (db *Datastore) Declare(value interface{}) error {
 			db.SetBalancingaccount(v.name)
 		}
 		return nil
-
-	default:
-		panic("unreachable code")
 	}
 	panic("unreachable code")
 }
