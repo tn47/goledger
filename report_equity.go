@@ -101,3 +101,11 @@ func (report *ReportEquity) Render(db api.Datastorer, args []string) {
 	}
 	fmt.Println()
 }
+
+func (report *ReportEquity) Clone(ndb api.Datastorer) api.Reporter {
+	nreport := *report
+	nreport.rcf = report.rcf.Clone(ndb)
+	nreport.filteraccounts = []string{}
+	nreport.equity = make(map[string][][]string)
+	return &nreport
+}

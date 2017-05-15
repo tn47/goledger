@@ -7,7 +7,7 @@ import "github.com/prataprc/goparsec"
 import "github.com/prataprc/golog"
 import "github.com/tn47/goledger/dblentry"
 
-func firstpass(db *dblentry.Datastore, journalfile string) error {
+func dofirstpass(db *dblentry.Datastore, journalfile string) error {
 	log.Debugf("firstpass %v\n", journalfile)
 	var node parsec.ParsecNode
 

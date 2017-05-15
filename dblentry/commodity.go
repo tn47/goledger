@@ -206,6 +206,11 @@ func (comm *Commodity) Secondpass(
 	return nil
 }
 
+func (comm *Commodity) Clone(ndb *Datastore) *Commodity {
+	ncomm := *comm
+	return &ncomm
+}
+
 func (comm *Commodity) doInverse() {
 	comm.amount = -comm.amount
 }

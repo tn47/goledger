@@ -80,7 +80,7 @@ func main() {
 
 	for _, journal := range options.journals {
 		log.Debugf("processing journal %q\n", journal)
-		if err := firstpass(db, journal); err != nil {
+		if err := dofirstpass(db, journal); err != nil {
 			os.Exit(1)
 		}
 	}
@@ -88,10 +88,12 @@ func main() {
 
 	db.PrintAccounts()
 
-	if err := secondpass(db); err != nil {
+	ndb := db.Clone()
+
+	if err := secondpass(ndb); err != nil {
 		os.Exit(2)
 	}
-	db.Secondpassok()
+	ndb.Secondpassok()
 
 	reporter.Render(db, args)
 }

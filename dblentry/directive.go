@@ -169,12 +169,7 @@ func (d *Directive) Firstpass(db *Datastore) error {
 		return db.declare(d.account) // NOTE: this is redundant
 
 	case "apply":
-		if db.rootaccount != "" {
-			fmsg := "previous `apply` directive(%v) not closed"
-			return fmt.Errorf(fmsg, db.rootaccount)
-		}
-		db.rootaccount = d.account.name
-		return nil
+		return db.setrootaccount(d.account.name)
 
 	case "alias":
 		db.addAlias(d.aliasname, d.account.name)
@@ -184,11 +179,7 @@ func (d *Directive) Firstpass(db *Datastore) error {
 		return fmt.Errorf("directive not-implemented")
 
 	case "end":
-		if db.rootaccount == "" {
-			return fmt.Errorf("dangling `end` directive")
-		}
-		db.rootaccount = ""
-		return nil
+		return db.clearRootaccount()
 
 	case "year":
 		db.setYear(d.year)

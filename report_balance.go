@@ -130,6 +130,17 @@ func (report *ReportBalance) Render(db api.Datastorer, args []string) {
 	fmt.Println()
 }
 
+func (report *ReportBalance) Clone(ndb api.Datastorer) api.Reporter {
+	nreport := *report
+	nreport.rcf = report.rcf.Clone(ndb)
+	nreport.filteraccounts = []string{}
+	nreport.balance = make(map[string][][]string)
+	nreport.finaltally = [][]string{}
+	nreport.postings = map[string]bool{}
+	nreport.bubbleacc = map[string]bool{}
+	return &nreport
+}
+
 func (report *ReportBalance) prunebubbled() {
 	for bbname := range report.bubbleacc {
 		ln, selfpost, children := len(bbname), 0, map[string]bool{}

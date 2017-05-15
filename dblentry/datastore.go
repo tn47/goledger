@@ -2,7 +2,6 @@ package dblentry
 
 import "fmt"
 import "sort"
-import "time"
 
 import "github.com/tn47/goledger/api"
 import "github.com/prataprc/golog"
@@ -22,25 +21,20 @@ const (
 // Datastore managing accounts, commodities, transactions and posting and
 // every thing else that are related.
 type Datastore struct {
-	name     string
-	reporter api.Reporter
+	// immutable from first initialization.
+	name string
 
+	// immutable once firstpass is ok
+	firstpass
+
+	// changes with every second pass.
+	reporter    api.Reporter
+	pass        ParsePhase
+	commodities map[string]*Commodity
+	accntdb     map[string]*Account // full account-name -> account
+	balance     map[string]*Commodity
 	transdb     *DB
 	pricedb     *DB
-	accntdb     map[string]*Account // full account-name -> account
-	commodities map[string]*Commodity
-
-	defaultcomm string
-	comments    []string
-	pass        ParsePhase
-	balance     map[string]*Commodity
-
-	// directive fields
-	currdate     time.Time
-	rootaccount  string            // apply-account
-	blncingaccnt string            // account
-	aliases      map[string]string // alias, account-alias
-	payees       map[string]string // account-payee map[regex]->accountname
 }
 
 // NewDatastore return a new datastore.
@@ -49,18 +43,15 @@ func NewDatastore(name string, reporter api.Reporter) *Datastore {
 		name:     name,
 		reporter: reporter,
 
+		pass:        DBSTART,
 		transdb:     NewDB(fmt.Sprintf("%v-transactions", name)),
 		pricedb:     NewDB(fmt.Sprintf("%v-pricedb", name)),
 		accntdb:     map[string]*Account{},
 		commodities: map[string]*Commodity{},
 
-		comments: []string{},
-		balance:  make(map[string]*Commodity),
-		pass:     DBSTART,
-		// directives
-		currdate: time.Now(),
-		aliases:  map[string]string{},
+		balance: make(map[string]*Commodity),
 	}
+	db.initfirstpass()
 	db.defaultprices()
 	return db
 }
@@ -74,11 +65,12 @@ func (db *Datastore) assertfirstpass() {
 }
 
 func (db *Datastore) getCommodity(name string, defcomm *Commodity) *Commodity {
-	if name == "" && db.defaultcomm != "" {
-		return db.commodities[db.defaultcomm]
+	defaultcomm := db.getDefaultcomm()
+	if name == "" && defaultcomm != "" {
+		return db.commodities[defaultcomm]
 	}
-	if db.defaultcomm == "" && name != "" {
-		db.defaultcomm = name
+	if defaultcomm == "" && name != "" {
+		db.setDefaultcomm(name)
 	}
 	if comm, ok := db.commodities[name]; ok {
 		return comm
@@ -89,24 +81,6 @@ func (db *Datastore) getCommodity(name string, defcomm *Commodity) *Commodity {
 	}
 	db.commodities[name] = defcomm
 	return defcomm
-}
-
-func (db *Datastore) setYear(year int) *Datastore {
-	db.currdate = time.Date(year, 1, 1, 0, 0, 0, 0, time.Local)
-	return db
-}
-
-func (db *Datastore) getYear() int {
-	return db.currdate.Year()
-}
-
-func (db *Datastore) setCurrentDate(date time.Time) *Datastore {
-	db.currdate = date
-	return db
-}
-
-func (db *Datastore) currentDate() time.Time {
-	return db.currdate
 }
 
 //---- exported accessors
@@ -197,7 +171,7 @@ func (db *Datastore) Firstpass(obj interface{}) (err error) {
 
 	} else if comment, ok := obj.(*Comment); ok {
 		err = comment.Firstpass(db)
-		db.comments = append(db.comments, comment.line)
+		db.addComment(comment.line)
 	}
 	return err
 }
@@ -212,6 +186,40 @@ func (db *Datastore) Secondpass() error {
 		}
 	}
 	return nil
+}
+
+func (db *Datastore) Clone() *Datastore {
+	ndb := *db
+
+	ndb.reporter = db.reporter.Clone(&ndb)
+
+	ndb.commodities = map[string]*Commodity{}
+	for name, commodity := range db.commodities {
+		ndb.commodities[name] = commodity.Clone(&ndb)
+	}
+
+	ndb.accntdb = map[string]*Account{}
+	for name, account := range db.accntdb {
+		ndb.accntdb[name] = account.Clone(&ndb)
+	}
+
+	ndb.balance = map[string]*Commodity{}
+	for name, commodity := range db.balance {
+		ndb.balance[name] = commodity.Clone(&ndb)
+	}
+
+	ndb.transdb = NewDB(fmt.Sprintf("%v-transactions", ndb.name))
+	for _, kv := range db.transdb.Range(nil, nil, "both", []KV{}) {
+		k, ntrans := kv.k, kv.v.(*Transaction).Clone(&ndb)
+		ndb.transdb.Insert(k, ntrans)
+	}
+
+	ndb.pricedb = NewDB(fmt.Sprintf("%v-pricedb", ndb.name))
+	for _, kv := range db.pricedb.Range(nil, nil, "both", []KV{}) {
+		k, nprice := kv.k, kv.v.(*Price).Clone(&ndb)
+		ndb.pricedb.Insert(k, nprice)
+	}
+	return &ndb
 }
 
 func (db *Datastore) addBalance(commodity *Commodity) {
@@ -232,18 +240,6 @@ func (db *Datastore) deductBalance(commodity *Commodity) {
 	db.balance[commodity.name] = commodity.makeSimilar(commodity.amount)
 }
 
-// directive-alias
-
-func (db *Datastore) addAlias(aliasname, accountname string) *Datastore {
-	db.aliases[aliasname] = accountname
-	return db
-}
-
-func (db *Datastore) getAlias(aliasname string) (accountname string, ok bool) {
-	accountname, ok = db.aliases[aliasname]
-	return accountname, ok
-}
-
 // directive-account
 
 func (db *Datastore) declare(value interface{}) error {
@@ -257,30 +253,6 @@ func (db *Datastore) declare(value interface{}) error {
 		return nil
 	}
 	panic("unreachable code")
-}
-
-func (db *Datastore) addPayee(regex, accountname string) *Datastore {
-	db.payees[regex] = accountname
-	return db
-}
-
-func (db *Datastore) setBalancingaccount(name string) *Datastore {
-	db.blncingaccnt = name
-	return db
-}
-
-func (db *Datastore) lookupAlias(name string) string {
-	if accountname, ok := db.aliases[name]; ok {
-		return accountname
-	}
-	return name
-}
-
-func (db *Datastore) applyroot(name string) string {
-	if db.rootaccount != "" {
-		return db.rootaccount + ":" + name
-	}
-	return name
 }
 
 //---- api.Reporter methods

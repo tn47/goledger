@@ -289,6 +289,23 @@ func (p *Posting) Secondpass(db *Datastore, trans *Transaction) error {
 	return nil
 }
 
+func (p *Posting) Clone(ndb *Datastore, ntrans *Transaction) *Posting {
+	np := *p
+	np.trans = ntrans
+	np.account = ndb.GetAccount(p.account.name).(*Account)
+	np.commodity = p.commodity.Clone(ndb)
+	if p.lotprice != nil {
+		np.lotprice = p.lotprice.Clone(ndb)
+	}
+	if p.costprice != nil {
+		np.costprice = p.costprice.Clone(ndb)
+	}
+	if p.balprice != nil {
+		np.balprice = p.balprice.Clone(ndb)
+	}
+	return &np
+}
+
 //---- api.Reporter methods
 
 func (p *Posting) FmtBalances(

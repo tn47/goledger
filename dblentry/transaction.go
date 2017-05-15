@@ -11,14 +11,16 @@ import "github.com/tn47/goledger/api"
 
 // Transaction instance for every transaction in the journal file.
 type Transaction struct {
+	// immutable after firstpass
 	date     time.Time
 	edate    time.Time
 	code     string
-	postings []*Posting
 	tags     []string
 	metadata map[string]interface{}
 	notes    []string
 	lineno   int
+
+	postings []*Posting
 }
 
 // NewTransaction create a new transaction object.
@@ -177,7 +179,7 @@ func (trans *Transaction) Yledgerblock(db *Datastore, block []string) error {
 
 func (trans *Transaction) Firstpass(db *Datastore) error {
 	if trans.shouldBalance() {
-		defaccount := db.GetAccount(db.blncingaccnt).(*Account)
+		defaccount := db.GetAccount(db.getBalancingaccount()).(*Account)
 		if ok, err := trans.autobalance1(db, defaccount); err != nil {
 			return err
 		} else if ok == false {
@@ -201,6 +203,15 @@ func (trans *Transaction) Secondpass(db *Datastore) error {
 		}
 	}
 	return db.reporter.Transaction(db, trans)
+}
+
+func (trans *Transaction) Clone(ndb *Datastore) *Transaction {
+	ntrans := *trans
+	ntrans.postings = []*Posting{}
+	for _, posting := range trans.postings {
+		ntrans.postings = append(ntrans.postings, posting.Clone(ndb, &ntrans))
+	}
+	return &ntrans
 }
 
 func (trans *Transaction) shouldBalance() bool {

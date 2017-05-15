@@ -105,6 +105,8 @@ type Reporter interface {
 	BubblePosting(Datastorer, Transactor, Poster, Accounter) error
 
 	Render(db Datastorer, args []string)
+
+	Clone(db Datastorer) Reporter
 }
 
 // Formatter implements are uniform tabularized {row,column} formatting across

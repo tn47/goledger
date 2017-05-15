@@ -2,6 +2,7 @@ package main
 
 import "fmt"
 
+import "github.com/tn47/goledger/api"
 import "github.com/tn47/goledger/dblentry"
 
 // RCformat for {row, column} tabular formatting.
@@ -87,4 +88,10 @@ func (rcf *RCformat) column(index int) []string {
 		col = append(col, row[index])
 	}
 	return col
+}
+
+func (rcf *RCformat) Clone(ndb api.Datastorer) *RCformat {
+	nrcf := *rcf
+	nrcf.rows = [][]string{}
+	return &nrcf
 }

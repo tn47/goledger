@@ -101,6 +101,16 @@ func (reports *Reports) Render(db api.Datastorer, args []string) {
 	}
 }
 
+func (reports *Reports) Clone(ndb api.Datastorer) api.Reporter {
+	nreports := *reports
+	nreports.reporters = []api.Reporter{}
+	nreports.accounts = map[string]int64{}
+	for _, reporter := range reports.reporters {
+		nreports.reporters = append(nreports.reporters, reporter.Clone(ndb))
+	}
+	return &nreports
+}
+
 func (reports *Reports) String() string {
 	return fmt.Sprintf("Reports")
 }

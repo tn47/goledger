@@ -18,7 +18,6 @@ type Account struct {
 	balanced   bool
 	hasposting bool
 	balance    map[string]*Commodity
-	children   map[string]*Account
 	// from account directive
 	note      string
 	aliasname string
@@ -32,9 +31,8 @@ type Account struct {
 // NewAccount create a new instance of Account{}.
 func NewAccount(name string) *Account {
 	acc := &Account{
-		name:     name,
-		balance:  make(map[string]*Commodity),
-		children: make(map[string]*Account, 0),
+		name:    name,
+		balance: make(map[string]*Commodity),
 	}
 	return acc
 }
@@ -246,6 +244,15 @@ func (acc *Account) Secondpass(
 		return err
 	}
 	return nil
+}
+
+func (acc *Account) Clone(ndb *Datastore) *Account {
+	nacc := *acc
+	nacc.balance = map[string]*Commodity{}
+	for name, commodity := range acc.balance {
+		nacc.balance[name] = commodity.Clone(ndb)
+	}
+	return &nacc
 }
 
 func (acc *Account) doTotal(db *Datastore, trans *Transaction, p *Posting) error {
