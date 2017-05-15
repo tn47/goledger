@@ -4,11 +4,13 @@ import "strings"
 
 import "github.com/prataprc/goparsec"
 
+// Tags from journal within a posting and/or a transactions.
 type Tags struct {
 	tags []string
 	tagm map[string]interface{}
 }
 
+// NewTag create a new Tags instance.
 func NewTag() *Tags {
 	return &Tags{
 		tags: []string{},
@@ -16,6 +18,9 @@ func NewTag() *Tags {
 	}
 }
 
+//---- ledger parser
+
+// Yledger return a parser-combinator that can parse a tag specification.
 func (tag *Tags) Yledger(db *Datastore) parsec.Parser {
 	ytags := parsec.Kleene(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
@@ -29,13 +34,13 @@ func (tag *Tags) Yledger(db *Datastore) parsec.Parser {
 			}
 			return tags
 		},
-		ytok_tag,
+		ytokTag,
 	)
 	ytagscolon := parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			return nodes[0].([]string)
 		},
-		ytags, ytok_colon,
+		ytags, ytokColon,
 	)
 	ytagm := parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
@@ -43,7 +48,7 @@ func (tag *Tags) Yledger(db *Datastore) parsec.Parser {
 			val := string(nodes[1].(*parsec.Terminal).Value)
 			return map[string]interface{}{key: val}
 		},
-		ytok_tagk, ytok_tagv,
+		ytokTagK, ytokTagV,
 	)
 
 	y := parsec.OrdChoice(

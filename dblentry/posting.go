@@ -9,9 +9,12 @@ import "github.com/prataprc/golog"
 import "github.com/tn47/goledger/api"
 
 const (
+	// PostUncleared notion for a posting.
 	PostUncleared = "uncleared"
-	PostCleared   = "cleared"
-	PostPending   = "pending"
+	// PostCleared notion for a posting.
+	PostCleared = "cleared"
+	// PostPending notion for a posting.
+	PostPending = "pending"
 )
 
 var prefix2state = map[rune]string{
@@ -19,6 +22,7 @@ var prefix2state = map[rune]string{
 	'!': PostPending,
 }
 
+// Posting instance for every single posting within a transaction.
 type Posting struct {
 	trans     *Transaction
 	account   *Account
@@ -34,6 +38,7 @@ type Posting struct {
 	note     string
 }
 
+// NewPosting create a new posting instance.
 func NewPosting(trans *Transaction) *Posting {
 	return &Posting{
 		trans:    trans,
@@ -42,37 +47,39 @@ func NewPosting(trans *Transaction) *Posting {
 	}
 }
 
-//---- accessor
+//---- local accessors
 
-func (p *Posting) Commodity() api.Commoditiser {
-	return p.commodity
+func (p *Posting) getMetadata(key string) interface{} {
+	if value, ok := p.metadata[key]; ok {
+		return value
+	}
+	return p.trans.getMetadata(key)
 }
+
+func (p *Posting) setMetadata(key string, value interface{}) {
+	p.metadata[key] = value
+}
+
+//---- api.Poster methods.
 
 func (p *Posting) Account() api.Accounter {
 	return p.account
 }
 
-func (p *Posting) Metadata(key string) interface{} {
-	if value, ok := p.metadata[key]; ok {
-		return value
-	}
-	return p.trans.Metadata(key)
-}
-
-func (p *Posting) SetMetadata(key string, value interface{}) {
-	p.metadata[key] = value
+func (p *Posting) Commodity() api.Commoditiser {
+	return p.commodity
 }
 
 func (p *Posting) Payee() string {
-	payee := p.Metadata("payee")
+	payee := p.getMetadata("payee")
 	if payee == nil {
 		return ""
 	}
 	return payee.(string)
 }
 
-func (p *Posting) State() string {
-	state := p.Metadata("state")
+func (p *Posting) getState() string {
+	state := p.getMetadata("state")
 	if state == nil {
 		return ""
 	}
@@ -81,6 +88,8 @@ func (p *Posting) State() string {
 
 //---- ledger parser
 
+// Yledger return parser-combinator that can parse a posting line within
+// a transaction.
 func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 	account := NewAccount("")
 	comm := NewCommodity("")
@@ -88,18 +97,21 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 	costprice := NewCommodity("")
 	balprice := NewCommodity("")
 
-	ylotdate := parsec.And(nil, ytok_opensqrt, Ydate(db.Year()), ytok_closesqrt)
+	ylotdate := parsec.And(
+		nil,
+		ytokOpensqrt, Ydate(db.getYear()), ytokClosesqrt,
+	)
 
 	yposting := parsec.And(
 		nil,
-		parsec.Maybe(maybenode, ytok_prefix),
+		parsec.Maybe(maybenode, ytokPrefix),
 		account.Ypostaccn(db),
 		parsec.Maybe(maybenode, comm.Yledger(db)),
 		parsec.Maybe(maybenode, lotprice.Ylotprice(db)),
 		parsec.Maybe(maybenode, ylotdate),
 		parsec.Maybe(maybenode, costprice.Ycostprice(db)),
 		parsec.Maybe(maybenode, balprice.Ybalprice(db)),
-		parsec.Maybe(maybenode, ytok_postnote),
+		parsec.Maybe(maybenode, ytokPostnote),
 	)
 
 	y := parsec.OrdChoice(
@@ -108,7 +120,7 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 			case []parsec.ParsecNode:
 				// prefix
 				if t, ok := items[0].(*parsec.Terminal); ok {
-					p.SetMetadata("state", prefix2state[[]rune(t.Value)[0]])
+					p.setMetadata("state", prefix2state[[]rune(t.Value)[0]])
 				}
 
 				p.account = p.fixaccount(db, items[1])     // account
@@ -140,7 +152,7 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 						tag := node.(*Tags)
 						p.tags = append(p.tags, tag.tags...)
 						for k, v := range tag.tagm {
-							p.SetMetadata(k, v)
+							p.setMetadata(k, v)
 						}
 					}
 				}
@@ -155,7 +167,7 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 				node, _ := NewTag().Yledger(db)(scanner)
 				if node == nil {
 					log.Debugf("posting.yledger %v\n", string(items.Value))
-					return Transnote(items.Value)
+					return typeTransnote(items.Value)
 				}
 				log.Debugf("posting.yledger %v\n", node)
 				return node.(*Tags)
@@ -164,14 +176,16 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 			panic(fmt.Errorf(fmsg, len(nodes)))
 		},
 		yposting,
-		ytok_transnote,
+		ytokTransnote,
 	)
 	return y
 }
 
+//---- engine
+
 func (p *Posting) fixaccount(db *Datastore, item interface{}) *Account {
 	account := item.(*Account)
-	accname := db.Applyroot(db.LookupAlias(account.name))
+	accname := db.applyroot(db.lookupAlias(account.name))
 	paccount := db.GetAccount(accname).(*Account)
 	paccount.virtual = account.virtual
 	paccount.balanced = account.balanced
@@ -180,9 +194,9 @@ func (p *Posting) fixaccount(db *Datastore, item interface{}) *Account {
 
 func (p *Posting) fixcommodity(db *Datastore, item interface{}) *Commodity {
 	if commodity, ok := item.(*Commodity); ok {
-		return db.GetCommodity(
+		return db.getCommodity(
 			commodity.name, commodity,
-		).Similar(commodity.amount)
+		).makeSimilar(commodity.amount)
 	}
 	return nil
 }
@@ -215,30 +229,28 @@ func (p *Posting) fixbalprice(item interface{}) *Commodity {
 	return nil
 }
 
-//---- engine
-
-func (p *Posting) Costprice() *Commodity {
-	checkdebit := p.IsDebit() && p.commodity.currency == false
+func (p *Posting) getCostprice() *Commodity {
+	checkdebit := p.isDebit() && p.commodity.currency == false
 	if checkdebit && p.costprice != nil {
-		if p.costprice.IsTotal() { // first compute per unit price
+		if p.costprice.isTotal() { // first compute per unit price
 			p.costprice.amount /= p.commodity.amount
 		}
-		return p.costprice.Similar(p.commodity.amount * p.costprice.amount)
+		return p.costprice.makeSimilar(p.commodity.amount * p.costprice.amount)
 
 	}
 
-	checkcredit := p.IsCredit() && p.commodity.currency == false
+	checkcredit := p.isCredit() && p.commodity.currency == false
 	if checkcredit && p.lotprice != nil {
-		if p.lotprice.IsTotal() { // first compute per unit price
+		if p.lotprice.isTotal() { // first compute per unit price
 			p.lotprice.amount /= p.commodity.amount
 		}
-		return p.lotprice.Similar(p.commodity.amount * p.lotprice.amount)
+		return p.lotprice.makeSimilar(p.commodity.amount * p.lotprice.amount)
 	}
 
-	return p.commodity.Similar(p.commodity.amount)
+	return p.commodity.makeSimilar(p.commodity.amount)
 }
 
-func (p *Posting) IsCredit() bool {
+func (p *Posting) isCredit() bool {
 	if p.commodity == nil {
 		panic("impossible situation")
 	}
@@ -248,8 +260,8 @@ func (p *Posting) IsCredit() bool {
 	return false
 }
 
-func (p *Posting) IsDebit() bool {
-	return !p.IsCredit()
+func (p *Posting) isDebit() bool {
+	return !p.isCredit()
 }
 
 func (p *Posting) Firstpass(db *Datastore, trans *Transaction) error {
@@ -264,8 +276,8 @@ func (p *Posting) Firstpass(db *Datastore, trans *Transaction) error {
 
 func (p *Posting) Secondpass(db *Datastore, trans *Transaction) error {
 
-	db.AddBalance(p.commodity)
-	p.account.SetPosting()
+	db.addBalance(p.commodity)
+	p.account.setPosting()
 
 	if err := p.account.Secondpass(db, trans, p); err != nil {
 		return err
@@ -277,7 +289,7 @@ func (p *Posting) Secondpass(db *Datastore, trans *Transaction) error {
 	return nil
 }
 
-//---- Reporting
+//---- api.Reporter methods
 
 func (p *Posting) FmtBalances(
 	db api.Datastorer, trans api.Transactor, _ api.Poster,

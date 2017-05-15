@@ -7,6 +7,7 @@ import "strings"
 import "github.com/prataprc/goparsec"
 import "github.com/tn47/goledger/api"
 
+// Commodity that can be exchanged between accounts.
 type Commodity struct {
 	name string
 	// amount is more like quantity,
@@ -19,8 +20,50 @@ type Commodity struct {
 	total     bool
 }
 
+// NewCommodity return an new commodity instance.
 func NewCommodity(name string) *Commodity {
 	return &Commodity{name: name}
+}
+
+//---- local accessors
+
+func (comm *Commodity) setFixprice() {
+	comm.fixprice = true
+}
+
+func (comm *Commodity) isFixedprice() bool {
+	return comm.fixprice
+}
+
+func (comm *Commodity) setTotal() {
+	comm.total = true
+}
+
+func (comm *Commodity) isTotal() bool {
+	return comm.total
+}
+
+//---- api.Commoditiser methods.
+
+func (comm *Commodity) Name() string {
+	return comm.name
+}
+
+func (comm *Commodity) Amount() float64 {
+	return comm.amount
+}
+
+func (comm *Commodity) Currency() bool {
+	return comm.currency
+}
+
+func (comm *Commodity) BalanceEqual(other api.Commoditiser) bool {
+	if comm.name != other.Name() {
+		panic("impossible situation")
+	} else if comm.currency != other.Currency() {
+		panic("impossible situation")
+	}
+	return comm.amount == other.Amount()
 }
 
 func (comm *Commodity) String() string {
@@ -35,38 +78,9 @@ func (comm *Commodity) String() string {
 	return fmt.Sprintf("%v %v", amountstr, comm.name)
 }
 
-//---- accessors
-
-func (comm *Commodity) Name() string {
-	return comm.name
-}
-
-func (comm *Commodity) Amount() float64 {
-	return comm.amount
-}
-
-func (comm *Commodity) Currency() bool {
-	return comm.currency
-}
-
-func (comm *Commodity) SetFixprice() {
-	comm.fixprice = true
-}
-
-func (comm *Commodity) IsFixedprice() bool {
-	return comm.fixprice
-}
-
-func (comm *Commodity) SetTotal() {
-	comm.total = true
-}
-
-func (comm *Commodity) IsTotal() bool {
-	return comm.total
-}
-
 //---- ledger parser
 
+// Yledger return a parser-combinator that can parse a commodity amount/name.
 func (comm *Commodity) Yledger(db *Datastore) parsec.Parser {
 	parseprecision := func(amount string) int {
 		parts := strings.Split(amount, ".")
@@ -101,40 +115,42 @@ func (comm *Commodity) Yledger(db *Datastore) parsec.Parser {
 					comm.name, comm.currency = string(t.Value), false
 				}
 			}
-			newcomm := db.GetCommodity(comm.name, comm).Similar(comm.amount)
+			newcomm := db.getCommodity(comm.name, comm).makeSimilar(comm.amount)
 			return newcomm
 		},
-		parsec.Maybe(maybenode, ytok_currency),
-		ytok_amount,
-		parsec.Maybe(maybenode, ytok_commodity),
+		parsec.Maybe(maybenode, ytokCurrency),
+		ytokAmount,
+		parsec.Maybe(maybenode, ytokCommodity),
 	)
 	return y
 }
 
+// Ylotprice return a parser-combinator that can parse a commodity in lotprice
+// format, like: {...}
 func (comm *Commodity) Ylotprice(db *Datastore) parsec.Parser {
 	ylotprice := parsec.And(
 		nil,
-		ytok_openparan,
-		parsec.Maybe(maybenode, ytok_equal),
+		ytokOpenparan,
+		parsec.Maybe(maybenode, ytokEqual),
 		comm.Yledger(db),
-		ytok_closeparan)
+		ytokCloseparan)
 	ylottotal := parsec.And(
 		nil,
-		ytok_openopenparan,
-		parsec.Maybe(maybenode, ytok_equal),
+		ytokOpenOpenparan,
+		parsec.Maybe(maybenode, ytokEqual),
 		comm.Yledger(db),
-		ytok_closecloseparan)
+		ytokCloseCloseparan)
 	y := parsec.OrdChoice(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			items := nodes[0].([]parsec.ParsecNode)
 			commodity := items[2].(*Commodity)
 			// total ?
 			if items[0].(*parsec.Terminal).Name == "OPENOPENPARAN" {
-				commodity.SetTotal()
+				commodity.setTotal()
 			}
 			// fixed ?
 			if t, ok := items[1].(*parsec.Terminal); ok && t.Name == "EQUAL" {
-				commodity.SetFixprice()
+				commodity.setFixprice()
 			}
 			return commodity
 		},
@@ -142,31 +158,35 @@ func (comm *Commodity) Ylotprice(db *Datastore) parsec.Parser {
 	return y
 }
 
+// Ycostprice return a parser-combinator that can parse a commodity in
+// costprice format, like: @ <comm>
 func (comm *Commodity) Ycostprice(db *Datastore) parsec.Parser {
 	y := parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			commodity := nodes[2].(*Commodity)
 			if nodes[0].(*parsec.Terminal).Name == "COSTATAT" {
-				commodity.SetTotal()
+				commodity.setTotal()
 			}
 			if t, ok := nodes[1].(*parsec.Terminal); ok && t.Name == "EQUAL" {
-				commodity.SetFixprice()
+				commodity.setFixprice()
 			}
 			return commodity
 		},
-		parsec.OrdChoice(Vector2scalar, ytok_atat, ytok_at),
-		parsec.Maybe(maybenode, ytok_equal),
+		parsec.OrdChoice(Vector2scalar, ytokAtat, ytokAt),
+		parsec.Maybe(maybenode, ytokEqual),
 		comm.Yledger(db),
 	)
 	return y
 }
 
+// Ybalprice return a parser-combinator that can parse a commodity in
+// balance-price format, like: =<comm>
 func (comm *Commodity) Ybalprice(db *Datastore) parsec.Parser {
 	y := parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			return nodes[1].(*Commodity)
 		},
-		ytok_equal,
+		ytokEqual,
 		comm.Yledger(db),
 	)
 	return y
@@ -186,11 +206,11 @@ func (comm *Commodity) Secondpass(
 	return nil
 }
 
-func (comm *Commodity) InverseAmount() {
+func (comm *Commodity) doInverse() {
 	comm.amount = -comm.amount
 }
 
-func (comm *Commodity) Add(other *Commodity) error {
+func (comm *Commodity) doAdd(other *Commodity) error {
 	n1, c1, n2, c2 := comm.name, comm.currency, other.name, other.currency
 	if comm.name == other.name && comm.currency == other.currency {
 		comm.amount += other.amount
@@ -198,7 +218,7 @@ func (comm *Commodity) Add(other *Commodity) error {
 	return fmt.Errorf("can't <%v:%v> + <%v:%v>", n1, c1, n2, c2)
 }
 
-func (comm *Commodity) Deduct(other *Commodity) error {
+func (comm *Commodity) doDeduct(other *Commodity) error {
 	n1, c1, n2, c2 := comm.name, comm.currency, other.name, other.currency
 	if comm.name == other.name && comm.currency == other.currency {
 		comm.amount -= other.amount
@@ -206,16 +226,7 @@ func (comm *Commodity) Deduct(other *Commodity) error {
 	return fmt.Errorf("can't <%v:%v> - <%v:%v>", n1, c1, n2, c2)
 }
 
-func (comm *Commodity) BalanceEqual(other api.Commoditiser) bool {
-	if comm.name != other.Name() {
-		panic("impossible situation")
-	} else if comm.currency != other.Currency() {
-		panic("impossible situation")
-	}
-	return comm.amount == other.Amount()
-}
-
-func (comm *Commodity) Similar(amount float64) *Commodity {
+func (comm *Commodity) makeSimilar(amount float64) *Commodity {
 	newcomm := &Commodity{
 		name:      comm.name,
 		amount:    amount,

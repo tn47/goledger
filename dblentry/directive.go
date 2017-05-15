@@ -6,6 +6,7 @@ import "strconv"
 import "github.com/prataprc/goparsec"
 import "github.com/prataprc/golog"
 
+// Directive can handle all directives in ledger journal.
 type Directive struct {
 	dtype      string
 	year       int      // year
@@ -15,100 +16,37 @@ type Directive struct {
 	endargs    []string // end
 }
 
+// NewDirective create a new Directive instance, one instance to be created
+// for handling each directive in the journal file.
 func NewDirective() *Directive {
 	return &Directive{account: NewAccount("")}
 }
 
 //---- ledger parser
 
+// Yledger return a parser-combinator that can parse directives.
 func (d *Directive) Yledger(db *Datastore) parsec.Parser {
 	y := parsec.OrdChoice(
 		Vector2scalar,
-		d.Yaccount(db),
-		d.Yapply(db),
-		d.Yalias(db),
-		d.Yassert(db),
-		d.Yend(db),
-		d.Yyear(db),
+		d.yaccount(db),
+		d.yapply(db),
+		d.yalias(db),
+		d.yassert(db),
+		d.yend(db),
+		d.yyear(db),
 	)
 	return y
 }
 
-func (d *Directive) Yaccount(db *Datastore) parsec.Parser {
-	return parsec.And(
-		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
-			d.dtype = "account"
-			d.account = nodes[1].(*Account)
-			log.Debugf("directive %q %v\n", d.dtype, d.account)
-			return d
-		},
-		ytok_account, d.account.Yledger(db),
-	)
-}
-
-func (d *Directive) Yapply(db *Datastore) parsec.Parser {
-	return parsec.And(
-		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
-			d.dtype = "apply"
-			return d
-		},
-		ytok_apply, ytok_account, d.account.Yledger(db),
-	)
-}
-
-func (d *Directive) Yalias(db *Datastore) parsec.Parser {
-	return parsec.And(
-		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
-			d.dtype = "alias"
-			d.aliasname = string(nodes[1].(*parsec.Terminal).Value)
-			return d
-		},
-		ytok_alias, ytok_aliasname, ytok_equal, d.account.Yledger(db),
-	)
-}
-
-func (d *Directive) Yassert(db *Datastore) parsec.Parser {
-	return parsec.And(
-		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
-			d.dtype = "assert"
-			d.expression = string(nodes[1].(*parsec.Terminal).Value)
-			return nil
-		},
-		ytok_assert, ytok_expr,
-	)
-}
-
-func (d *Directive) Yend(db *Datastore) parsec.Parser {
-	return parsec.And(
-		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
-			d.dtype = "end"
-			d.endargs = []string{"apply", "account"}
-			return d
-		},
-		ytok_end, ytok_apply, ytok_account,
-	)
-}
-
-func (d *Directive) Yyear(db *Datastore) parsec.Parser {
-	return parsec.And(
-		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
-			d.dtype = "year"
-			d.year, _ = strconv.Atoi(string(nodes[1].(*parsec.Terminal).Value))
-			return d
-		},
-		ytok_year, ytok_yearval,
-	)
-}
-
-//---- subdirective parsers
-
+// Yledgerblock return a parser-combinator that can parse sub directives under
+// account directive.
 func (d *Directive) Yledgerblock(db *Datastore, block []string) error {
 	var node parsec.ParsecNode
 	switch d.dtype {
 	case "account":
 		for _, line := range block {
 			scanner := parsec.NewScanner([]byte(line))
-			parser := d.Yaccountdirectives(db)
+			parser := d.yaccountdirectives(db)
 			if parser == nil {
 				continue
 			}
@@ -120,10 +58,10 @@ func (d *Directive) Yledgerblock(db *Datastore, block []string) error {
 				d.account.note = string(nodes[1].(*parsec.Terminal).Value)
 			case "DRTV_ACCOUNT_ALIAS":
 				d.account.aliasname = string(nodes[1].(*parsec.Terminal).Value)
-				db.AddAlias(d.account.aliasname, d.account.name)
+				db.addAlias(d.account.aliasname, d.account.name)
 			case "DRTV_ACCOUNT_PAYEE":
 				d.account.payee = string(nodes[1].(*parsec.Terminal).Value)
-				db.AddPayee(d.account.payee, d.account.name)
+				db.addPayee(d.account.payee, d.account.name)
 			case "DRTV_ACCOUNT_CHECK":
 				d.account.check = string(nodes[1].(*parsec.Terminal).Value)
 			case "DRTV_ACCOUNT_ASSERT":
@@ -142,14 +80,80 @@ func (d *Directive) Yledgerblock(db *Datastore, block []string) error {
 	panic(fmt.Errorf("unreachable code"))
 }
 
-func (d *Directive) Yaccountdirectives(db *Datastore) parsec.Parser {
-	ynote := parsec.And(nil, ytok_note, ytok_value)
-	yalias := parsec.And(nil, ytok_alias, ytok_value)
-	ypayee := parsec.And(nil, ytok_payee, ytok_value)
-	ycheck := parsec.And(nil, ytok_check, ytok_value)
-	yassert := parsec.And(nil, ytok_assert, ytok_value)
-	yeval := parsec.And(nil, ytok_eval, ytok_value)
-	ydefault := parsec.And(nil, ytok_default)
+func (d *Directive) yaccount(db *Datastore) parsec.Parser {
+	return parsec.And(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			d.dtype = "account"
+			d.account = nodes[1].(*Account)
+			log.Debugf("directive %q %v\n", d.dtype, d.account)
+			return d
+		},
+		ytokAccount, d.account.Yledger(db),
+	)
+}
+
+func (d *Directive) yapply(db *Datastore) parsec.Parser {
+	return parsec.And(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			d.dtype = "apply"
+			return d
+		},
+		ytokApply, ytokAccount, d.account.Yledger(db),
+	)
+}
+
+func (d *Directive) yalias(db *Datastore) parsec.Parser {
+	return parsec.And(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			d.dtype = "alias"
+			d.aliasname = string(nodes[1].(*parsec.Terminal).Value)
+			return d
+		},
+		ytokAlias, ytokAliasname, ytokEqual, d.account.Yledger(db),
+	)
+}
+
+func (d *Directive) yassert(db *Datastore) parsec.Parser {
+	return parsec.And(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			d.dtype = "assert"
+			d.expression = string(nodes[1].(*parsec.Terminal).Value)
+			return nil
+		},
+		ytokAssert, ytokExpr,
+	)
+}
+
+func (d *Directive) yend(db *Datastore) parsec.Parser {
+	return parsec.And(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			d.dtype = "end"
+			d.endargs = []string{"apply", "account"}
+			return d
+		},
+		ytokEnd, ytokApply, ytokAccount,
+	)
+}
+
+func (d *Directive) yyear(db *Datastore) parsec.Parser {
+	return parsec.And(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			d.dtype = "year"
+			d.year, _ = strconv.Atoi(string(nodes[1].(*parsec.Terminal).Value))
+			return d
+		},
+		ytokYear, ytokYearval,
+	)
+}
+
+func (d *Directive) yaccountdirectives(db *Datastore) parsec.Parser {
+	ynote := parsec.And(nil, ytokNote, ytokValue)
+	yalias := parsec.And(nil, ytokAlias, ytokValue)
+	ypayee := parsec.And(nil, ytokPayee, ytokValue)
+	ycheck := parsec.And(nil, ytokCheck, ytokValue)
+	yassert := parsec.And(nil, ytokAssert, ytokValue)
+	yeval := parsec.And(nil, ytokEval, ytokValue)
+	ydefault := parsec.And(nil, ytokDefault)
 	y := parsec.OrdChoice(
 		Vector2scalar,
 		ynote, yalias, ypayee, ycheck, yassert, yeval, ydefault,
@@ -157,10 +161,12 @@ func (d *Directive) Yaccountdirectives(db *Datastore) parsec.Parser {
 	return y
 }
 
+//---- engine
+
 func (d *Directive) Firstpass(db *Datastore) error {
 	switch d.dtype {
 	case "account":
-		return db.Declare(d.account) // NOTE: this is redundant
+		return db.declare(d.account) // NOTE: this is redundant
 
 	case "apply":
 		if db.rootaccount != "" {
@@ -171,7 +177,7 @@ func (d *Directive) Firstpass(db *Datastore) error {
 		return nil
 
 	case "alias":
-		db.AddAlias(d.aliasname, d.account.name)
+		db.addAlias(d.aliasname, d.account.name)
 		return nil
 
 	case "assert":
@@ -185,7 +191,7 @@ func (d *Directive) Firstpass(db *Datastore) error {
 		return nil
 
 	case "year":
-		db.SetYear(d.year)
+		db.setYear(d.year)
 		return nil
 	}
 	panic("unreachable code")

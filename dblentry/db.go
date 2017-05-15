@@ -3,26 +3,31 @@ package dblentry
 import "time"
 import "sort"
 
+// DB impelements array based sorted key-value entries.
 type DB struct {
 	name    string
 	entries []KV
 }
 
+// KV entry within DB.
 type KV struct {
 	k time.Time
 	v interface{}
 }
 
+// NewDB create a new DB.
 func NewDB(name string) *DB {
 	return &DB{name: name, entries: make([]KV, 0)}
 }
 
+// Insert a KV entry into DB.
 func (db *DB) Insert(k time.Time, v interface{}) error {
 	db.entries = append(db.entries, KV{k: k, v: v})
 	sort.Sort(db)
 	return nil
 }
 
+// Range over DB entries, from low to high with specified include option.
 func (db *DB) Range(
 	low *time.Time, high *time.Time, incl string, entries []KV) []KV {
 
@@ -72,7 +77,7 @@ endloop:
 	return entries
 }
 
-//---- sort.Interface{}
+//---- sort.Interface{} methods.
 
 func (db *DB) Len() int {
 	return len(db.entries)

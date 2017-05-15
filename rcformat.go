@@ -4,11 +4,13 @@ import "fmt"
 
 import "github.com/tn47/goledger/dblentry"
 
+// RCformat for {row, column} tabular formatting.
 type RCformat struct {
 	rows    [][]string
 	padding string
 }
 
+// NewRCformat creates a new table of rows and colums.
 func NewRCformat() *RCformat {
 	rcf := &RCformat{rows: [][]string{}, padding: " "}
 	return rcf
@@ -18,11 +20,12 @@ func (rcf *RCformat) readsettings() *RCformat {
 	return rcf
 }
 
-func (rcf *RCformat) Addrow(row ...string) *RCformat {
+func (rcf *RCformat) addrow(row ...string) *RCformat {
 	rcf.rows = append(rcf.rows, row)
 	return rcf
 }
 
+// FitAccountname for formatting
 func (rcf *RCformat) FitAccountname(index, maxwidth int) int {
 	for i, row := range rcf.rows {
 		row[index] = dblentry.FitAccountname(row[index], maxwidth)
@@ -31,6 +34,7 @@ func (rcf *RCformat) FitAccountname(index, maxwidth int) int {
 	return maxwidth
 }
 
+// FitPayee for formatting
 func (rcf *RCformat) FitPayee(index, maxwidth int) int {
 	for i, row := range rcf.rows {
 		row[index] = dblentry.FitPayee(row[index], maxwidth)
@@ -39,7 +43,7 @@ func (rcf *RCformat) FitPayee(index, maxwidth int) int {
 	return maxwidth
 }
 
-func (rcf *RCformat) Paddcells() {
+func (rcf *RCformat) paddcells() {
 	for y, row := range rcf.rows {
 		for x, col := range row {
 			row[x] = rcf.padding + col + rcf.padding
@@ -48,6 +52,7 @@ func (rcf *RCformat) Paddcells() {
 	}
 }
 
+// Fmsg format pattern for converting a row into report line.
 func (rcf *RCformat) Fmsg(fmsg string) string {
 	w := []interface{}{}
 	for x := range rcf.rows[0] {

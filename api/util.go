@@ -6,12 +6,16 @@ import "fmt"
 
 var _ = fmt.Sprintf("dummy")
 
+// Parsecsv parses the input string for comma separated string values and
+// return parsed strings.
 func Parsecsv(input string) []string {
 	if input == "" {
 		return nil
 	}
 	ss := strings.Split(input, ",")
-	outs := make([]string, 0)
+
+	var outs []string
+
 	for _, s := range ss {
 		s = strings.Trim(s, " \t\r\n")
 		if s == "" {
@@ -22,16 +26,18 @@ func Parsecsv(input string) []string {
 	return outs
 }
 
+// Maxints return the max value amont numbers.
 func Maxints(numbers ...int) int {
-	max_num := numbers[0]
+	maxNum := numbers[0]
 	for _, item := range numbers {
-		if max_num < item {
-			max_num = item
+		if maxNum < item {
+			maxNum = item
 		}
 	}
-	return max_num
+	return maxNum
 }
 
+// Repeatstr to repeat the string `string` n times and return the same.
 func Repeatstr(str string, n int) string {
 	out := ""
 	for i := 0; i < n; i++ {
@@ -40,6 +46,7 @@ func Repeatstr(str string, n int) string {
 	return out
 }
 
+// Filterstring can be used for excluding or including patters.
 func Filterstring(strpatt string, strs []string) bool {
 	if len(strs) == 0 {
 		return true

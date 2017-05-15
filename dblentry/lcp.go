@@ -1,5 +1,6 @@
 package dblentry
 
+// AccountLcp return longest common prefix for account names.
 func AccountLcp(ss []string) string {
 	// Special cases first
 	switch len(ss) {

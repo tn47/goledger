@@ -6,6 +6,7 @@ import "sort"
 
 import "github.com/tn47/goledger/api"
 
+// ReportEquity for equity reporting.
 type ReportEquity struct {
 	rcf            *RCformat
 	filteraccounts []string
@@ -13,6 +14,7 @@ type ReportEquity struct {
 	equity         map[string][][]string
 }
 
+// NewReportEquity create a new instance for equity reporting.
 func NewReportEquity(args []string) *ReportEquity {
 	report := &ReportEquity{
 		rcf:            NewRCformat(),
@@ -24,6 +26,8 @@ func NewReportEquity(args []string) *ReportEquity {
 	}
 	return report
 }
+
+//---- api.Reporter methods
 
 func (report *ReportEquity) Transaction(
 	db api.Datastorer, trans api.Transactor) error {
@@ -67,12 +71,12 @@ func (report *ReportEquity) Render(db api.Datastorer, args []string) {
 	cols := []string{
 		report.latestdate.Format("2006/Jan/02"), "Opening Balance", "",
 	}
-	rcf.Addrow(cols...)
+	rcf.addrow(cols...)
 
 	for _, key := range keys {
 		rows := report.equity[key]
 		for _, row := range rows {
-			report.rcf.Addrow(row...)
+			report.rcf.addrow(row...)
 		}
 	}
 
@@ -83,7 +87,7 @@ func (report *ReportEquity) Render(db api.Datastorer, args []string) {
 		w1 = rcf.FitAccountname(1, 70-w0-w2)
 	}
 
-	rcf.Paddcells()
+	rcf.paddcells()
 	fmsg := rcf.Fmsg(" %%-%vs%%-%vs%%%vs\n")
 
 	// start printing

@@ -4,6 +4,7 @@ import "fmt"
 
 import "github.com/tn47/goledger/api"
 
+// Reports manages all reporting commands.
 type Reports struct {
 	reporters []api.Reporter
 	accounts  map[string]int64
@@ -13,6 +14,7 @@ type Reports struct {
 	n_postings     int64
 }
 
+// NewReporter create a new reporter.
 func NewReporter(args []string) (reporter api.Reporter) {
 	reports := &Reports{
 		reporters: make([]api.Reporter, 0),
@@ -34,10 +36,12 @@ func NewReporter(args []string) (reporter api.Reporter) {
 	return reports
 }
 
+//---- api.Reporter methods
+
 func (reports *Reports) Transaction(
 	db api.Datastorer, trans api.Transactor) error {
 
-	reports.n_transactions += 1
+	reports.n_transactions++
 	for _, reporter := range reports.reporters {
 		if err := reporter.Transaction(db, trans); err != nil {
 			return err
@@ -51,13 +55,13 @@ func (reports *Reports) Posting(
 
 	n, ok := reports.accounts[p.Account().Name()]
 	if ok {
-		n += 1
+		n++
 	} else {
 		n = 0
 	}
 	reports.accounts[p.Account().Name()] = n
 
-	reports.n_postings += 1
+	reports.n_postings++
 
 	for _, reporter := range reports.reporters {
 		if err := reporter.Posting(db, trans, p); err != nil {

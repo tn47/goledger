@@ -7,6 +7,7 @@ import "fmt"
 import "github.com/tn47/goledger/api"
 import "github.com/tn47/goledger/dblentry"
 
+// ReportBalance for balance reporting.
 type ReportBalance struct {
 	rcf            *RCformat
 	filteraccounts []string
@@ -16,6 +17,7 @@ type ReportBalance struct {
 	bubbleacc      map[string]bool
 }
 
+// NewReportBalance creates an instance for balance reporting
 func NewReportBalance(args []string) *ReportBalance {
 	report := &ReportBalance{
 		rcf:       NewRCformat(),
@@ -28,6 +30,8 @@ func NewReportBalance(args []string) *ReportBalance {
 	}
 	return report
 }
+
+//---- api.Reporter methods
 
 func (report *ReportBalance) Transaction(
 	db api.Datastorer, trans api.Transactor) error {
@@ -84,20 +88,20 @@ func (report *ReportBalance) Render(db api.Datastorer, args []string) {
 
 	report.indent("", "", keys)
 
-	rcf.Addrow([]string{"By-date", "Account", "Balance"}...)
-	rcf.Addrow([]string{"", "", ""}...) // empty line
+	rcf.addrow([]string{"By-date", "Account", "Balance"}...)
+	rcf.addrow([]string{"", "", ""}...) // empty line
 
 	for _, key := range keys {
 		rows := report.balance[key]
 		for _, row := range rows {
-			rcf.Addrow(row...)
+			rcf.addrow(row...)
 		}
 	}
 	if report.isfiltered() == false {
 		dashes := api.Repeatstr("-", rcf.maxwidth(rcf.column(2)))
-		rcf.Addrow([]string{"", "", dashes}...)
+		rcf.addrow([]string{"", "", dashes}...)
 		for _, row := range report.finaltally {
-			rcf.Addrow(row...)
+			rcf.addrow(row...)
 		}
 	}
 
@@ -108,7 +112,7 @@ func (report *ReportBalance) Render(db api.Datastorer, args []string) {
 		w1 = rcf.FitAccountname(1, 70-w0-w2)
 	}
 
-	rcf.Paddcells()
+	rcf.paddcells()
 	fmsg := rcf.Fmsg(" %%-%vs%%-%vs%%%vs\n")
 
 	// start printing
@@ -124,7 +128,7 @@ func (report *ReportBalance) prunebubbled() {
 		ln, selfpost, children := len(bbname), 0, map[string]bool{}
 		for postname := range report.postings {
 			if postname == bbname {
-				selfpost += 1
+				selfpost++
 			} else if strings.HasPrefix(postname, bbname) {
 				parts := dblentry.SplitAccount(postname[ln+1:])
 				if postname[ln] == ':' {

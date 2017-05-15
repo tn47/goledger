@@ -4,12 +4,14 @@ import "time"
 
 import "github.com/prataprc/goparsec"
 
+// Price equivalence between commodities, TBD...
 type Price struct {
 	when  time.Time
 	this  *Commodity
 	other *Commodity
 }
 
+// NewPrice return a new Price instance.
 func NewPrice() *Price {
 	price := &Price{}
 	return price
@@ -17,6 +19,7 @@ func NewPrice() *Price {
 
 //---- ledger parser
 
+// Yledger return a parser-combinator that can parse a price directive.
 func (price *Price) Yledger(db *Datastore) parsec.Parser {
 	comm := NewCommodity("")
 
@@ -29,9 +32,9 @@ func (price *Price) Yledger(db *Datastore) parsec.Parser {
 			//price.other = nodes[3].(*Commodity)
 			return price
 		},
-		ytok_price,       // P
-		Ydate(db.Year()), // DATE
-		ytok_commodity,   // SYMBOL
+		ytokPrice,           // P
+		Ydate(db.getYear()), // DATE
+		ytokCommodity,       // SYMBOL
 		comm.Yledger(db),
 	)
 	return y

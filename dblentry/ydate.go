@@ -9,6 +9,9 @@ import "strconv"
 import "github.com/prataprc/goparsec"
 import "github.com/prataprc/golog"
 
+//---- ledger parser
+
+// Ydate return a parser-combinator that can parse date/time string.
 func Ydate(year int) parsec.Parser {
 	pattdelimit := `[/.-]`
 	pattmonth := `[0-9]{1,2}|Jan|jan|Feb|feb|Mar|mar|Apr|apr|` +

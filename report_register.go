@@ -4,6 +4,7 @@ import "fmt"
 
 import "github.com/tn47/goledger/api"
 
+// ReportRegister for register reporting.
 type ReportRegister struct {
 	rcf            *RCformat
 	filteraccounts []string
@@ -11,6 +12,7 @@ type ReportRegister struct {
 	register       [][]string
 }
 
+// NewReportRegister create an instance for register reporting.
 func NewReportRegister(args []string) *ReportRegister {
 	report := &ReportRegister{
 		rcf:            NewRCformat(),
@@ -27,6 +29,8 @@ func NewReportRegister(args []string) *ReportRegister {
 	}
 	return report
 }
+
+//---- api.Reporter methods
 
 func (report *ReportRegister) Transaction(
 	db api.Datastorer, trans api.Transactor) error {
@@ -79,11 +83,11 @@ func (report *ReportRegister) Render(db api.Datastorer, args []string) {
 	rcf := report.rcf
 
 	cols := []string{"By-date", "Payee", "Account", "Amount", "Balance"}
-	rcf.Addrow(cols...)
-	rcf.Addrow([]string{"", "", "", "", ""}...)
+	rcf.addrow(cols...)
+	rcf.addrow([]string{"", "", "", "", ""}...)
 
 	for _, cols := range report.register {
-		report.rcf.Addrow(cols...)
+		report.rcf.addrow(cols...)
 	}
 
 	w0 := rcf.maxwidth(rcf.column(0)) // Date
@@ -98,7 +102,7 @@ func (report *ReportRegister) Render(db api.Datastorer, args []string) {
 		}
 	}
 
-	rcf.Paddcells()
+	rcf.paddcells()
 	fmsg := rcf.Fmsg(" %%-%vs%%-%vs%%-%vs%%%vs%%%vs\n")
 
 	// start printing

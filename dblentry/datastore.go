@@ -2,20 +2,25 @@ package dblentry
 
 import "fmt"
 import "sort"
-import "strings"
 import "time"
 
 import "github.com/tn47/goledger/api"
 import "github.com/prataprc/golog"
 
-type Pass int
+// ParsePhase state to be tracked at datastore.
+type ParsePhase int
 
 const (
-	DBSTART Pass = iota + 1
+	// DBSTART is parsing started.
+	DBSTART ParsePhase = iota + 1
+	// DBFIRSTPASS is all Firstpass() calls are completed.
 	DBFIRSTPASS
+	// DBSECONDPASS is all Secondpass() calls are completed.
 	DBSECONDPASS
 )
 
+// Datastore managing accounts, commodities, transactions and posting and
+// every thing else that are related.
 type Datastore struct {
 	name     string
 	reporter api.Reporter
@@ -27,7 +32,7 @@ type Datastore struct {
 
 	defaultcomm string
 	comments    []string
-	pass        Pass
+	pass        ParsePhase
 	balance     map[string]*Commodity
 
 	// directive fields
@@ -38,6 +43,7 @@ type Datastore struct {
 	payees       map[string]string // account-payee map[regex]->accountname
 }
 
+// NewDatastore return a new datastore.
 func NewDatastore(name string, reporter api.Reporter) *Datastore {
 	db := &Datastore{
 		name:     name,
@@ -59,13 +65,7 @@ func NewDatastore(name string, reporter api.Reporter) *Datastore {
 	return db
 }
 
-func (db *Datastore) Firstpassok() {
-	db.pass = DBFIRSTPASS
-}
-
-func (db *Datastore) Secondpassok() {
-	db.pass = DBSECONDPASS
-}
+//---- local accessors
 
 func (db *Datastore) assertfirstpass() {
 	if db.pass < DBFIRSTPASS {
@@ -73,9 +73,7 @@ func (db *Datastore) assertfirstpass() {
 	}
 }
 
-//---- accessor
-
-func (db *Datastore) GetCommodity(name string, defcomm *Commodity) *Commodity {
+func (db *Datastore) getCommodity(name string, defcomm *Commodity) *Commodity {
 	if name == "" && db.defaultcomm != "" {
 		return db.commodities[db.defaultcomm]
 	}
@@ -93,6 +91,45 @@ func (db *Datastore) GetCommodity(name string, defcomm *Commodity) *Commodity {
 	return defcomm
 }
 
+func (db *Datastore) setYear(year int) *Datastore {
+	db.currdate = time.Date(year, 1, 1, 0, 0, 0, 0, time.Local)
+	return db
+}
+
+func (db *Datastore) getYear() int {
+	return db.currdate.Year()
+}
+
+func (db *Datastore) setCurrentDate(date time.Time) *Datastore {
+	db.currdate = date
+	return db
+}
+
+func (db *Datastore) currentDate() time.Time {
+	return db.currdate
+}
+
+//---- exported accessors
+
+// Firstpassok to track parsephase
+func (db *Datastore) Firstpassok() {
+	db.pass = DBFIRSTPASS
+}
+
+// Secondpassok to track parsephase
+func (db *Datastore) Secondpassok() {
+	db.pass = DBSECONDPASS
+}
+
+// PrintAccounts is a debug api for application.
+func (db *Datastore) PrintAccounts() {
+	for _, accname := range db.Accountnames() {
+		log.Debugf("-- %v\n", db.accntdb[accname])
+	}
+}
+
+//---- api.Datastorer methods
+
 func (db *Datastore) GetAccount(name string) api.Accounter {
 	if name == "" {
 		return (*Account)(nil)
@@ -103,11 +140,6 @@ func (db *Datastore) GetAccount(name string) api.Accounter {
 	}
 	db.accntdb[name] = account
 	return account
-}
-
-func (db *Datastore) HasAccount(name string) bool {
-	_, ok := db.accntdb[name]
-	return ok
 }
 
 func (db *Datastore) Accountnames() []string {
@@ -124,8 +156,8 @@ func (db *Datastore) Balance(obj interface{}) (balance api.Commoditiser) {
 	db.assertfirstpass()
 
 	switch v := obj.(type) {
-	case *Commodity:
-		balance, _ = db.balance[v.name]
+	case api.Commoditiser:
+		balance, _ = db.balance[v.Name()]
 	case string:
 		balance, _ = db.balance[v]
 	}
@@ -147,43 +179,6 @@ func (db *Datastore) Balances() []api.Commoditiser {
 	return comms
 }
 
-func (db *Datastore) SubAccounts(parentname string) []api.Accounter {
-	db.assertfirstpass()
-
-	parentname = strings.Trim(parentname, ":") + ":"
-	accounts := []api.Accounter{}
-	for name, account := range db.accntdb {
-		if strings.HasPrefix(name, parentname) {
-			accounts = append(accounts, account)
-		}
-	}
-	return accounts
-}
-
-func (db *Datastore) SetYear(year int) *Datastore {
-	db.currdate = time.Date(year, 1, 1, 0, 0, 0, 0, time.Local)
-	return db
-}
-
-func (db *Datastore) Year() int {
-	return db.currdate.Year()
-}
-
-func (db *Datastore) SetCurrentDate(date time.Time) *Datastore {
-	db.currdate = date
-	return db
-}
-
-func (db *Datastore) CurrentDate() time.Time {
-	return db.currdate
-}
-
-func (db *Datastore) PrintAccounts() {
-	for _, accname := range db.Accountnames() {
-		log.Debugf("-- %v\n", db.accntdb[accname])
-	}
-}
-
 //---- engine
 
 func (db *Datastore) Firstpass(obj interface{}) (err error) {
@@ -191,7 +186,7 @@ func (db *Datastore) Firstpass(obj interface{}) (err error) {
 		if err := trans.Firstpass(db); err != nil {
 			return err
 		}
-		db.SetCurrentDate(trans.date)
+		db.setCurrentDate(trans.date)
 		db.transdb.Insert(trans.date, trans)
 
 	} else if price, ok := obj.(*Price); ok {
@@ -208,7 +203,8 @@ func (db *Datastore) Firstpass(obj interface{}) (err error) {
 }
 
 func (db *Datastore) Secondpass() error {
-	kvfull := make([]KV, 0)
+	var kvfull []KV
+
 	for _, kv := range db.transdb.Range(nil, nil, "both", kvfull) {
 		trans := kv.v.(*Transaction)
 		if err := trans.Secondpass(db); err != nil {
@@ -218,93 +214,82 @@ func (db *Datastore) Secondpass() error {
 	return nil
 }
 
-func (db *Datastore) AddBalance(commodity *Commodity) {
+func (db *Datastore) addBalance(commodity *Commodity) {
 	if balance, ok := db.balance[commodity.name]; ok {
 		balance.amount += commodity.amount
 		db.balance[commodity.name] = balance
 		return
 	}
-	db.balance[commodity.name] = commodity.Similar(commodity.amount)
+	db.balance[commodity.name] = commodity.makeSimilar(commodity.amount)
 }
 
-func (db *Datastore) DeductBalance(commodity *Commodity) {
+func (db *Datastore) deductBalance(commodity *Commodity) {
 	if balance, ok := db.balance[commodity.name]; ok {
 		balance.amount -= commodity.amount
 		db.balance[commodity.name] = balance
 		return
 	}
-	db.balance[commodity.name] = commodity.Similar(commodity.amount)
+	db.balance[commodity.name] = commodity.makeSimilar(commodity.amount)
 }
 
 // directive-alias
 
-func (db *Datastore) AddAlias(aliasname, accountname string) *Datastore {
+func (db *Datastore) addAlias(aliasname, accountname string) *Datastore {
 	db.aliases[aliasname] = accountname
 	return db
 }
 
-func (db *Datastore) GetAlias(aliasname string) (accountname string, ok bool) {
+func (db *Datastore) getAlias(aliasname string) (accountname string, ok bool) {
 	accountname, ok = db.aliases[aliasname]
 	return accountname, ok
 }
 
-// directive-apply-account
-
-func (db *Datastore) SetRootaccount(name string) *Datastore {
-	db.rootaccount = name
-	return db
-}
-
-func (db *Datastore) Rootaccount() string {
-	return db.rootaccount
-}
-
 // directive-account
 
-func (db *Datastore) Declare(value interface{}) error {
+func (db *Datastore) declare(value interface{}) error {
 	switch v := value.(type) {
 	case *Account:
 		account := db.GetAccount(v.name).(*Account)
-		account.SetDirective(v)
+		account.setDirective(v)
 		if v.defblns {
-			db.SetBalancingaccount(v.name)
+			db.setBalancingaccount(v.name)
 		}
 		return nil
 	}
 	panic("unreachable code")
 }
 
-func (db *Datastore) AddPayee(regex, accountname string) *Datastore {
+func (db *Datastore) addPayee(regex, accountname string) *Datastore {
 	db.payees[regex] = accountname
 	return db
 }
 
-func (db *Datastore) SetBalancingaccount(name string) *Datastore {
+func (db *Datastore) setBalancingaccount(name string) *Datastore {
 	db.blncingaccnt = name
 	return db
 }
 
-func (db *Datastore) LookupAlias(name string) string {
+func (db *Datastore) lookupAlias(name string) string {
 	if accountname, ok := db.aliases[name]; ok {
 		return accountname
 	}
 	return name
 }
 
-func (db *Datastore) Applyroot(name string) string {
+func (db *Datastore) applyroot(name string) string {
 	if db.rootaccount != "" {
 		return db.rootaccount + ":" + name
 	}
 	return name
 }
 
-//---- Reporting
+//---- api.Reporter methods
 
 func (db *Datastore) FmtBalances(
 	_ api.Datastorer, trans api.Transactor, p api.Poster,
 	acc api.Accounter) [][]string {
 
-	rows := make([][]string, 0)
+	var rows [][]string
 
 	if len(db.Balances()) == 0 {
 		return append(rows, []string{"", "", "-"})
