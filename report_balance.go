@@ -46,12 +46,17 @@ func (report *ReportBalance) Posting(
 
 	// final balance
 	report.finaltally = db.FmtBalances(db, trans, p, acc)
+
 	// filter account
 	if api.Filterstring(acc.Name(), report.filteraccounts) == false {
 		return nil
 	}
 	// format account balance
-	report.balance[acc.Name()] = acc.FmtBalances(db, trans, p, acc)
+	if balances := acc.FmtBalances(db, trans, p, acc); len(balances) > 0 {
+		report.balance[acc.Name()] = balances
+	} else {
+		delete(report.balance, acc.Name())
+	}
 
 	report.postings[acc.Name()] = true
 	return nil
@@ -62,8 +67,10 @@ func (report *ReportBalance) BubblePosting(
 	p api.Poster, account api.Accounter) error {
 
 	bbname := account.Name()
+
 	// final balance
 	report.finaltally = db.FmtBalances(db, trans, p, account)
+
 	// filter account
 	if api.Filterstring(bbname, report.filteraccounts) == false {
 		return nil

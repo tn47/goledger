@@ -113,13 +113,17 @@ func (acc *Account) FmtBalances(
 		return nil
 	}
 
-	balances, rows := acc.Balances(), make([][]string, 0)
-	for _, balance := range balances[:len(balances)-1] {
-		rows = append(rows, []string{"", "", balance.String()})
+	rows := make([][]string, 0)
+	for _, balance := range acc.Balances() {
+		if balance.Amount() != 0 || acc.HasPosting() == false {
+			rows = append(rows, []string{"", "", balance.String()})
+		}
 	}
-	balance := balances[len(balances)-1]
-	date := trans.Date().Format("2006/Jan/02")
-	rows = append(rows, []string{date, acc.Name(), balance.String()})
+	if len(rows) > 0 { // last row to include date and account name.
+		lastrow := rows[len(rows)-1]
+		date := trans.Date().Format("2006/Jan/02")
+		lastrow[0], lastrow[1] = date, acc.Name()
+	}
 	return rows
 }
 
@@ -134,7 +138,9 @@ func (acc *Account) FmtEquity(
 	var rows [][]string
 
 	for _, balance := range acc.Balances() {
-		rows = append(rows, []string{"", acc.Name(), balance.String()})
+		if balance.Amount() != 0 {
+			rows = append(rows, []string{"", acc.Name(), balance.String()})
+		}
 	}
 	return rows
 }

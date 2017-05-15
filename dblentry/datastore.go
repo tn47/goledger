@@ -295,13 +295,14 @@ func (db *Datastore) FmtBalances(
 		return append(rows, []string{"", "", "-"})
 	}
 
-	balances := db.Balances()
-	for _, balance := range balances[:len(balances)-1] {
+	for _, balance := range db.Balances() {
 		rows = append(rows, []string{"", "", balance.String()})
 	}
-	balance := balances[len(balances)-1]
-	date := trans.Date().Format("2006/Jan/02")
-	rows = append(rows, []string{date, "", balance.String()})
+	if len(rows) > 0 { // last row to include date.
+		lastrow := rows[len(rows)-1]
+		date := trans.Date().Format("2006/Jan/02")
+		lastrow[0] = date
+	}
 	return rows
 }
 

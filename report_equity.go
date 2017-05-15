@@ -46,7 +46,11 @@ func (report *ReportEquity) Posting(
 	}
 	report.latestdate = trans.Date()
 	// format account balance
-	report.equity[acc.Name()] = acc.FmtEquity(db, trans, p, acc)
+	if balances := acc.FmtEquity(db, trans, p, acc); len(balances) > 0 {
+		report.equity[acc.Name()] = balances
+	} else {
+		delete(report.equity, acc.Name())
+	}
 
 	return nil
 }
