@@ -32,7 +32,7 @@ func firstpass(db *dblentry.Datastore, journalfile string) error {
 			ytrans, yprice, ydirective, ycomment,
 		)
 
-		node, scanner = y(scanner)
+		node, _ = y(scanner)
 
 		switch obj := node.(type) {
 		case *dblentry.Transaction:

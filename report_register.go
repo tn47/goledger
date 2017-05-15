@@ -98,7 +98,7 @@ func (report *ReportRegister) Render(db api.Datastorer, args []string) {
 	if (w0 + w1 + w2 + w3 + w4) > 70 {
 		w1 = rcf.FitPayee(1, 70-w0-w2-w3-w4)
 		if (w0 + w1 + w2 + w3 + w4) > 70 {
-			w2 = rcf.FitAccountname(1, 70-w0-w1-w3-w4)
+			_ /*w2*/ = rcf.FitAccountname(1, 70-w0-w1-w3-w4)
 		}
 	}
 

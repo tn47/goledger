@@ -116,7 +116,7 @@ func (report *ReportBalance) Render(db api.Datastorer, args []string) {
 	w1 := rcf.maxwidth(rcf.column(1)) // Account name
 	w2 := rcf.maxwidth(rcf.column(2)) // Balance (amount)
 	if (w0 + w1 + w2) > 70 {
-		w1 = rcf.FitAccountname(1, 70-w0-w2)
+		_ /*w1*/ = rcf.FitAccountname(1, 70-w0-w2)
 	}
 
 	rcf.paddcells()

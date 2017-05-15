@@ -50,7 +50,7 @@ func (d *Directive) Yledgerblock(db *Datastore, block []string) error {
 			if parser == nil {
 				continue
 			}
-			node, scanner = parser(scanner)
+			node, _ = parser(scanner)
 			nodes := node.([]parsec.ParsecNode)
 			t := nodes[0].(*parsec.Terminal)
 			switch t.Name {
