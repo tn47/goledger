@@ -138,7 +138,7 @@ func (trans *Transaction) Yledger(db *Datastore) parsec.Parser {
 }
 
 // Yledgerblock return a parser combinaty that can parse all the posting
-// withing the transaction.
+// within the transaction.
 func (trans *Transaction) Yledgerblock(db *Datastore, block []string) error {
 	if len(block) == 0 {
 		return nil
