@@ -1,8 +1,12 @@
+Inspired by http://ledger-cli.org/.
+
 Ledger-likes
 ------------
 
 https://github.com/simonmichael/hledger
+
 https://github.com/sn127/tackler
+
 https://github.com/hrj/abandon
 
 Developer Contribution
