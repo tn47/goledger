@@ -188,10 +188,9 @@ func (db *Datastore) Secondpass() error {
 	return nil
 }
 
-func (db *Datastore) Clone() *Datastore {
+func (db *Datastore) Clone(nreporter api.Reporter) *Datastore {
 	ndb := *db
-
-	ndb.reporter = db.reporter.Clone(&ndb)
+	ndb.reporter = nreporter
 
 	ndb.commodities = map[string]*Commodity{}
 	for name, commodity := range db.commodities {

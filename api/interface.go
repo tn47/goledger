@@ -106,7 +106,7 @@ type Reporter interface {
 
 	Render(db Datastorer, args []string)
 
-	Clone(db Datastorer) Reporter
+	Clone() Reporter
 }
 
 // Formatter implements are uniform tabularized {row,column} formatting across

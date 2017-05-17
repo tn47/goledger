@@ -130,10 +130,10 @@ func (report *ReportBalance) Render(db api.Datastorer, args []string) {
 	fmt.Println()
 }
 
-func (report *ReportBalance) Clone(ndb api.Datastorer) api.Reporter {
+func (report *ReportBalance) Clone() api.Reporter {
 	nreport := *report
-	nreport.rcf = report.rcf.Clone(ndb)
-	nreport.filteraccounts = []string{}
+	nreport.rcf = report.rcf.Clone()
+	nreport.filteraccounts = report.filteraccounts
 	nreport.balance = make(map[string][][]string)
 	nreport.finaltally = [][]string{}
 	nreport.postings = map[string]bool{}

@@ -113,11 +113,11 @@ func (report *ReportRegister) Render(db api.Datastorer, args []string) {
 	fmt.Println()
 }
 
-func (report *ReportRegister) Clone(ndb api.Datastorer) api.Reporter {
+func (report *ReportRegister) Clone() api.Reporter {
 	nreport := *report
-	nreport.rcf = report.rcf.Clone(ndb)
-	nreport.filteraccounts = []string{}
-	nreport.filterpayees = []string{}
+	nreport.rcf = report.rcf.Clone()
+	nreport.filteraccounts = report.filteraccounts
+	nreport.filterpayees = report.filterpayees
 	nreport.register = make([][]string, 0)
 	return &nreport
 }
