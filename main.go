@@ -24,6 +24,7 @@ func main() {
 	reporter := NewReporter(args)
 	db := dblentry.NewDatastore(options.dbname, reporter)
 
+	// firstpass
 	for _, journal := range options.journals {
 		log.Debugf("processing journal %q\n", journal)
 		if err := dofirstpass(db, journal); err != nil {
@@ -31,10 +32,11 @@ func main() {
 		}
 	}
 	db.Firstpassok()
-
 	db.PrintAccounts()
 
+	// secondpass
 	nreporter := reporter.Clone()
+	//nreporter.secondpass()
 	ndb := db.Clone(nreporter)
 	if err := secondpass(ndb); err != nil {
 		os.Exit(2)
