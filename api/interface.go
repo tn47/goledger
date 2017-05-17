@@ -24,6 +24,21 @@ type Datastorer interface {
 	// transactions are tallied between the accounts.
 	Balances() []Commoditiser
 
+	// Firstpass to parse journal file.
+	Firstpass(obj interface{}) error
+
+	// Secondpass to apply journal entries.
+	Secondpass() error
+
+	// Firstpassok means firstpass completed on the datastore.
+	Firstpassok()
+
+	// Secondpassok means secondpass completed on the datastore.
+	Secondpassok()
+
+	// Clone this instance and all its nested reference.
+	Clone(Reporter) Datastorer
+
 	Formatter
 }
 
@@ -104,7 +119,7 @@ type Reporter interface {
 
 	BubblePosting(Datastorer, Transactor, Poster, Accounter) error
 
-	Render(db Datastorer, args []string)
+	Render(args []string, db Datastorer)
 
 	Clone() Reporter
 }

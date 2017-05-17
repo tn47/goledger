@@ -79,7 +79,7 @@ func (report *ReportRegister) BubblePosting(
 	return nil
 }
 
-func (report *ReportRegister) Render(db api.Datastorer, args []string) {
+func (report *ReportRegister) Render(args []string, db api.Datastorer) {
 	rcf := report.rcf
 
 	cols := []string{"By-date", "Payee", "Account", "Amount", "Balance"}

@@ -7,8 +7,39 @@ import "github.com/tn47/goledger/dblentry"
 import "github.com/tn47/goledger/api"
 
 func main() {
-	args := argparse()
+	args := phase1()
+	reporter, db := phase2(args)
+	nreporter, ndb := phase3(args, reporter, db)
+	nreporter.Render(args, ndb)
+}
 
+func trycommand(args []string, phase string) bool {
+	if len(args) == 0 {
+		return false
+	}
+	switch phase {
+	case "phase1":
+		switch args[0] {
+		case "version", "ver":
+			log.Consolef("goledger version - goledger%v\n", api.LedgerVersion)
+			return true
+		}
+	case "phase2":
+	case "phase3":
+	}
+	return false
+}
+
+// 1. arguments are parsed.
+// 2. log is initialized.
+func phase1() (args []string) {
+	defer func() {
+		if trycommand(args, "phase1") {
+			os.Exit(0)
+		}
+	}()
+
+	args = argparse()
 	logsetts := map[string]interface{}{
 		"log.level":      options.loglevel,
 		"log.file":       "",
@@ -16,15 +47,23 @@ func main() {
 		"log.prefix":     "[%v]",
 	}
 	log.SetLogger(nil, logsetts)
+	return args
+}
 
-	if trycommand(args) {
-		os.Exit(0)
-	}
+// 1. create one or more reporter
+// 2. create a datastore.
+// 3. firstpass on all journal files on the datastore.
+// 4. firstpass completed
+func phase2(args []string) (api.Reporter, api.Datastorer) {
+	defer func() {
+		if trycommand(args, "phase2") {
+			os.Exit(0)
+		}
+	}()
 
 	reporter := NewReporter(args)
 	db := dblentry.NewDatastore(options.dbname, reporter)
 
-	// firstpass
 	for _, journal := range options.journals {
 		log.Debugf("processing journal %q\n", journal)
 		if err := dofirstpass(db, journal); err != nil {
@@ -33,8 +72,21 @@ func main() {
 	}
 	db.Firstpassok()
 	db.PrintAccounts()
+	return reporter, db
+}
 
-	// secondpass
+// 1. clone reporter and datastore for secondpass.
+// 2. do secondpass on datastore.
+// 3. secondpass completed.
+func phase3(
+	args []string,
+	reporter api.Reporter, db api.Datastorer) (api.Reporter, api.Datastorer) {
+
+	defer func() {
+		if trycommand(args, "phase3") {
+			os.Exit(0)
+		}
+	}()
 	nreporter := reporter.Clone()
 	//nreporter.secondpass()
 	ndb := db.Clone(nreporter)
@@ -42,17 +94,5 @@ func main() {
 		os.Exit(2)
 	}
 	ndb.Secondpassok()
-	nreporter.Render(ndb, args)
-}
-
-func trycommand(args []string) bool {
-	if len(args) == 0 {
-		return false
-	}
-	switch args[0] {
-	case "version", "ver":
-		log.Consolef("goledger version - goledger%v\n", api.LedgerVersion)
-		return true
-	}
-	return false
+	return nreporter, ndb
 }

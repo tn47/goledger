@@ -188,7 +188,7 @@ func (db *Datastore) Secondpass() error {
 	return nil
 }
 
-func (db *Datastore) Clone(nreporter api.Reporter) *Datastore {
+func (db *Datastore) Clone(nreporter api.Reporter) api.Datastorer {
 	ndb := *db
 	ndb.reporter = nreporter
 

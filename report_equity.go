@@ -62,7 +62,7 @@ func (report *ReportEquity) BubblePosting(
 	return nil
 }
 
-func (report *ReportEquity) Render(db api.Datastorer, args []string) {
+func (report *ReportEquity) Render(args []string, db api.Datastorer) {
 	rcf := report.rcf
 
 	// sort

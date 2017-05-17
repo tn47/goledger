@@ -82,7 +82,7 @@ func (report *ReportBalance) BubblePosting(
 	return nil
 }
 
-func (report *ReportBalance) Render(db api.Datastorer, args []string) {
+func (report *ReportBalance) Render(args []string, db api.Datastorer) {
 	report.prunebubbled()
 
 	rcf := report.rcf

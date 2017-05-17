@@ -83,7 +83,7 @@ func (reports *Reports) BubblePosting(
 	return nil
 }
 
-func (reports *Reports) Render(db api.Datastorer, args []string) {
+func (reports *Reports) Render(args []string, db api.Datastorer) {
 	if len(args) == 0 {
 		fmt.Printf("  No. of transactions: %5v\n", reports.n_transactions)
 		fmt.Printf("  No. of postings:     %5v\n", reports.n_postings)
@@ -97,7 +97,7 @@ func (reports *Reports) Render(db api.Datastorer, args []string) {
 	}
 
 	for _, reporter := range reports.reporters {
-		reporter.Render(db, args)
+		reporter.Render(args, db)
 	}
 }
 
