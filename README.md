@@ -9,8 +9,8 @@ https://github.com/sn127/tackler
 
 https://github.com/hrj/abandon
 
-Developer Contribution
-----------------------
+How to contribute
+-----------------
 
 * Pick an issue, or create an new issue. Provide adequate documentation for
 the issue.

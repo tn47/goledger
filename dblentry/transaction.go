@@ -178,6 +178,12 @@ func (trans *Transaction) Yledgerblock(db *Datastore, block []string) error {
 //---- engine
 
 func (trans *Transaction) Firstpass(db *Datastore) error {
+	for _, posting := range trans.postings {
+		if err := posting.Firstpass(db, trans); err != nil {
+			return err
+		}
+	}
+
 	if trans.shouldBalance() {
 		defaccount := db.GetAccount(db.getBalancingaccount()).(*Account)
 		if ok, err := trans.autobalance1(db, defaccount); err != nil {
@@ -186,12 +192,6 @@ func (trans *Transaction) Firstpass(db *Datastore) error {
 			return fmt.Errorf("unbalanced transaction")
 		}
 		log.Debugf("transaction balanced\n")
-	}
-
-	for _, posting := range trans.postings {
-		if err := posting.Firstpass(db, trans); err != nil {
-			return err
-		}
 	}
 	return nil
 }
@@ -216,8 +216,8 @@ func (trans *Transaction) Clone(ndb *Datastore) *Transaction {
 
 func (trans *Transaction) shouldBalance() bool {
 	for _, posting := range trans.postings {
-		virtual := posting.account.isVirtual()
-		balanced := posting.account.Balanced()
+		virtual := posting.isVirtual()
+		balanced := posting.isBalanced()
 		if virtual == true && balanced == false {
 			return false
 		} else if balanced == false {

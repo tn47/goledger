@@ -2,6 +2,7 @@ package dblentry
 
 import "time"
 import "fmt"
+import "regexp"
 
 type firstpass struct {
 	defaultcomm string
@@ -12,6 +13,10 @@ type firstpass struct {
 	blncingaccnt string
 	aliases      map[string]string // alias, account-alias
 	payees       map[string]string // account-payee map[regex]->accountname
+	repayees     map[string]*regexp.Regexp
+
+	// options
+	strict bool
 }
 
 func (fp *firstpass) initfirstpass() {
@@ -20,6 +25,18 @@ func (fp *firstpass) initfirstpass() {
 	fp.aliases = map[string]string{}
 	fp.payees = map[string]string{}
 }
+
+//---- exported accessors
+
+func (fp firstpass) SetStrict() {
+	fp.strict = true
+}
+
+func (fp firstpass) IsStrict() bool {
+	return fp.strict
+}
+
+//---- local accessors
 
 func (fp *firstpass) setDefaultcomm(name string) {
 	fp.defaultcomm = name
@@ -74,7 +91,9 @@ func (fp *firstpass) applyroot(name string) string {
 }
 
 func (fp *firstpass) setBalancingaccount(name string) {
-	fp.blncingaccnt = name
+	if name != "" {
+		fp.blncingaccnt = name
+	}
 }
 
 func (fp *firstpass) getBalancingaccount() string {
@@ -82,12 +101,9 @@ func (fp *firstpass) getBalancingaccount() string {
 }
 
 func (fp *firstpass) addAlias(aliasname, accountname string) {
-	fp.aliases[aliasname] = accountname
-}
-
-func (fp *firstpass) getAlias(aliasname string) (accountname string, ok bool) {
-	accountname, ok = fp.aliases[aliasname]
-	return accountname, ok
+	if aliasname != "" {
+		fp.aliases[aliasname] = accountname
+	}
 }
 
 func (fp *firstpass) lookupAlias(name string) string {
@@ -97,6 +113,23 @@ func (fp *firstpass) lookupAlias(name string) string {
 	return name
 }
 
-func (fp *Datastore) addPayee(regex, accountname string) {
-	fp.payees[regex] = accountname
+func (fp *firstpass) addPayee(regex, accountname string) error {
+	if regex != "" && accountname != "" {
+		fp.payees[regex] = accountname
+		regexc, err := regexp.Compile(regex)
+		if err != nil {
+			return err
+		}
+		fp.repayees[regex] = regexc
+	}
+	return nil
+}
+
+func (fp *firstpass) matchpayee(payee string) (string, bool) {
+	for regex, regexc := range fp.repayees {
+		if regexc.MatchString(payee) {
+			return fp.payees[regex], true
+		}
+	}
+	return "", false
 }

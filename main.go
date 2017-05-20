@@ -24,6 +24,7 @@ func trycommand(args []string, phase string) bool {
 			log.Consolef("goledger version - goledger%v\n", api.LedgerVersion)
 			return true
 		}
+
 	case "phase2":
 	case "phase3":
 	}
@@ -71,7 +72,7 @@ func phase2(args []string) (api.Reporter, api.Datastorer) {
 		}
 	}
 	db.Firstpassok()
-	db.PrintAccounts()
+	db.PrintAccounts() // for debug
 	return reporter, db
 }
 
@@ -87,6 +88,12 @@ func phase3(
 			os.Exit(0)
 		}
 	}()
+
+	switch args[0] {
+	case "list", "ls":
+		return reporter, db
+	}
+
 	nreporter := reporter.Clone()
 	//nreporter.secondpass()
 	ndb := db.Clone(nreporter)

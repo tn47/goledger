@@ -19,13 +19,9 @@ type Account struct {
 	hasposting bool
 	balance    map[string]*Commodity
 	// from account directive
-	note      string
-	aliasname string
-	payee     string
-	check     string
-	assert    string
-	eval      string
-	defblns   bool
+	notes   []string
+	aliases []string
+	payees  []string
 }
 
 // NewAccount create a new instance of Account{}.
@@ -48,16 +44,36 @@ func (acc *Account) setOpeningbalance(commodity *Commodity) *Account {
 	return acc
 }
 
-func (acc *Account) setDirective(account *Account) *Account {
-	acc.note = account.note
-	acc.check = account.check
-	acc.assert = account.assert
-	acc.eval = account.eval
+func (acc *Account) isVirtual() bool {
+	return acc.virtual
+}
+
+func (acc *Account) addNote(note string) *Account {
+	if note != "" {
+		acc.notes = append(acc.notes, note)
+	}
 	return acc
 }
 
-func (acc *Account) isVirtual() bool {
-	return acc.virtual
+func (acc *Account) addAlias(alias string) *Account {
+	if alias != "" {
+		acc.aliases = append(acc.aliases, alias)
+	}
+	return acc
+}
+
+func (acc *Account) addPayee(payee string) *Account {
+	if payee != "" {
+		acc.payees = append(acc.payees, payee)
+	}
+	return acc
+}
+
+func (acc *Account) isUnknown() bool {
+	if acc.name == "Unknown" || strings.HasSuffix(acc.name, ":Unknown") {
+		return true
+	}
+	return false
 }
 
 //---- api.Accounter methods.
@@ -186,7 +202,7 @@ func (acc *Account) Ypostaccn(db *Datastore) parsec.Parser {
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			return nodes[0]
 		},
-		ytokAccname, parsec.Parser(parsec.End),
+		ytokAccname, parsec.Parser(parsec.End()),
 	)
 	y := parsec.OrdChoice(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {

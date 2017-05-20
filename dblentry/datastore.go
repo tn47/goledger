@@ -104,6 +104,11 @@ func (db *Datastore) PrintAccounts() {
 
 //---- api.Datastorer methods
 
+func (db *Datastore) HasAccount(name string) bool {
+	_, ok := db.accntdb[name]
+	return ok
+}
+
 func (db *Datastore) GetAccount(name string) api.Accounter {
 	if name == "" {
 		return (*Account)(nil)
@@ -243,11 +248,22 @@ func (db *Datastore) deductBalance(commodity *Commodity) {
 
 func (db *Datastore) declare(value interface{}) error {
 	switch v := value.(type) {
-	case *Account:
-		account := db.GetAccount(v.name).(*Account)
-		account.setDirective(v)
-		if v.defblns {
-			db.setBalancingaccount(v.name)
+	case *Directive:
+		d := v
+		switch d.dtype {
+		case "account":
+			db.addAlias(d.accalias, d.accname)
+			err := db.addPayee(d.accpayee, d.accname)
+			if err != nil {
+				return err
+			}
+			account := db.GetAccount(d.accname).(*Account)
+			account.addNote(d.accnote)
+			account.addAlias(d.accalias)
+			account.addPayee(d.accpayee)
+			if d.accdefault {
+				db.setBalancingaccount(account.name)
+			}
 		}
 		return nil
 	}

@@ -10,7 +10,14 @@ import "github.com/prataprc/golog"
 type Directive struct {
 	dtype      string
 	year       int      // year
-	account    *Account // account, alias, apply
+	accname    string   // account, alias, apply
+	accnote    string   // account
+	accalias   string   // account
+	accpayee   string   // account
+	acccheck   string   // account
+	accassert  string   // account
+	acceval    string   // account
+	accdefault bool     // account
 	aliasname  string   // alias
 	expression string   // assert
 	endargs    []string // end
@@ -19,7 +26,7 @@ type Directive struct {
 // NewDirective create a new Directive instance, one instance to be created
 // for handling each directive in the journal file.
 func NewDirective() *Directive {
-	return &Directive{account: NewAccount("")}
+	return &Directive{}
 }
 
 //---- ledger parser
@@ -55,21 +62,19 @@ func (d *Directive) Yledgerblock(db *Datastore, block []string) error {
 			t := nodes[0].(*parsec.Terminal)
 			switch t.Name {
 			case "DRTV_ACCOUNT_NOTE":
-				d.account.note = string(nodes[1].(*parsec.Terminal).Value)
+				d.accnote = string(nodes[1].(*parsec.Terminal).Value)
 			case "DRTV_ACCOUNT_ALIAS":
-				d.account.aliasname = string(nodes[1].(*parsec.Terminal).Value)
-				db.addAlias(d.account.aliasname, d.account.name)
+				d.accalias = string(nodes[1].(*parsec.Terminal).Value)
 			case "DRTV_ACCOUNT_PAYEE":
-				d.account.payee = string(nodes[1].(*parsec.Terminal).Value)
-				db.addPayee(d.account.payee, d.account.name)
+				d.accpayee = string(nodes[1].(*parsec.Terminal).Value)
 			case "DRTV_ACCOUNT_CHECK":
-				d.account.check = string(nodes[1].(*parsec.Terminal).Value)
+				d.acccheck = string(nodes[1].(*parsec.Terminal).Value)
 			case "DRTV_ACCOUNT_ASSERT":
-				d.account.assert = string(nodes[1].(*parsec.Terminal).Value)
+				d.accassert = string(nodes[1].(*parsec.Terminal).Value)
 			case "DRTV_ACCOUNT_EVAL":
-				d.account.eval = string(nodes[1].(*parsec.Terminal).Value)
+				d.acceval = string(nodes[1].(*parsec.Terminal).Value)
 			case "DRTV_ACCOUNT_DEFAULT":
-				d.account.defblns = true
+				d.accdefault = true
 			}
 		}
 		return nil
@@ -81,35 +86,40 @@ func (d *Directive) Yledgerblock(db *Datastore, block []string) error {
 }
 
 func (d *Directive) yaccount(db *Datastore) parsec.Parser {
+	account := NewAccount("")
 	return parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			d.dtype = "account"
-			d.account = nodes[1].(*Account)
-			log.Debugf("directive %q %v\n", d.dtype, d.account)
+			d.accname = nodes[1].(*Account).name
+			log.Debugf("directive %q %v\n", d.dtype, d.accname)
 			return d
 		},
-		ytokAccount, d.account.Yledger(db),
+		ytokAccount, account.Yledger(db),
 	)
 }
 
 func (d *Directive) yapply(db *Datastore) parsec.Parser {
+	account := NewAccount("")
 	return parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			d.dtype = "apply"
+			d.accname = nodes[2].(*Account).name
 			return d
 		},
-		ytokApply, ytokAccount, d.account.Yledger(db),
+		ytokApply, ytokAccount, account.Yledger(db),
 	)
 }
 
 func (d *Directive) yalias(db *Datastore) parsec.Parser {
+	account := NewAccount("")
 	return parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			d.dtype = "alias"
 			d.aliasname = string(nodes[1].(*parsec.Terminal).Value)
+			d.accname = nodes[3].(*Account).name
 			return d
 		},
-		ytokAlias, ytokAliasname, ytokEqual, d.account.Yledger(db),
+		ytokAlias, ytokAliasname, ytokEqual, account.Yledger(db),
 	)
 }
 
@@ -166,13 +176,13 @@ func (d *Directive) yaccountdirectives(db *Datastore) parsec.Parser {
 func (d *Directive) Firstpass(db *Datastore) error {
 	switch d.dtype {
 	case "account":
-		return db.declare(d.account) // NOTE: this is redundant
+		return db.declare(d) // NOTE: this is redundant
 
 	case "apply":
-		return db.setrootaccount(d.account.name)
+		return db.setrootaccount(d.accname)
 
 	case "alias":
-		db.addAlias(d.aliasname, d.account.name)
+		db.addAlias(d.aliasname, d.accname)
 		return nil
 
 	case "assert":

@@ -7,9 +7,9 @@ import "github.com/tn47/goledger/api"
 // Reports manages all reporting commands.
 type Reports struct {
 	reporters []api.Reporter
-	accounts  map[string]int64
 
 	// stats
+	n_accounts     map[string]int64
 	n_transactions int64
 	n_postings     int64
 }
@@ -17,8 +17,8 @@ type Reports struct {
 // NewReporter create a new reporter.
 func NewReporter(args []string) (reporter api.Reporter) {
 	reports := &Reports{
-		reporters: make([]api.Reporter, 0),
-		accounts:  make(map[string]int64),
+		reporters:  make([]api.Reporter, 0),
+		n_accounts: make(map[string]int64),
 	}
 
 	if len(args) == 0 {
@@ -32,6 +32,8 @@ func NewReporter(args []string) (reporter api.Reporter) {
 		reports.reporters = append(reports.reporters, NewReportRegister(args))
 	case "equity":
 		reports.reporters = append(reports.reporters, NewReportEquity(args))
+	case "list", "ls":
+		reports.reporters = append(reports.reporters, NewReportList(args))
 	}
 	return reports
 }
@@ -53,13 +55,13 @@ func (reports *Reports) Transaction(
 func (reports *Reports) Posting(
 	db api.Datastorer, trans api.Transactor, p api.Poster) error {
 
-	n, ok := reports.accounts[p.Account().Name()]
+	n, ok := reports.n_accounts[p.Account().Name()]
 	if ok {
 		n++
 	} else {
 		n = 0
 	}
-	reports.accounts[p.Account().Name()] = n
+	reports.n_accounts[p.Account().Name()] = n
 
 	reports.n_postings++
 
@@ -87,11 +89,11 @@ func (reports *Reports) Render(args []string, db api.Datastorer) {
 	if len(args) == 0 {
 		fmt.Printf("  No. of transactions: %5v\n", reports.n_transactions)
 		fmt.Printf("  No. of postings:     %5v\n", reports.n_postings)
-		fmt.Printf("  No. of accounts:	%5v\n", len(reports.accounts))
+		fmt.Printf("  No. of accounts:	%5v\n", len(reports.n_accounts))
 		fmt.Println()
 		fmt.Printf("  Accountwise postings\n")
 		fmt.Printf("  --------------------\n")
-		for name, count := range reports.accounts {
+		for name, count := range reports.n_accounts {
 			fmt.Printf("  %15v %5v\n", name, count)
 		}
 	}
@@ -104,7 +106,7 @@ func (reports *Reports) Render(args []string, db api.Datastorer) {
 func (reports *Reports) Clone() api.Reporter {
 	nreports := *reports
 	nreports.reporters = []api.Reporter{}
-	nreports.accounts = map[string]int64{}
+	nreports.n_accounts = map[string]int64{}
 	for _, reporter := range reports.reporters {
 		nreports.reporters = append(nreports.reporters, reporter.Clone())
 	}

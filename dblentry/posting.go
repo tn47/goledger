@@ -26,6 +26,8 @@ var prefix2state = map[rune]string{
 type Posting struct {
 	trans     *Transaction
 	account   *Account
+	virtual   bool
+	balanced  bool
 	commodity *Commodity
 
 	lotprice  *Commodity
@@ -58,6 +60,14 @@ func (p *Posting) getMetadata(key string) interface{} {
 
 func (p *Posting) setMetadata(key string, value interface{}) {
 	p.metadata[key] = value
+}
+
+func (p *Posting) isVirtual() bool {
+	return p.virtual
+}
+
+func (p *Posting) isBalanced() bool {
+	return p.balanced
 }
 
 //---- api.Poster methods.
@@ -123,7 +133,7 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 					p.setMetadata("state", prefix2state[[]rune(t.Value)[0]])
 				}
 
-				p.account = p.fixaccount(db, items[1])     // account
+				p.account, p.virtual, p.balanced = p.fixaccount(db, items[1])
 				p.commodity = p.fixcommodity(db, items[2]) // commodity
 				p.lotprice = p.fixlotprice(items[3])       // lot price
 				p.lotdate = p.fixlotdate(items[4])         // lot date
@@ -183,13 +193,11 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 
 //---- engine
 
-func (p *Posting) fixaccount(db *Datastore, item interface{}) *Account {
+func (p *Posting) fixaccount(
+	db *Datastore, item interface{}) (*Account, bool, bool) {
+
 	account := item.(*Account)
-	accname := db.applyroot(db.lookupAlias(account.name))
-	paccount := db.GetAccount(accname).(*Account)
-	paccount.virtual = account.virtual
-	paccount.balanced = account.balanced
-	return paccount
+	return account, account.virtual, account.balanced
 }
 
 func (p *Posting) fixcommodity(db *Datastore, item interface{}) *Commodity {
@@ -265,6 +273,33 @@ func (p *Posting) isDebit() bool {
 }
 
 func (p *Posting) Firstpass(db *Datastore, trans *Transaction) error {
+	accname := p.account.name
+
+	// if account is Unknown, try rewrite !!
+	if p.account.isUnknown() {
+		// fetch the declared account name with payee
+		daccname, ok := db.matchpayee(trans.Payee())
+		if ok == false {
+			fmsg := "Unknown account %q has no matching payee %q\n"
+			return fmt.Errorf(fmsg, p.account.name, trans.Payee())
+		}
+		prefix := p.account.name[:len(p.account.name)-len("Unknown")]
+		if strings.HasPrefix(daccname, prefix) == false {
+			fmsg := "Unknown account %q has no matching prefix %q\n"
+			return fmt.Errorf(fmsg, p.account.name, accname)
+		}
+		accname = prefix + daccname[len(prefix):]
+
+	} else {
+		accname = db.applyroot(db.lookupAlias(accname))
+	}
+
+	if db.IsStrict() && db.HasAccount(accname) == false {
+		return fmt.Errorf("account %q not declared before\n", accname)
+	}
+
+	p.account = db.GetAccount(accname).(*Account)
+
 	if err := p.account.Firstpass(db, trans, p); err != nil {
 		return err
 	}

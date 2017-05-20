@@ -63,3 +63,18 @@ func Filterstring(strpatt string, strs []string) bool {
 	}
 	return false
 }
+
+func StringSet(xs []string) []string {
+	// TODO: is there a better algorithm to identify duplicates
+	ys := make([]string, len(xs))
+outer:
+	for _, x := range xs {
+		for _, y := range ys {
+			if x == y {
+				continue outer
+			}
+		}
+		ys = append(ys, x)
+	}
+	return ys
+}
