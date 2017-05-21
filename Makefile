@@ -1,4 +1,4 @@
-SUBDIRS := api dblentry reports testdata
+SUBDIRS := api dblentry testdata
 
 build: clean
 	go build
