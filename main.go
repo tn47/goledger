@@ -1,10 +1,13 @@
 package main
 
 import "os"
+import "fmt"
 
 import "github.com/prataprc/golog"
 import "github.com/tn47/goledger/dblentry"
 import "github.com/tn47/goledger/api"
+
+var _ = fmt.Sprintf("dummy")
 
 func main() {
 	args := phase1()
@@ -64,6 +67,9 @@ func phase2(args []string) (api.Reporter, api.Datastorer) {
 
 	reporter := NewReporter(args)
 	db := dblentry.NewDatastore(options.dbname, reporter)
+	if options.strict {
+		db.SetStrict()
+	}
 
 	for _, journal := range options.journals {
 		log.Debugf("processing journal %q\n", journal)

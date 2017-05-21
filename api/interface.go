@@ -39,6 +39,9 @@ type Datastorer interface {
 	// Clone this instance and all its nested reference.
 	Clone(Reporter) Datastorer
 
+	// SetStrict option
+	SetStrict()
+
 	Formatter
 }
 
@@ -92,6 +95,9 @@ type Accounter interface {
 	// Name of the account.
 	Name() string
 
+	// Notes return list of notes declared on this account.
+	Notes() []string
+
 	// Balance amount, for commodity specified by `obj`, after all postings
 	// from all transactions are applied on to this account. Note that each
 	// accounts can exchange with any number of commodities.
@@ -106,6 +112,9 @@ type Accounter interface {
 	// HasPosting return true if this account has ever participated in a
 	// transaction posting.
 	HasPosting() bool
+
+	// Directive return the account details as directive declaration.
+	Directive() string
 
 	Formatter
 }

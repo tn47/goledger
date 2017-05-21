@@ -1,2 +1,1 @@
-[Error] lineno: 5; account(Assets:Cash) should balance as $520.00, got $500.00
-
+[Error] lineno 7: account(Assets:Cash) should balance as $520.00, got $500.00

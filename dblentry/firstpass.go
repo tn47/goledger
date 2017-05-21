@@ -24,15 +24,16 @@ func (fp *firstpass) initfirstpass() {
 	fp.currdate = time.Now()
 	fp.aliases = map[string]string{}
 	fp.payees = map[string]string{}
+	fp.repayees = map[string]*regexp.Regexp{}
 }
 
 //---- exported accessors
 
-func (fp firstpass) SetStrict() {
+func (fp *firstpass) SetStrict() {
 	fp.strict = true
 }
 
-func (fp firstpass) IsStrict() bool {
+func (fp *firstpass) IsStrict() bool {
 	return fp.strict
 }
 

@@ -141,14 +141,18 @@ func (trans *Transaction) Yledger(db *Datastore) parsec.Parser {
 
 // Yledgerblock return a parser combinaty that can parse all the posting
 // within the transaction.
-func (trans *Transaction) Yledgerblock(db *Datastore, block []string) error {
+func (trans *Transaction) Yledgerblock(
+	db *Datastore, block []string) (int, error) {
+
 	if len(block) == 0 {
-		return nil
+		return 0, nil
 	}
 
 	var node parsec.ParsecNode
+	var index int
+	var line string
 
-	for _, line := range block {
+	for index, line = range block {
 		scanner := parsec.NewScanner([]byte(line))
 		posting := NewPosting(trans)
 		node, scanner = posting.Yledger(db)(scanner)
@@ -166,13 +170,13 @@ func (trans *Transaction) Yledgerblock(db *Datastore, block []string) error {
 			trans.notes = append(trans.notes, string(val))
 
 		case error:
-			return val
+			return index, val
 		}
 		if scanner.Endof() == false {
-			return fmt.Errorf("unable to parse posting")
+			return index, fmt.Errorf("unable to parse posting")
 		}
 	}
-	return nil
+	return index, nil
 }
 
 //---- engine
@@ -199,7 +203,7 @@ func (trans *Transaction) Firstpass(db *Datastore) error {
 func (trans *Transaction) Secondpass(db *Datastore) error {
 	for _, posting := range trans.postings {
 		if err := posting.Secondpass(db, trans); err != nil {
-			return fmt.Errorf("lineno: %v; %v", trans.lineno, err)
+			return fmt.Errorf("lineno %v: %v", trans.lineno, err)
 		}
 	}
 	return db.reporter.Transaction(db, trans)

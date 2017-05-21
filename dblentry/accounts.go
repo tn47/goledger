@@ -82,6 +82,10 @@ func (acc *Account) Name() string {
 	return acc.name
 }
 
+func (acc *Account) Notes() []string {
+	return acc.notes
+}
+
 func (acc *Account) Balance(obj interface{}) (balance api.Commoditiser) {
 	switch v := obj.(type) {
 	case *Commodity:
@@ -164,6 +168,23 @@ func (acc *Account) FmtRegister(
 	_ api.Accounter) [][]string {
 
 	panic("not supported")
+}
+
+func (acc *Account) Directive() string {
+	lines := []string{fmt.Sprintf("account %v", acc.name)}
+	for _, note := range acc.notes {
+		line := fmt.Sprintf("    note  %v", note)
+		lines = append(lines, line)
+	}
+	for _, alias := range acc.aliases {
+		line := fmt.Sprintf("    alias  %v", alias)
+		lines = append(lines, line)
+	}
+	for _, payee := range acc.payees {
+		line := fmt.Sprintf("    payee  %v", payee)
+		lines = append(lines, line)
+	}
+	return strings.Join(lines, "\n")
 }
 
 //---- ledger parser
@@ -249,7 +270,7 @@ func (acc *Account) Secondpass(
 	balance := p.account.Balance(p.commodity.name)
 	if p.balprice != nil && balance.BalanceEqual(p.balprice) == false {
 		accname := p.account.name
-		fmsg := "account(%v) should balance as %s, got %s\n"
+		fmsg := "account(%v) should balance as %s, got %s"
 		return fmt.Errorf(fmsg, accname, p.balprice.String(), balance.String())
 	}
 

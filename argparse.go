@@ -20,6 +20,8 @@ var options struct {
 	onlyactual bool
 	related    bool
 	dcformat   bool
+	strict     bool
+	verbose    bool
 	loglevel   string
 }
 
@@ -33,6 +35,8 @@ func argparse() []string {
 		f.PrintDefaults()
 	}
 
+	f.StringVar(&options.dbname, "db", "devjournal",
+		"Provide datastore name")
 	f.StringVar(&journals, "f", "example/first.ldg",
 		"Comma separated list of input files.")
 	f.StringVar(&options.currentdt, "current", "",
@@ -57,8 +61,12 @@ func argparse() []string {
 		"Display only related postings.")
 	f.BoolVar(&options.dcformat, "dc", true,
 		"Display only real postings.")
-	f.StringVar(&options.dbname, "db", "devjournal",
-		"Provide datastore name")
+	f.BoolVar(&options.strict, "strict", false,
+		"Accounts, tags or commodities not previously declared "+
+			"will cause warnings.")
+	f.BoolVar(&options.verbose, "v", false,
+		"verbose reporting / listing")
+
 	f.StringVar(&options.loglevel, "log", "info",
 		"Console log level")
 	f.Parse(os.Args[1:])

@@ -10,12 +10,14 @@ import "github.com/tn47/goledger/dblentry"
 func dofirstpass(db *dblentry.Datastore, journalfile string) error {
 	log.Debugf("firstpass %v\n", journalfile)
 	var node parsec.ParsecNode
+	var index int
 
 	lines := readlines(journalfile)
 
 	iterate := blockiterate(lines)
 	lineno, block, eof, err := iterate()
 	for len(block) > 0 {
+		lineno -= len(block)
 		if err != nil {
 			log.Errorf("lineno %v: %v\n", lineno, err)
 			return err
@@ -36,11 +38,13 @@ func dofirstpass(db *dblentry.Datastore, journalfile string) error {
 
 		switch obj := node.(type) {
 		case *dblentry.Transaction:
-			err = obj.Yledgerblock(db, block[1:])
-			obj.SetLineno(lineno - len(block))
+			index, err = obj.Yledgerblock(db, block[1:])
+			lineno += 1 + index
+			obj.SetLineno(lineno)
 
 		case *dblentry.Directive:
-			err = obj.Yledgerblock(db, block[1:])
+			index, err = obj.Yledgerblock(db, block[1:])
+			lineno += 1 + index
 
 		case error:
 			err = obj
@@ -53,7 +57,7 @@ func dofirstpass(db *dblentry.Datastore, journalfile string) error {
 		}
 		if err := db.Firstpass(node); err != nil {
 			fmsg := "%T at lineno %v: %v\n"
-			log.Errorf(fmsg, node, lineno-len(block), err)
+			log.Errorf(fmsg, node, lineno-len(block)+1, err)
 			return err
 		}
 		lineno, block, eof, err = iterate()

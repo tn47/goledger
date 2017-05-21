@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 import "github.com/prataprc/golog"
 import "github.com/tn47/goledger/api"
 
@@ -42,7 +44,11 @@ func (report *ReportList) Render(args []string, ndb api.Datastorer) {
 
 	switch args[1] {
 	case "accounts":
-		report.listAccounts(args[2:], ndb)
+		if options.verbose == false {
+			report.listAccounts(args[2:], ndb)
+		} else {
+			report.listAccountsV(args[2:], ndb)
+		}
 	}
 }
 
@@ -53,4 +59,39 @@ func (report *ReportList) Clone() api.Reporter {
 }
 
 func (report *ReportList) listAccounts(args []string, ndb api.Datastorer) {
+	rcf := report.rcf
+	for _, accname := range ndb.Accountnames() {
+		account := ndb.GetAccount(accname)
+		notes := account.Notes()
+		switch len(notes) {
+		case 0:
+			rcf.addrow([]string{accname, ""}...)
+		case 1:
+			rcf.addrow([]string{accname, notes[0]}...)
+		default:
+			rcf.addrow([]string{accname, notes[0]}...)
+			for _, note := range notes[1:] {
+				rcf.addrow([]string{"", note}...)
+			}
+		}
+	}
+
+	rcf.paddcells()
+	fmsg := rcf.Fmsg(" %%-%vs%%-%vs\n")
+
+	// start printing
+	fmt.Println()
+	for _, cols := range rcf.rows {
+		fmt.Printf(fmsg, cols[0], cols[1])
+	}
+	fmt.Println()
+}
+
+func (report *ReportList) listAccountsV(args []string, ndb api.Datastorer) {
+	fmt.Println()
+	for _, accname := range ndb.Accountnames() {
+		account := ndb.GetAccount(accname)
+		fmt.Println(account.Directive())
+	}
+	fmt.Println()
 }

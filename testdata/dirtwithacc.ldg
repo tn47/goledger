@@ -1,0 +1,16 @@
+account Expenses:Groceries
+    note  all about living expense
+
+account Income:Salary
+    note  income for labour
+
+account Assets:Checking
+    note  checking account
+
+2011/02/29  My Employer
+    Assets:Checking     500.00
+    Income:Salary      -500.0
+
+2011/03/15   Departmental store
+    Expenses:Groceries   100.00
+    Assets:Checking
