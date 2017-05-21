@@ -290,6 +290,9 @@ func (p *Posting) Firstpass(db *Datastore, trans *Transaction) error {
 		}
 		accname = prefix + daccname[len(prefix):]
 
+	} else if accname1, ok := db.matchcapture(accname); ok {
+		accname = accname1
+
 	} else {
 		accname = db.applyroot(db.lookupAlias(accname))
 	}

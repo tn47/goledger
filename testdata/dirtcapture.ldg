@@ -1,0 +1,8 @@
+bucket Assets:Checking
+capture  Expenses:Deductible:Medical  .*Medical.*
+
+2011/01/27 Doctor charges
+    DoctorMedicalexpense                 $20.00
+
+2011/12/01 Pharma
+    MedicalExpense                       $ 30.00

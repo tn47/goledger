@@ -20,6 +20,7 @@ type Directive struct {
 	accdefault bool     // account
 	aliasname  string   // alias
 	expression string   // assert
+	capture    string   // capture pattern
 	endargs    []string // end
 }
 
@@ -39,6 +40,8 @@ func (d *Directive) Yledger(db *Datastore) parsec.Parser {
 		d.yapply(db),
 		d.yalias(db),
 		d.yassert(db),
+		d.ybucket(db),
+		d.ycapture(db),
 		d.yend(db),
 		d.yyear(db),
 	)
@@ -82,7 +85,7 @@ func (d *Directive) Yledgerblock(db *Datastore, block []string) (int, error) {
 		}
 		return len(block), nil
 
-	case "apply", "alias", "assert", "end", "year":
+	case "apply", "alias", "assert", "bucket", "capture", "end", "year":
 		return len(block), nil
 	}
 	panic(fmt.Errorf("unreachable code"))
@@ -131,9 +134,34 @@ func (d *Directive) yassert(db *Datastore) parsec.Parser {
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			d.dtype = "assert"
 			d.expression = string(nodes[1].(*parsec.Terminal).Value)
-			return nil
+			return d
 		},
 		ytokAssert, ytokExpr,
+	)
+}
+
+func (d *Directive) ybucket(db *Datastore) parsec.Parser {
+	account := NewAccount("")
+	return parsec.And(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			d.dtype = "bucket"
+			d.accname = nodes[1].(*Account).name
+			return d
+		},
+		ytokBucket, account.Yledger(db),
+	)
+}
+
+func (d *Directive) ycapture(db *Datastore) parsec.Parser {
+	account := NewAccount("")
+	return parsec.And(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			d.dtype = "capture"
+			d.accname = nodes[1].(*Account).name
+			d.capture = nodes[2].(*parsec.Terminal).Value
+			return d
+		},
+		ytokCapture, account.Ypostaccn(db), ytokValue,
 	)
 }
 
@@ -190,6 +218,14 @@ func (d *Directive) Firstpass(db *Datastore) error {
 
 	case "assert":
 		return fmt.Errorf("directive not-implemented")
+
+	case "bucket":
+		db.setBalancingaccount(d.accname)
+		return nil
+
+	case "capture":
+		db.addCapture(d.capture, d.accname)
+		return nil
 
 	case "end":
 		return db.clearRootaccount()

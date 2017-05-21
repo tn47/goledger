@@ -805,6 +805,56 @@ func TestMatchingPayee(t *testing.T) {
 	}
 }
 
+func TestDirectiveBucket(t *testing.T) {
+	testcases := [][]interface{}{
+		[]interface{}{
+			[]string{"-f", "dirtbucket.ldg", "balance"},
+			"refdata/dirtbucket.balance.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "dirtbucket.ldg", "register"},
+			"refdata/dirtbucket.register.ref",
+		},
+	}
+	for _, testcase := range testcases {
+		ref := testdataFile(testcase[1].(string))
+		args := testcase[0].([]string)
+		cmd := exec.Command(LEDGEREXEC, args...)
+		out, _ := cmd.CombinedOutput()
+		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if bytes.Compare(out, ref) != 0 {
+			t.Logf(strings.Join(args, " "))
+			t.Logf("expected %s", ref)
+			t.Errorf("got %s", out)
+		}
+	}
+}
+
+func TestDirectiveCapture(t *testing.T) {
+	testcases := [][]interface{}{
+		[]interface{}{
+			[]string{"-f", "dirtcapture.ldg", "balance"},
+			"refdata/dirtcapture.balance.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "dirtcapture.ldg", "register"},
+			"refdata/dirtcapture.register.ref",
+		},
+	}
+	for _, testcase := range testcases {
+		ref := testdataFile(testcase[1].(string))
+		args := testcase[0].([]string)
+		cmd := exec.Command(LEDGEREXEC, args...)
+		out, _ := cmd.CombinedOutput()
+		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if bytes.Compare(out, ref) != 0 {
+			t.Logf(strings.Join(args, " "))
+			t.Logf("expected %s", ref)
+			t.Errorf("got %s", out)
+		}
+	}
+}
+
 func testdataFile(filename string) []byte {
 	f, err := os.Open(filename)
 	if err != nil {

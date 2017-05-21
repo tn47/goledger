@@ -14,6 +14,8 @@ type firstpass struct {
 	aliases      map[string]string // alias, account-alias
 	payees       map[string]string // account-payee map[regex]->accountname
 	repayees     map[string]*regexp.Regexp
+	captures     map[string]string
+	recaptures   map[string]*regexp.Regexp
 
 	// options
 	strict bool
@@ -25,6 +27,8 @@ func (fp *firstpass) initfirstpass() {
 	fp.aliases = map[string]string{}
 	fp.payees = map[string]string{}
 	fp.repayees = map[string]*regexp.Regexp{}
+	fp.captures = map[string]string{}
+	fp.recaptures = map[string]*regexp.Regexp{}
 }
 
 //---- exported accessors
@@ -130,6 +134,27 @@ func (fp *firstpass) matchpayee(payee string) (string, bool) {
 	for regex, regexc := range fp.repayees {
 		if regexc.MatchString(payee) {
 			return fp.payees[regex], true
+		}
+	}
+	return "", false
+}
+
+func (fp *firstpass) addCapture(regex, accountname string) error {
+	if regex != "" && accountname != "" {
+		fp.captures[regex] = accountname
+		regexc, err := regexp.Compile(regex)
+		if err != nil {
+			return err
+		}
+		fp.recaptures[regex] = regexc
+	}
+	return nil
+}
+
+func (fp *firstpass) matchcapture(accname string) (string, bool) {
+	for regex, regexc := range fp.recaptures {
+		if regexc.MatchString(accname) {
+			return fp.captures[regex], true
 		}
 	}
 	return "", false

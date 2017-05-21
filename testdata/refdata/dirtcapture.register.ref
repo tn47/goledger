@@ -1,0 +1,8 @@
+
+  By-date      Payee           Account                       Amount  Balance 
+                                                                             
+  2011-Jan-27  Doctor charges  Expenses:Deductible:Medical   $20.00   $20.00 
+                               Assets:Checking              $-20.00  $-20.00 
+  2011-Dec-01  Pharma          Expenses:Deductible:Medical   $30.00   $50.00 
+                               Assets:Checking              $-30.00  $-50.00 
+

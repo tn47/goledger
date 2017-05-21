@@ -1,0 +1,13 @@
+account Expenses:CarLease
+    default
+
+2011/01/25 Tom's Used Cars
+    Assets:Checking                    $ -5,500.00
+
+bucket Assets:Checking
+2011/01/27 Book Store
+    Expenses:Books                       $20.00
+
+bucket Assets:Cash
+2011/12/01 Sale
+    Expenses:KFC                         $ 30.00
