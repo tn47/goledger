@@ -280,13 +280,13 @@ func (p *Posting) Firstpass(db *Datastore, trans *Transaction) error {
 		// fetch the declared account name with payee
 		daccname, ok := db.matchpayee(trans.Payee())
 		if ok == false {
-			fmsg := "Unknown account %q has no matching payee %q\n"
+			fmsg := "Unknown account %q has no matching payee %q"
 			return fmt.Errorf(fmsg, p.account.name, trans.Payee())
 		}
 		prefix := p.account.name[:len(p.account.name)-len("Unknown")]
 		if strings.HasPrefix(daccname, prefix) == false {
-			fmsg := "Unknown account %q has no matching prefix %q\n"
-			return fmt.Errorf(fmsg, p.account.name, accname)
+			fmsg := "Unknown account %q has no matching prefix with %q"
+			return fmt.Errorf(fmsg, p.account.name, daccname)
 		}
 		accname = prefix + daccname[len(prefix):]
 

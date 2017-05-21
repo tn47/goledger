@@ -1,0 +1,9 @@
+account MyCompany:Expenses:Food:KFC
+    note  This account is all about the chicken!
+    alias  food
+    payee  ^(KFC|Popeyes)$
+
+
+2011/03/15   Chats
+    Expenses:Unknown   75.00
+    Assets:Checking
