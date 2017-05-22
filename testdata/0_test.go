@@ -912,6 +912,35 @@ func TestDirtCommodity(t *testing.T) {
 	}
 }
 
+func TestDirtAlias(t *testing.T) {
+	testcases := [][]interface{}{
+		[]interface{}{
+			[]string{"-f", "dirtalias.ldg", "-strict", "list", "accounts"},
+			"refdata/dirtalias.list.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "dirtalias.ldg", "-strict", "-v", "list", "accounts"},
+			"refdata/dirtalias.vlist.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "dirtaliaserr.ldg", "-strict", "list", "accounts"},
+			"refdata/dirtaliaserr.ref",
+		},
+	}
+	for _, testcase := range testcases {
+		ref := testdataFile(testcase[1].(string))
+		args := testcase[0].([]string)
+		cmd := exec.Command(LEDGEREXEC, args...)
+		out, _ := cmd.CombinedOutput()
+		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if bytes.Compare(out, ref) != 0 {
+			t.Logf(strings.Join(args, " "))
+			t.Logf("expected %s", ref)
+			t.Errorf("got %s", out)
+		}
+	}
+}
+
 func testdataFile(filename string) []byte {
 	f, err := os.Open(filename)
 	if err != nil {

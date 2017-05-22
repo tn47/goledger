@@ -50,6 +50,9 @@ func (d *Directive) Yledger(db *Datastore) parsec.Parser {
 		d.ycheck(db),
 		d.ycomment(db),
 		d.ycommodity(db),
+		d.ydefine(db),
+		d.yfixed(db),
+		d.ytest(db),
 		d.yend(db),
 		d.yyear(db),
 	)
@@ -120,7 +123,7 @@ func (d *Directive) Yledgerblock(db *Datastore, block []string) (int, error) {
 		return len(block), nil
 
 	case "apply", "alias", "assert", "bucket", "capture", "check", "comment",
-		"end", "year":
+		"define", "fixed", "test", "end", "year":
 		return len(block), nil
 	}
 	panic(fmt.Errorf("unreachable code"))
@@ -234,6 +237,36 @@ func (d *Directive) ycommodity(db *Datastore) parsec.Parser {
 	)
 }
 
+func (d *Directive) ydefine(db *Datastore) parsec.Parser {
+	return parsec.And(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			d.dtype = "define"
+			return d
+		},
+		ytokDirtDefine,
+	)
+}
+
+func (d *Directive) yfixed(db *Datastore) parsec.Parser {
+	return parsec.And(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			d.dtype = "fixed"
+			return d
+		},
+		ytokDirtFixed,
+	)
+}
+
+func (d *Directive) ytest(db *Datastore) parsec.Parser {
+	return parsec.And(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			d.dtype = "test"
+			return d
+		},
+		ytokDirtTest,
+	)
+}
+
 func (d *Directive) yend(db *Datastore) parsec.Parser {
 	return parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
@@ -322,6 +355,15 @@ func (d *Directive) Firstpass(db *Datastore) error {
 
 	case "commodity":
 		return db.declare(d)
+
+	case "define":
+		return fmt.Errorf("define directive not-implemented")
+
+	case "fixed":
+		return fmt.Errorf("fixed directive not-implemented")
+
+	case "test":
+		return fmt.Errorf("test directive not-implemented")
 
 	case "end":
 		return db.clearRootaccount()
