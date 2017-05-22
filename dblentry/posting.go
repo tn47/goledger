@@ -101,7 +101,7 @@ func (p *Posting) getState() string {
 // Yledger return parser-combinator that can parse a posting line within
 // a transaction.
 func (p *Posting) Yledger(db *Datastore) parsec.Parser {
-	account := NewAccount("")
+	account := NewAccount("") // kept alive till Firstpass.
 	comm := NewCommodity("")
 	lotprice := NewCommodity("")
 	costprice := NewCommodity("")

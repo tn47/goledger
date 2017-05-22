@@ -98,7 +98,7 @@ func (d *Directive) Yledgerblock(db *Datastore, block []string) (int, error) {
 }
 
 func (d *Directive) yaccount(db *Datastore) parsec.Parser {
-	account := NewAccount("")
+	account := NewAccount("") // local scope.
 	return parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			d.dtype = "account"
@@ -111,7 +111,7 @@ func (d *Directive) yaccount(db *Datastore) parsec.Parser {
 }
 
 func (d *Directive) yapply(db *Datastore) parsec.Parser {
-	account := NewAccount("")
+	account := NewAccount("") // local scope.
 	return parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			d.dtype = "apply"
@@ -123,7 +123,7 @@ func (d *Directive) yapply(db *Datastore) parsec.Parser {
 }
 
 func (d *Directive) yalias(db *Datastore) parsec.Parser {
-	account := NewAccount("")
+	account := NewAccount("") // local scope.
 	return parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			d.dtype = "alias"
@@ -147,7 +147,7 @@ func (d *Directive) yassert(db *Datastore) parsec.Parser {
 }
 
 func (d *Directive) ybucket(db *Datastore) parsec.Parser {
-	account := NewAccount("")
+	account := NewAccount("") // local scope
 	return parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			d.dtype = "bucket"
@@ -159,7 +159,7 @@ func (d *Directive) ybucket(db *Datastore) parsec.Parser {
 }
 
 func (d *Directive) ycapture(db *Datastore) parsec.Parser {
-	account := NewAccount("")
+	account := NewAccount("") // local scope
 	return parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			d.dtype = "capture"
