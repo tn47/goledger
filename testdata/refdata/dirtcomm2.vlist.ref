@@ -1,0 +1,16 @@
+
+commodity $
+    note  Oil currency
+    format $1000.00
+    nomarket
+
+commodity INR
+    note  Indian rupees
+    format INR1000.00
+    nomarket
+
+commodity KVB
+    note  Shares
+    format 1000 KVB
+
+

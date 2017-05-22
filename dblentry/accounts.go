@@ -173,16 +173,13 @@ func (acc *Account) FmtRegister(
 func (acc *Account) Directive() string {
 	lines := []string{fmt.Sprintf("account %v", acc.name)}
 	for _, note := range acc.notes {
-		line := fmt.Sprintf("    note  %v", note)
-		lines = append(lines, line)
+		lines = append(lines, fmt.Sprintf("    note  %v", note))
 	}
 	for _, alias := range acc.aliases {
-		line := fmt.Sprintf("    alias  %v", alias)
-		lines = append(lines, line)
+		lines = append(lines, fmt.Sprintf("    alias  %v", alias))
 	}
 	for _, payee := range acc.payees {
-		line := fmt.Sprintf("    payee  %v", payee)
-		lines = append(lines, line)
+		lines = append(lines, fmt.Sprintf("    payee  %v", payee))
 	}
 	return strings.Join(lines, "\n")
 }

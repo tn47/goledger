@@ -9,3 +9,4 @@ account Expenses:Food
     payee  ^(cake|momos)$
     payee  ^(KFC|Popeyes)$
 
+

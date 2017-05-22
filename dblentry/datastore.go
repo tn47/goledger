@@ -3,8 +3,9 @@ package dblentry
 import "fmt"
 import "sort"
 
-import "github.com/tn47/goledger/api"
+import "github.com/prataprc/goparsec"
 import "github.com/prataprc/golog"
+import "github.com/tn47/goledger/api"
 
 // ParsePhase state to be tracked at datastore.
 type ParsePhase int
@@ -85,6 +86,10 @@ func (db *Datastore) getCommodity(name string, defcomm *Commodity) *Commodity {
 
 //---- exported accessors
 
+func (db *Datastore) GetCommodity(name string) api.Commoditiser {
+	return db.getCommodity(name, nil)
+}
+
 // Firstpassok to track parsephase
 func (db *Datastore) Firstpassok() {
 	db.pass = DBFIRSTPASS
@@ -103,6 +108,16 @@ func (db *Datastore) PrintAccounts() {
 }
 
 //---- api.Datastorer methods
+
+func (db *Datastore) HasCommodity(name string) bool {
+	if name == "" && db.getDefaultcomm() != "" {
+		return true
+	} else if name == "" {
+		return false
+	}
+	_, ok := db.commodities[name]
+	return ok
+}
 
 func (db *Datastore) HasAccount(name string) bool {
 	_, ok := db.accntdb[name]
@@ -128,7 +143,19 @@ func (db *Datastore) Accountnames() []string {
 	for name := range db.accntdb {
 		accnames = append(accnames, name)
 	}
+	sort.Strings(accnames)
 	return accnames
+}
+
+func (db *Datastore) Commoditynames() []string {
+	db.assertfirstpass()
+
+	cnames := []string{}
+	for name := range db.commodities {
+		cnames = append(cnames, name)
+	}
+	sort.Strings(cnames)
+	return cnames
 }
 
 func (db *Datastore) Balance(obj interface{}) (balance api.Commoditiser) {
@@ -258,12 +285,30 @@ func (db *Datastore) declare(value interface{}) error {
 				return err
 			}
 			account := db.GetAccount(d.accname).(*Account)
-			account.addNote(d.accnote)
+			account.addNote(d.note)
 			account.addAlias(d.accalias)
 			account.addPayee(d.accpayee)
-			if d.accdefault {
+			if d.ndefault {
 				db.setBalancingaccount(account.name)
 			}
+
+		case "commodity":
+			scanner := parsec.NewScanner([]byte(d.commdfmt))
+			node, _ := NewCommodity("").Yledger(db)(scanner)
+			commodity := node.(*Commodity)
+			if commodity.name != d.commdname {
+				x, y := commodity.name, d.commdname
+				return fmt.Errorf("name mismatching %q vs %q", x, y)
+			}
+			commodity.addNote(d.note)
+			if d.ndefault {
+				db.setDefaultcomm(commodity.name)
+			}
+			if d.commdnmrkt {
+				commodity.nomarket = true
+			}
+			// now finally update the datastore.commodity db.
+			db.commodities[commodity.name] = commodity
 		}
 		return nil
 	}

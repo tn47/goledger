@@ -9,7 +9,8 @@ import "github.com/tn47/goledger/api"
 
 // Commodity that can be exchanged between accounts.
 type Commodity struct {
-	name string
+	name  string
+	notes []string
 	// amount is more like quantity,
 	// or in pricing context it says the per unit price.
 	amount    float64
@@ -18,11 +19,12 @@ type Commodity struct {
 	mark1k    bool
 	fixprice  bool
 	total     bool
+	nomarket  bool
 }
 
 // NewCommodity return an new commodity instance.
 func NewCommodity(name string) *Commodity {
-	return &Commodity{name: name}
+	return &Commodity{name: name, notes: make([]string, 0)}
 }
 
 //---- local accessors
@@ -43,10 +45,18 @@ func (comm *Commodity) isTotal() bool {
 	return comm.total
 }
 
+func (comm *Commodity) addNote(note string) {
+	comm.notes = append(comm.notes, note)
+}
+
 //---- api.Commoditiser methods.
 
 func (comm *Commodity) Name() string {
 	return comm.name
+}
+
+func (comm *Commodity) Notes() []string {
+	return comm.notes
 }
 
 func (comm *Commodity) Amount() float64 {
@@ -76,6 +86,20 @@ func (comm *Commodity) String() string {
 		return fmt.Sprintf("%v%v", comm.name, amountstr)
 	}
 	return fmt.Sprintf("%v %v", amountstr, comm.name)
+}
+
+func (comm *Commodity) Directive() string {
+	lines := []string{fmt.Sprintf("commodity %v", comm.name)}
+	for _, note := range comm.notes {
+		lines = append(lines, fmt.Sprintf("    note  %v", note))
+	}
+	if comm.amount > 0 {
+		lines = append(lines, fmt.Sprintf("    format %v", comm.String()))
+	}
+	if comm.nomarket {
+		lines = append(lines, fmt.Sprintf("    nomarket"))
+	}
+	return strings.Join(lines, "\n")
 }
 
 //---- ledger parser
@@ -115,14 +139,18 @@ func (comm *Commodity) Yledger(db *Datastore) parsec.Parser {
 					comm.name, comm.currency = string(t.Value), false
 				}
 			}
-			newcomm := db.getCommodity(comm.name, comm).makeSimilar(comm.amount)
-			return newcomm
+			return comm
 		},
 		parsec.Maybe(maybenode, ytokCurrency),
 		ytokAmount,
 		parsec.Maybe(maybenode, ytokCommodity),
 	)
 	return y
+}
+
+// Yname return a parser-combinator that can parse a commodity name.
+func (comm *Commodity) Yname(db *Datastore) parsec.Parser {
+	return parsec.OrdChoice(Vector2scalar, ytokCurrency, ytokCommodity)
 }
 
 // Ylotprice return a parser-combinator that can parse a commodity in lotprice
@@ -234,12 +262,14 @@ func (comm *Commodity) doDeduct(other *Commodity) error {
 func (comm *Commodity) makeSimilar(amount float64) *Commodity {
 	newcomm := &Commodity{
 		name:      comm.name,
+		notes:     comm.notes,
 		amount:    amount,
 		currency:  comm.currency,
 		precision: comm.precision,
 		mark1k:    comm.mark1k,
 		fixprice:  comm.fixprice,
 		total:     comm.total,
+		nomarket:  comm.nomarket,
 	}
 	return newcomm
 }

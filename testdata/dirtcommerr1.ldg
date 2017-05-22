@@ -1,0 +1,4 @@
+commodity $
+    note  Oil currency
+    format  INR 1000.00
+    nomarket

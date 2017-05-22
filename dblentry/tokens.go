@@ -45,12 +45,10 @@ var ytokPrice = parsec.Token(";[^;]+", "TRANSPRICE")
 
 //---- Directives
 var ytokAccount = parsec.Token("account", "DRTV_ACCOUNT")
-var ytokNote = parsec.Token("note", "DRTV_ACCOUNT_NOTE")
 var ytokAlias = parsec.Token("alias", "DRTV_ACCOUNT_ALIAS")
 var ytokPayee = parsec.Token("payee", "DRTV_ACCOUNT_PAYEE")
 var ytokCheck = parsec.Token("check", "DRTV_ACCOUNT_CHECK")
 var ytokEval = parsec.Token("eval", "DRTV_ACCOUNT_EVAL")
-var ytokDefault = parsec.Token("default", "DRTV_ACCOUNT_DEFAULT")
 var ytokValue = parsec.Token(".*", "DRTV_VALUE")
 
 var ytokApply = parsec.Token("apply", "DRTV_APPLY")
@@ -58,8 +56,14 @@ var ytokAliasname = parsec.Token("[^=]+", "DRTV_ALIASNAME")
 var ytokBucket = parsec.Token("bucket", "DRTV_BUCKET")
 var ytokCapture = parsec.Token("capture", "DRTV_CAPTURE")
 var ytokComment = parsec.Token("comment", "DRTV_COMMENT")
+var ytokDirtCommodity = parsec.Token("commodity", "DRTV_COMMODITY")
+var ytokFormat = parsec.Token("format", "DRTV_COMMODITY_FORMAT")
+var ytokNomarket = parsec.Token("nomarket", "DRTV_COMMODITY_NOMARKET")
 var ytokEnd = parsec.Token("end", "DRTV_END")
 var ytokYear = parsec.Token("year", "DRTV_YEAR")
+
+var ytokNote = parsec.Token("note", "DRTV_NOTE")
+var ytokDefault = parsec.Token("default", "DRTV_DEFAULT")
 
 // tags
 var ytokColon = parsec.Token(":", "COLON")

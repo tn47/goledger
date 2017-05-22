@@ -124,6 +124,8 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 		parsec.Maybe(maybenode, ytokPostnote),
 	)
 
+	var err error
+
 	y := parsec.OrdChoice(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			switch items := nodes[0].(type) {
@@ -134,11 +136,23 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 				}
 
 				p.account, p.virtual, p.balanced = p.fixaccount(db, items[1])
-				p.commodity = p.fixcommodity(db, items[2]) // commodity
-				p.lotprice = p.fixlotprice(items[3])       // lot price
-				p.lotdate = p.fixlotdate(items[4])         // lot date
-				p.costprice = p.fixcostprice(items[5])     // cost price
-				p.balprice = p.fixbalprice(items[6])       // balance price
+				p.commodity, err = p.fixcommodity(db, items[2]) // commodity
+				if err != nil {
+					return err
+				}
+				p.lotprice, err = p.fixlotprice(db, items[3]) // lot price
+				if err != nil {
+					return err
+				}
+				p.lotdate = p.fixlotdate(items[4])              // lot date
+				p.costprice, err = p.fixcostprice(db, items[5]) // cost price
+				if err != nil {
+					return err
+				}
+				p.balprice, err = p.fixbalprice(db, items[6]) // balance price
+				if err != nil {
+					return err
+				}
 
 				if p.lotprice != nil && lotprice.currency == false {
 					return fmt.Errorf("lot price must be currency")
@@ -200,20 +214,31 @@ func (p *Posting) fixaccount(
 	return account, account.virtual, account.balanced
 }
 
-func (p *Posting) fixcommodity(db *Datastore, item interface{}) *Commodity {
+func (p *Posting) fixcommodity(
+	db *Datastore, item interface{}) (*Commodity, error) {
+
 	if commodity, ok := item.(*Commodity); ok {
-		return db.getCommodity(
-			commodity.name, commodity,
-		).makeSimilar(commodity.amount)
+		cname := commodity.name
+		if db.IsStrict() && db.HasCommodity(cname) == false {
+			return nil, fmt.Errorf("commodity %q is not pre-declared", cname)
+		}
+		c := db.getCommodity(cname, commodity).makeSimilar(commodity.amount)
+		return c, nil
 	}
-	return nil
+	return nil, nil
 }
 
-func (p *Posting) fixlotprice(item interface{}) *Commodity {
+func (p *Posting) fixlotprice(
+	db *Datastore, item interface{}) (*Commodity, error) {
+
 	if lotprice, ok := item.(*Commodity); ok {
-		return lotprice
+		lname := lotprice.name
+		if db.IsStrict() && db.HasCommodity(lname) == false {
+			return nil, fmt.Errorf("commodity %q is not pre-declared", lname)
+		}
+		return lotprice, nil
 	}
-	return nil
+	return nil, nil
 }
 
 func (p *Posting) fixlotdate(item interface{}) (tm time.Time) {
@@ -223,18 +248,30 @@ func (p *Posting) fixlotdate(item interface{}) (tm time.Time) {
 	return
 }
 
-func (p *Posting) fixcostprice(item interface{}) *Commodity {
+func (p *Posting) fixcostprice(
+	db *Datastore, item interface{}) (*Commodity, error) {
+
 	if costprice, ok := item.(*Commodity); ok {
-		return costprice
+		cname := costprice.name
+		if db.IsStrict() && db.HasCommodity(cname) == false {
+			return nil, fmt.Errorf("commodity %q is not pre-declared", cname)
+		}
+		return costprice, nil
 	}
-	return nil
+	return nil, nil
 }
 
-func (p *Posting) fixbalprice(item interface{}) *Commodity {
+func (p *Posting) fixbalprice(
+	db *Datastore, item interface{}) (*Commodity, error) {
+
 	if balprice, ok := item.(*Commodity); ok {
-		return balprice
+		bname := balprice.name
+		if db.IsStrict() && db.HasCommodity(bname) == false {
+			return nil, fmt.Errorf("commodity %q is not pre-declared", bname)
+		}
+		return balprice, nil
 	}
-	return nil
+	return nil, nil
 }
 
 func (p *Posting) getCostprice() *Commodity {
@@ -313,7 +350,6 @@ func (p *Posting) Firstpass(db *Datastore, trans *Transaction) error {
 }
 
 func (p *Posting) Secondpass(db *Datastore, trans *Transaction) error {
-
 	db.addBalance(p.commodity)
 	p.account.setPosting()
 
@@ -331,7 +367,9 @@ func (p *Posting) Clone(ndb *Datastore, ntrans *Transaction) *Posting {
 	np := *p
 	np.trans = ntrans
 	np.account = ndb.GetAccount(p.account.name).(*Account)
-	np.commodity = p.commodity.Clone(ndb)
+	if p.commodity != nil {
+		np.commodity = p.commodity.Clone(ndb)
+	}
 	if p.lotprice != nil {
 		np.lotprice = p.lotprice.Clone(ndb)
 	}

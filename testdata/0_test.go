@@ -738,7 +738,8 @@ func TestDirtAccount(t *testing.T) {
 			"refdata/dirtaccount1.list.ref",
 		},
 		[]interface{}{
-			[]string{"-f", "dirtaccount1.ldg", "-strict", "-v", "list", "accounts"},
+			[]string{"-f", "dirtaccount1.ldg", "-strict", "-v", "list",
+				"accounts"},
 			"refdata/dirtaccount1.vlist.ref",
 		},
 		[]interface{}{
@@ -746,12 +747,17 @@ func TestDirtAccount(t *testing.T) {
 			"refdata/dirtaccount2.list.ref",
 		},
 		[]interface{}{
-			[]string{"-f", "dirtaccount2.ldg", "-strict", "-v", "list", "accounts"},
+			[]string{"-f", "dirtaccount2.ldg", "-strict", "-v", "list",
+				"accounts"},
 			"refdata/dirtaccount2.vlist.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "dirtwithacc.ldg", "-strict", "balance"},
 			"refdata/dirtwithacc.balance.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "dirtwithacc.ldg", "-strict", "register"},
+			"refdata/dirtwithacc.register.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "dirtwithoacc.ldg", "-strict", "balance"},
@@ -839,6 +845,57 @@ func TestDirectiveCapture(t *testing.T) {
 		[]interface{}{
 			[]string{"-f", "dirtcapture.ldg", "register"},
 			"refdata/dirtcapture.register.ref",
+		},
+	}
+	for _, testcase := range testcases {
+		ref := testdataFile(testcase[1].(string))
+		args := testcase[0].([]string)
+		cmd := exec.Command(LEDGEREXEC, args...)
+		out, _ := cmd.CombinedOutput()
+		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if bytes.Compare(out, ref) != 0 {
+			t.Logf(strings.Join(args, " "))
+			t.Logf("expected %s", ref)
+			t.Errorf("got %s", out)
+		}
+	}
+}
+
+func TestDirtCommodity(t *testing.T) {
+	testcases := [][]interface{}{
+		[]interface{}{
+			[]string{"-f", "dirtcomm1.ldg", "-strict", "list", "commodity"},
+			"refdata/dirtcomm1.list.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "dirtcomm1.ldg", "-strict", "-v", "list",
+				"commodity"},
+			"refdata/dirtcomm1.vlist.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "dirtcomm2.ldg", "-strict", "list", "commodity"},
+			"refdata/dirtcomm2.list.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "dirtcomm2.ldg", "-strict", "-v", "list",
+				"commodity"},
+			"refdata/dirtcomm2.vlist.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "dirtcommerr1.ldg", "-strict", "list", "commodity"},
+			"refdata/dirtcommerr1.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "dirtwithcomm.ldg", "-strict", "balance"},
+			"refdata/dirtwithcomm.balance.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "dirtwithcomm.ldg", "-strict", "register"},
+			"refdata/dirtwithcomm.register.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "dirtwithocomm.ldg", "-strict", "balance"},
+			"refdata/dirtwithocomm.balance.ref",
 		},
 	}
 	for _, testcase := range testcases {

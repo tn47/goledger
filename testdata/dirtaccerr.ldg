@@ -1,3 +1,0 @@
-account Expenses:Food
-    alias  snacks
-    payee  ^(cake|momos)$

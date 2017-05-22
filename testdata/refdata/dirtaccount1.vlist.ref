@@ -6,3 +6,4 @@ account Expenses:Food
     payee  ^(KFC|Popeyes)$
     payee  ^(KFC|Popeyes)$
 
+

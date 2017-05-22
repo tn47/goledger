@@ -9,18 +9,21 @@ import "github.com/prataprc/golog"
 // Directive can handle all directives in ledger journal.
 type Directive struct {
 	dtype      string
-	year       int      // year
-	accname    string   // account, alias, apply
-	accnote    string   // account
-	accalias   string   // account
-	accpayee   string   // account
-	acccheck   string   // account
-	accassert  string   // account
-	acceval    string   // account
-	accdefault bool     // account
-	aliasname  string   // alias
-	expression string   // assert, check
-	capture    string   // capture pattern
+	year       int    // year
+	note       string // account, commodity
+	ndefault   bool   // account, commodity
+	accname    string // account, alias, apply
+	accalias   string // account
+	accpayee   string // account
+	acccheck   string // account
+	accassert  string // account
+	acceval    string // account
+	aliasname  string // alias
+	expression string // assert, check
+	capture    string // capture pattern
+	commdname  string // commodity
+	commdfmt   string
+	commdnmrkt bool
 	endargs    []string // end
 	comments   []string
 }
@@ -46,6 +49,7 @@ func (d *Directive) Yledger(db *Datastore) parsec.Parser {
 		d.ycapture(db),
 		d.ycheck(db),
 		d.ycomment(db),
+		d.ycommodity(db),
 		d.yend(db),
 		d.yyear(db),
 	)
@@ -71,8 +75,8 @@ func (d *Directive) Yledgerblock(db *Datastore, block []string) (int, error) {
 			nodes := node.([]parsec.ParsecNode)
 			t := nodes[0].(*parsec.Terminal)
 			switch t.Name {
-			case "DRTV_ACCOUNT_NOTE":
-				d.accnote = string(nodes[2].(*parsec.Terminal).Value)
+			case "DRTV_NOTE":
+				d.note = string(nodes[2].(*parsec.Terminal).Value)
 			case "DRTV_ACCOUNT_ALIAS":
 				d.accalias = string(nodes[2].(*parsec.Terminal).Value)
 			case "DRTV_ACCOUNT_PAYEE":
@@ -83,15 +87,40 @@ func (d *Directive) Yledgerblock(db *Datastore, block []string) (int, error) {
 				d.accassert = string(nodes[2].(*parsec.Terminal).Value)
 			case "DRTV_ACCOUNT_EVAL":
 				d.acceval = string(nodes[2].(*parsec.Terminal).Value)
-			case "DRTV_ACCOUNT_DEFAULT":
-				d.accdefault = true
+			case "DRTV_DEFAULT":
+				d.ndefault = true
+			}
+		}
+		return len(block), nil
+
+	case "commodity":
+		for index, line := range block {
+			scanner := parsec.NewScanner([]byte(line))
+			parser := d.ycommoditydirectives(db)
+			if parser == nil {
+				continue
+			}
+			node, _ = parser(scanner)
+			if node == nil {
+				return index, fmt.Errorf("parsing %q", line)
+			}
+			nodes := node.([]parsec.ParsecNode)
+			t := nodes[0].(*parsec.Terminal)
+			switch t.Name {
+			case "DRTV_NOTE":
+				d.note = nodes[2].(*parsec.Terminal).Value
+			case "DRTV_COMMODITY_FORMAT":
+				d.commdfmt = nodes[2].(*parsec.Terminal).Value
+			case "DRTV_COMMODITY_NOMARKET":
+				d.commdnmrkt = true
+			case "DRTV_DEFAULT":
+				d.ndefault = true
 			}
 		}
 		return len(block), nil
 
 	case "apply", "alias", "assert", "bucket", "capture", "check", "comment",
 		"end", "year":
-
 		return len(block), nil
 	}
 	panic(fmt.Errorf("unreachable code"))
@@ -192,6 +221,19 @@ func (d *Directive) ycomment(db *Datastore) parsec.Parser {
 	)
 }
 
+func (d *Directive) ycommodity(db *Datastore) parsec.Parser {
+	commodity := NewCommodity("") // local scope.
+	return parsec.And(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			d.dtype = "commodity"
+			d.commdname = nodes[1].(*parsec.Terminal).Value
+			log.Debugf("directive %q %v\n", d.dtype, d.commdname)
+			return d
+		},
+		ytokDirtCommodity, commodity.Yname(db),
+	)
+}
+
 func (d *Directive) yend(db *Datastore) parsec.Parser {
 	return parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
@@ -229,12 +271,21 @@ func (d *Directive) yaccountdirectives(db *Datastore) parsec.Parser {
 	return y
 }
 
+func (d *Directive) ycommoditydirectives(db *Datastore) parsec.Parser {
+	ynote := parsec.And(nil, ytokNote, ytokHardSpace, ytokValue)
+	yformat := parsec.And(nil, ytokFormat, ytokHardSpace, ytokValue)
+	ynomarket := parsec.And(nil, ytokNomarket)
+	ydefault := parsec.And(nil, ytokDefault)
+	y := parsec.OrdChoice(Vector2scalar, ynote, yformat, ynomarket, ydefault)
+	return y
+}
+
 //---- engine
 
 func (d *Directive) Firstpass(db *Datastore) error {
 	switch d.dtype {
 	case "account":
-		return db.declare(d) // NOTE: this is redundant
+		return db.declare(d)
 
 	case "apply":
 		return db.setrootaccount(d.accname)
@@ -268,6 +319,9 @@ func (d *Directive) Firstpass(db *Datastore) error {
 
 	case "comment":
 		return fmt.Errorf("comment directive not-implemented")
+
+	case "commodity":
+		return db.declare(d)
 
 	case "end":
 		return db.clearRootaccount()

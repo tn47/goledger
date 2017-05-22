@@ -49,6 +49,13 @@ func (report *ReportList) Render(args []string, ndb api.Datastorer) {
 		} else {
 			report.listAccountsV(args[2:], ndb)
 		}
+
+	case "commodities", "commodity":
+		if options.verbose == false {
+			report.listCommodities(args[2:], ndb)
+		} else {
+			report.listCommoditiesV(args[2:], ndb)
+		}
 	}
 }
 
@@ -59,6 +66,10 @@ func (report *ReportList) Clone() api.Reporter {
 }
 
 func (report *ReportList) listAccounts(args []string, ndb api.Datastorer) {
+	if len(ndb.Accountnames()) == 0 {
+		return
+	}
+
 	rcf := report.rcf
 	for _, accname := range ndb.Accountnames() {
 		account := ndb.GetAccount(accname)
@@ -88,10 +99,62 @@ func (report *ReportList) listAccounts(args []string, ndb api.Datastorer) {
 }
 
 func (report *ReportList) listAccountsV(args []string, ndb api.Datastorer) {
+	if len(ndb.Accountnames()) == 0 {
+		return
+	}
+
 	fmt.Println()
 	for _, accname := range ndb.Accountnames() {
 		account := ndb.GetAccount(accname)
 		fmt.Println(account.Directive())
+		fmt.Println()
+	}
+	fmt.Println()
+}
+
+func (report *ReportList) listCommodities(args []string, ndb api.Datastorer) {
+	if len(ndb.Commoditynames()) == 0 {
+		return
+	}
+
+	rcf := report.rcf
+	for _, commdname := range ndb.Commoditynames() {
+		commodity := ndb.GetCommodity(commdname)
+		notes := commodity.Notes()
+		switch len(notes) {
+		case 0:
+			rcf.addrow([]string{commdname, ""}...)
+		case 1:
+			rcf.addrow([]string{commdname, notes[0]}...)
+		default:
+			rcf.addrow([]string{commdname, notes[0]}...)
+			for _, note := range notes[1:] {
+				rcf.addrow([]string{"", note}...)
+			}
+		}
+	}
+
+	rcf.paddcells()
+	fmsg := rcf.Fmsg(" %%-%vs%%-%vs\n")
+
+	// start printing
+	fmt.Println()
+	for _, cols := range rcf.rows {
+		fmt.Printf(fmsg, cols[0], cols[1])
+	}
+	fmt.Println()
+}
+
+func (report *ReportList) listCommoditiesV(args []string, ndb api.Datastorer) {
+	if len(ndb.Commoditynames()) == 0 {
+		return
+	}
+
+	fmt.Println()
+	for _, commdname := range ndb.Commoditynames() {
+		commodity := ndb.GetCommodity(commdname)
+		fmt.Println(commodity.Directive())
+		fmt.Println()
 	}
 	fmt.Println()
 }

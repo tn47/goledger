@@ -10,8 +10,16 @@ type Datastorer interface {
 	// that name, and return the same.
 	GetAccount(name string) Accounter
 
+	// GetCommodity() returns the commodity object by name or creates an new
+	// one. Note that this commodity object serves as the blue print for
+	// commodity instansiation.
+	GetCommodity(name string) Commoditiser
+
 	// Accountnames return list of all account names.
 	Accountnames() []string
+
+	// Commoditynames return list of all commodity names.
+	Commoditynames() []string
 
 	// Balance amount, for commodity specified by `obj`, after all transactions
 	// are tallied between the accounts. Note that each accounts can exchange
@@ -77,6 +85,9 @@ type Commoditiser interface {
 	// Name of the commodity, like: $, INR, Gold, Oil etc...
 	Name() string
 
+	// Notes return list of notes declared on this commodity.
+	Notes() []string
+
 	// Amount as in quantity, not necessarily as value.
 	Amount() float64
 
@@ -86,6 +97,9 @@ type Commoditiser interface {
 	// BalanceEqual is equality between two commodity, which implies equality
 	// in Name(), Amount() and Currency().
 	BalanceEqual(Commoditiser) bool
+
+	// Directive return the commodity details as directive declaration.
+	Directive() string
 
 	String() string
 }

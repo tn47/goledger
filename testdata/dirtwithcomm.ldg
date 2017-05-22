@@ -1,0 +1,35 @@
+account Expenses:Groceries
+    note  all about living expense
+
+account Income:Salary
+    note  income for labour
+
+account Assets:Checking
+    note  checking account
+
+account Assets:Share
+    note  shares
+
+commodity $
+    note  American dollars
+    format  $ 1000.00
+
+commodity INR
+    note  Indian rupees
+    format  INR 1000.00
+
+commodity KVB
+    note  Shares
+    format  1000 KVB
+
+2011/02/29  My Employer
+    Assets:Checking     $ 500
+    Income:Salary      $ -500
+
+2011/03/15   Departmental store
+    Expenses:Groceries   100 INR
+    Assets:Checking
+
+2004/05/01 Stock purchase
+    Assets:Share    50.00 KVB @ $30.00
+    Assets:Checking
