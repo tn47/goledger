@@ -66,7 +66,7 @@ func (d *Directive) Yledgerblock(db *Datastore, block []string) (int, error) {
 			}
 			node, _ = parser(scanner)
 			if node == nil {
-				return index, fmt.Errorf("parsing %q\n", line)
+				return index, fmt.Errorf("parsing %q", line)
 			}
 			nodes := node.([]parsec.ParsecNode)
 			t := nodes[0].(*parsec.Terminal)
@@ -240,6 +240,9 @@ func (d *Directive) Firstpass(db *Datastore) error {
 		return db.setrootaccount(d.accname)
 
 	case "alias":
+		if db.IsStrict() && db.HasAccount(d.accname) == false {
+			return fmt.Errorf("account %q not declared before", d.accname)
+		}
 		db.addAlias(d.aliasname, d.accname)
 		return nil
 
@@ -247,10 +250,16 @@ func (d *Directive) Firstpass(db *Datastore) error {
 		return fmt.Errorf("assert directive not-implemented")
 
 	case "bucket":
+		if db.IsStrict() && db.HasAccount(d.accname) == false {
+			return fmt.Errorf("account %q not declared before", d.accname)
+		}
 		db.setBalancingaccount(d.accname)
 		return nil
 
 	case "capture":
+		if db.IsStrict() && db.HasAccount(d.accname) == false {
+			return fmt.Errorf("account %q not declared before", d.accname)
+		}
 		db.addCapture(d.capture, d.accname)
 		return nil
 
