@@ -19,9 +19,10 @@ type Directive struct {
 	acceval    string   // account
 	accdefault bool     // account
 	aliasname  string   // alias
-	expression string   // assert
+	expression string   // assert, check
 	capture    string   // capture pattern
 	endargs    []string // end
+	comments   []string
 }
 
 // NewDirective create a new Directive instance, one instance to be created
@@ -41,7 +42,10 @@ func (d *Directive) Yledger(db *Datastore) parsec.Parser {
 		d.yalias(db),
 		d.yassert(db),
 		d.ybucket(db),
+		d.ycheck(db),
 		d.ycapture(db),
+		d.ycheck(db),
+		d.ycomment(db),
 		d.yend(db),
 		d.yyear(db),
 	)
@@ -85,7 +89,9 @@ func (d *Directive) Yledgerblock(db *Datastore, block []string) (int, error) {
 		}
 		return len(block), nil
 
-	case "apply", "alias", "assert", "bucket", "capture", "end", "year":
+	case "apply", "alias", "assert", "bucket", "capture", "check", "comment",
+		"end", "year":
+
 		return len(block), nil
 	}
 	panic(fmt.Errorf("unreachable code"))
@@ -165,6 +171,27 @@ func (d *Directive) ycapture(db *Datastore) parsec.Parser {
 	)
 }
 
+func (d *Directive) ycheck(db *Datastore) parsec.Parser {
+	return parsec.And(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			d.dtype = "check"
+			d.expression = nodes[1].(*parsec.Terminal).Value
+			return d
+		},
+		ytokCheck, ytokExpr,
+	)
+}
+
+func (d *Directive) ycomment(db *Datastore) parsec.Parser {
+	return parsec.And(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			d.dtype = "comment"
+			return d
+		},
+		ytokComment,
+	)
+}
+
 func (d *Directive) yend(db *Datastore) parsec.Parser {
 	return parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
@@ -217,7 +244,7 @@ func (d *Directive) Firstpass(db *Datastore) error {
 		return nil
 
 	case "assert":
-		return fmt.Errorf("directive not-implemented")
+		return fmt.Errorf("assert directive not-implemented")
 
 	case "bucket":
 		db.setBalancingaccount(d.accname)
@@ -226,6 +253,12 @@ func (d *Directive) Firstpass(db *Datastore) error {
 	case "capture":
 		db.addCapture(d.capture, d.accname)
 		return nil
+
+	case "check":
+		return fmt.Errorf("check directive not-implemented")
+
+	case "comment":
+		return fmt.Errorf("comment directive not-implemented")
 
 	case "end":
 		return db.clearRootaccount()

@@ -57,6 +57,7 @@ var ytokApply = parsec.Token("apply", "DRTV_APPLY")
 var ytokAliasname = parsec.Token("[^=]+", "DRTV_ALIASNAME")
 var ytokBucket = parsec.Token("bucket", "DRTV_BUCKET")
 var ytokCapture = parsec.Token("capture", "DRTV_CAPTURE")
+var ytokComment = parsec.Token("comment", "DRTV_COMMENT")
 var ytokEnd = parsec.Token("end", "DRTV_END")
 var ytokYear = parsec.Token("year", "DRTV_YEAR")
 
