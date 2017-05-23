@@ -26,6 +26,9 @@ type Directive struct {
 	commdfmt    string   // commodity
 	commdnmrkt  bool     // commodity
 	includefile string   // include
+	dpayee      string   // payee
+	dpayeealias []string // payee
+	dpayeeuuid  []string // payee
 	endargs     []string // end
 	comments    []string
 }
@@ -68,6 +71,7 @@ func (d *Directive) Yledger(db *Datastore) parsec.Parser {
 		d.ydefine(db),
 		d.yfixed(db),
 		d.yinclude(db),
+		d.ypayee(db),
 		d.ytest(db),
 		d.yend(db),
 		d.yyear(db),
@@ -134,6 +138,32 @@ func (d *Directive) Yledgerblock(db *Datastore, block []string) (int, error) {
 				d.commdnmrkt = true
 			case "DRTV_DEFAULT":
 				d.ndefault = true
+			}
+		}
+		return len(block), nil
+
+	case "payee":
+		d.dpayeealias = []string{}
+		d.dpayeeuuid = []string{}
+		for index, line := range block {
+			scanner := parsec.NewScanner([]byte(line))
+			parser := d.ypayeedirectives(db)
+			if parser == nil {
+				continue
+			}
+			node, _ = parser(scanner)
+			if node == nil {
+				return index, fmt.Errorf("parsing %q", line)
+			}
+			nodes := node.([]parsec.ParsecNode)
+			t := nodes[0].(*parsec.Terminal)
+			switch t.Name {
+			case "DRTV_PAYEE_ALIAS":
+				aliasv := nodes[2].(*parsec.Terminal).Value
+				d.dpayeealias = append(d.dpayeealias, aliasv)
+			case "DRTV_PAYEE_UUID":
+				uuidv := nodes[2].(*parsec.Terminal).Value
+				d.dpayeeuuid = append(d.dpayeeuuid, uuidv)
 			}
 		}
 		return len(block), nil
@@ -285,6 +315,17 @@ func (d *Directive) yinclude(db *Datastore) parsec.Parser {
 	)
 }
 
+func (d *Directive) ypayee(db *Datastore) parsec.Parser {
+	return parsec.And(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			d.dtype = "payee"
+			d.dpayee = nodes[1].(*parsec.Terminal).Value
+			return d
+		},
+		ytokPayee, ytokPayeestr,
+	)
+}
+
 func (d *Directive) ytest(db *Datastore) parsec.Parser {
 	return parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
@@ -341,6 +382,13 @@ func (d *Directive) ycommoditydirectives(db *Datastore) parsec.Parser {
 	return y
 }
 
+func (d *Directive) ypayeedirectives(db *Datastore) parsec.Parser {
+	yalias := parsec.And(nil, ytokPayeeAlias, ytokHardSpace, ytokValue)
+	yuuid := parsec.And(nil, ytokPayeeUuid, ytokHardSpace, ytokValue)
+	y := parsec.OrdChoice(Vector2scalar, yalias, yuuid)
+	return y
+}
+
 //---- engine
 
 func (d *Directive) Firstpass(db *Datastore) error {
@@ -392,6 +440,9 @@ func (d *Directive) Firstpass(db *Datastore) error {
 
 	case "include":
 		return nil
+
+	case "payee":
+		return db.declare(d)
 
 	case "test":
 		return fmt.Errorf("test directive not-implemented")

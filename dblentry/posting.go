@@ -310,12 +310,24 @@ func (p *Posting) isDebit() bool {
 }
 
 func (p *Posting) Firstpass(db *Datastore, trans *Transaction) error {
+	// payee-rewrite
+	if val, ok := p.metadata["payee"]; ok {
+		payee := val.(string)
+		if payee, ok = db.matchpayee(payee); ok {
+			p.setMetadata("payee", payee)
+		}
+	}
+	payee := p.Payee()
+	if db.IsCheckPayee() && db.HasPayee(payee) == false {
+		return fmt.Errorf("payee %q is not pre-declared", payee)
+	}
+
 	accname := p.account.name
 
 	// if account is Unknown, try rewrite !!
 	if p.account.isUnknown() {
 		// fetch the declared account name with payee
-		daccname, ok := db.matchpayee(trans.Payee())
+		daccname, ok := db.matchaccpayee(trans.Payee())
 		if ok == false {
 			fmsg := "Unknown account %q has no matching payee %q"
 			return fmt.Errorf(fmsg, p.account.name, trans.Payee())

@@ -124,6 +124,15 @@ func (db *Datastore) HasAccount(name string) bool {
 	return ok
 }
 
+func (db *Datastore) HasPayee(name string) bool {
+	for payee := range db.dpayees {
+		if name == payee {
+			return true
+		}
+	}
+	return false
+}
+
 func (db *Datastore) GetAccount(name string) api.Accounter {
 	if name == "" {
 		return (*Account)(nil)
@@ -309,6 +318,18 @@ func (db *Datastore) declare(value interface{}) error {
 			}
 			// now finally update the datastore.commodity db.
 			db.commodities[commodity.name] = commodity
+
+		case "payee":
+			payee := db.findpayee(d.dpayee)
+			for _, alias := range d.dpayeealias {
+				if err := payee.addAlias(alias); err != nil {
+					return err
+				}
+			}
+			for _, uuid := range d.dpayeeuuid {
+				payee.addUuid(uuid)
+			}
+
 		}
 		return nil
 	}

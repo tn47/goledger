@@ -16,9 +16,11 @@ type firstpass struct {
 	repayees     map[string]*regexp.Regexp
 	captures     map[string]string
 	recaptures   map[string]*regexp.Regexp
+	dpayees      map[string]*Payee
 
 	// options
-	strict bool
+	strict     bool
+	checkpayee bool
 }
 
 func (fp *firstpass) initfirstpass() {
@@ -39,6 +41,14 @@ func (fp *firstpass) SetStrict() {
 
 func (fp *firstpass) IsStrict() bool {
 	return fp.strict
+}
+
+func (fp *firstpass) SetCheckPayee() {
+	fp.checkpayee = true
+}
+
+func (fp *firstpass) IsCheckPayee() bool {
+	return fp.checkpayee
 }
 
 //---- local accessors
@@ -130,7 +140,7 @@ func (fp *firstpass) addPayee(regex, accountname string) error {
 	return nil
 }
 
-func (fp *firstpass) matchpayee(payee string) (string, bool) {
+func (fp *firstpass) matchaccpayee(payee string) (string, bool) {
 	for regex, regexc := range fp.repayees {
 		if regexc.MatchString(payee) {
 			return fp.payees[regex], true
@@ -155,6 +165,32 @@ func (fp *firstpass) matchcapture(accname string) (string, bool) {
 	for regex, regexc := range fp.recaptures {
 		if regexc.MatchString(accname) {
 			return fp.captures[regex], true
+		}
+	}
+	return "", false
+}
+
+func (fp *firstpass) findpayee(payee string) *Payee {
+	if pe, ok := fp.dpayees[payee]; ok {
+		return pe
+	}
+	fp.dpayees[payee] = NewPayee(payee)
+	return fp.dpayees[payee]
+}
+
+func (fp *firstpass) matchpayee(payee string) (string, bool) {
+	for _, py := range fp.dpayees {
+		if name, ok := py.matchAlias(payee); ok {
+			return name, true
+		}
+	}
+	return "", false
+}
+
+func (fp *firstpass) matchuuid(uuid string) (string, bool) {
+	for _, payee := range fp.dpayees {
+		if name, ok := payee.matchUuid(uuid); ok {
+			return name, true
 		}
 	}
 	return "", false

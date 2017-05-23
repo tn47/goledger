@@ -182,6 +182,16 @@ func (trans *Transaction) Yledgerblock(
 //---- engine
 
 func (trans *Transaction) Firstpass(db *Datastore) error {
+	// payee-rewrite
+	if payee, ok := db.matchpayee(trans.Payee()); ok {
+		trans.setMetadata("payee", payee)
+	}
+	val := trans.getMetadata("payee")
+	payee := val.(string)
+	if db.IsCheckPayee() && db.HasPayee(payee) == false {
+		return fmt.Errorf("payee %q is not pre-declared", payee)
+	}
+
 	for _, posting := range trans.postings {
 		if err := posting.Firstpass(db, trans); err != nil {
 			return err
