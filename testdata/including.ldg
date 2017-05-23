@@ -1,0 +1,11 @@
+include dirtwithacc.ldg
+
+2011/03/29  My Employer
+    Assets:Checking     500.00
+    Income:Salary      -500.0
+
+include dirtwithcomm.ldg
+
+2011/05/29  My Employer
+    Assets:Checking     500.00
+    Income:Salary      -500.0

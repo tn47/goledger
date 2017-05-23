@@ -1,6 +1,7 @@
 package dblentry
 
 import "fmt"
+import "strings"
 import "strconv"
 
 import "github.com/prataprc/goparsec"
@@ -8,30 +9,44 @@ import "github.com/prataprc/golog"
 
 // Directive can handle all directives in ledger journal.
 type Directive struct {
-	dtype      string
-	year       int    // year
-	note       string // account, commodity
-	ndefault   bool   // account, commodity
-	accname    string // account, alias, apply
-	accalias   string // account
-	accpayee   string // account
-	acccheck   string // account
-	accassert  string // account
-	acceval    string // account
-	aliasname  string // alias
-	expression string // assert, check
-	capture    string // capture pattern
-	commdname  string // commodity
-	commdfmt   string
-	commdnmrkt bool
-	endargs    []string // end
-	comments   []string
+	dtype       string
+	year        int      // year
+	note        string   // account, commodity
+	ndefault    bool     // account, commodity
+	accname     string   // account, alias, apply
+	accalias    string   // account
+	accpayee    string   // account
+	acccheck    string   // account
+	accassert   string   // account
+	acceval     string   // account
+	aliasname   string   // alias
+	expression  string   // assert, check
+	capture     string   // capture pattern
+	commdname   string   // commodity
+	commdfmt    string   // commodity
+	commdnmrkt  bool     // commodity
+	includefile string   // include
+	endargs     []string // end
+	comments    []string
 }
 
 // NewDirective create a new Directive instance, one instance to be created
 // for handling each directive in the journal file.
 func NewDirective() *Directive {
 	return &Directive{}
+}
+
+//---- exported methods
+
+func (d *Directive) Type() string {
+	return d.dtype
+}
+
+func (d *Directive) Includefile() string {
+	if d.dtype == "include" {
+		return d.includefile
+	}
+	panic("impossible situation")
 }
 
 //---- ledger parser
@@ -52,6 +67,7 @@ func (d *Directive) Yledger(db *Datastore) parsec.Parser {
 		d.ycommodity(db),
 		d.ydefine(db),
 		d.yfixed(db),
+		d.yinclude(db),
 		d.ytest(db),
 		d.yend(db),
 		d.yyear(db),
@@ -123,7 +139,7 @@ func (d *Directive) Yledgerblock(db *Datastore, block []string) (int, error) {
 		return len(block), nil
 
 	case "apply", "alias", "assert", "bucket", "capture", "check", "comment",
-		"define", "fixed", "test", "end", "year":
+		"define", "fixed", "include", "test", "end", "year":
 		return len(block), nil
 	}
 	panic(fmt.Errorf("unreachable code"))
@@ -257,6 +273,18 @@ func (d *Directive) yfixed(db *Datastore) parsec.Parser {
 	)
 }
 
+func (d *Directive) yinclude(db *Datastore) parsec.Parser {
+	return parsec.And(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			d.dtype = "include"
+			d.includefile = nodes[1].(*parsec.Terminal).Value
+			d.includefile = strings.Trim(d.includefile, " \t")
+			return d
+		},
+		ytokDirtInclude, ytokValue,
+	)
+}
+
 func (d *Directive) ytest(db *Datastore) parsec.Parser {
 	return parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
@@ -361,6 +389,9 @@ func (d *Directive) Firstpass(db *Datastore) error {
 
 	case "fixed":
 		return fmt.Errorf("fixed directive not-implemented")
+
+	case "include":
+		return nil
 
 	case "test":
 		return fmt.Errorf("test directive not-implemented")

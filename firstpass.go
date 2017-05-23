@@ -2,6 +2,7 @@ package main
 
 import "fmt"
 import "strings"
+import "path/filepath"
 
 import "github.com/prataprc/goparsec"
 import "github.com/prataprc/golog"
@@ -60,6 +61,9 @@ func dofirstpass(db *dblentry.Datastore, journalfile string) error {
 			log.Errorf(fmsg, node, lineno-len(block)+1, err)
 			return err
 		}
+
+		tryinclude(db, node, journalfile) // handle include here, if include
+
 		lineno, block, eof, err = iterate()
 	}
 	if eof == false {
@@ -67,6 +71,20 @@ func dofirstpass(db *dblentry.Datastore, journalfile string) error {
 	}
 
 	return nil
+}
+
+func tryinclude(
+	db *dblentry.Datastore, node parsec.ParsecNode, including string) bool {
+
+	d, ok := node.(*dblentry.Directive)
+	if ok && d.Type() == "include" {
+		journalfile := d.Includefile()
+		journalfile = strings.Trim(journalfile, "/")
+		journalfile = filepath.Join(filepath.Dir(including), journalfile)
+		dofirstpass(db, journalfile)
+		return true
+	}
+	return false
 }
 
 func blockiterate(lines []string) func() (int, []string, bool, error) {
