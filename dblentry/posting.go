@@ -372,7 +372,7 @@ func (p *Posting) Secondpass(db *Datastore, trans *Transaction) error {
 		return err
 	}
 
-	return nil
+	return db.reporter.Posting(db, trans, p)
 }
 
 func (p *Posting) Clone(ndb *Datastore, ntrans *Transaction) *Posting {

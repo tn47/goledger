@@ -50,6 +50,9 @@ type Datastorer interface {
 	// SetStrict option
 	SetStrict()
 
+	// AggregateTotal containing ledger for each posting.
+	AggregateTotal(Transactor, Poster) error
+
 	Formatter
 }
 

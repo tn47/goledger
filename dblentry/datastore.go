@@ -2,6 +2,7 @@ package dblentry
 
 import "fmt"
 import "sort"
+import "strings"
 
 import "github.com/prataprc/goparsec"
 import "github.com/prataprc/golog"
@@ -192,6 +193,23 @@ func (db *Datastore) Balances() []api.Commoditiser {
 		comms = append(comms, db.balance[key])
 	}
 	return comms
+}
+
+func (db *Datastore) AggregateTotal(trans api.Transactor, p api.Poster) error {
+	posting := p.(*Posting)
+	names := SplitAccount(posting.account.name)
+	parts := []string{}
+	for _, name := range names[:len(names)-1] {
+		parts = append(parts, name)
+		fullname := strings.Join(parts, ":")
+		consacc := db.GetAccount(fullname).(*Account)
+		consacc.addBalance(posting.commodity)
+		err := db.reporter.BubblePosting(db, trans, posting, consacc)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 //---- engine

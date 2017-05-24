@@ -70,6 +70,11 @@ func (reports *Reports) Posting(
 			return err
 		}
 	}
+
+	if err := db.AggregateTotal(trans, p); err != nil {
+		return err
+	}
+
 	return nil
 }
 

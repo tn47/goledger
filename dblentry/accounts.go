@@ -270,13 +270,6 @@ func (acc *Account) Secondpass(
 		fmsg := "account(%v) should balance as %s, got %s"
 		return fmt.Errorf(fmsg, accname, p.balprice.String(), balance.String())
 	}
-
-	if err := db.reporter.Posting(db, trans, p); err != nil {
-		return err
-	}
-	if err := acc.doTotal(db, trans, p); err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -287,22 +280,6 @@ func (acc *Account) Clone(ndb *Datastore) *Account {
 		nacc.balance[name] = commodity.Clone(ndb)
 	}
 	return &nacc
-}
-
-func (acc *Account) doTotal(db *Datastore, trans *Transaction, p *Posting) error {
-	names := SplitAccount(acc.name)
-	parts := []string{}
-	for _, name := range names[:len(names)-1] {
-		parts = append(parts, name)
-		fullname := strings.Join(parts, ":")
-		consacc := db.GetAccount(fullname).(*Account)
-		consacc.addBalance(p.commodity)
-		err := db.reporter.BubblePosting(db, trans, p, consacc)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func (acc *Account) addBalance(commodity *Commodity) {
