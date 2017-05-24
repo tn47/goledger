@@ -1,4 +1,4 @@
-package main
+package reports
 
 import "fmt"
 import "time"

@@ -5,6 +5,7 @@ import "fmt"
 
 import "github.com/prataprc/golog"
 import "github.com/tn47/goledger/dblentry"
+import "github.com/tn47/goledger/reports"
 import "github.com/tn47/goledger/api"
 
 var _ = fmt.Sprintf("dummy")
@@ -45,7 +46,7 @@ func phase1() (args []string) {
 
 	args = argparse()
 	logsetts := map[string]interface{}{
-		"log.level":      options.loglevel,
+		"log.level":      api.Options.Loglevel,
 		"log.file":       "",
 		"log.timeformat": "",
 		"log.prefix":     "[%v]",
@@ -65,10 +66,10 @@ func phase2(args []string) (api.Reporter, api.Datastorer) {
 		}
 	}()
 
-	reporter := NewReporter(args)
-	db := dblentry.NewDatastore(options.dbname, reporter)
+	reporter := reports.NewReporter(args)
+	db := dblentry.NewDatastore(api.Options.Dbname, reporter)
 
-	for _, journal := range options.journals {
+	for _, journal := range api.Options.Journals {
 		log.Debugf("processing journal %q\n", journal)
 		if err := dofirstpass(db, journal); err != nil {
 			os.Exit(1)

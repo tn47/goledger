@@ -1,4 +1,4 @@
-package main
+package reports
 
 import "fmt"
 
@@ -50,14 +50,14 @@ func (report *ReportList) Render(args []string, ndb api.Datastorer) {
 
 	switch args[1] {
 	case "accounts":
-		if options.verbose == false {
+		if api.Options.Verbose == false {
 			report.listAccounts(args[2:], ndb)
 		} else {
 			report.listAccountsV(args[2:], ndb)
 		}
 
 	case "commodities", "commodity":
-		if options.verbose == false {
+		if api.Options.Verbose == false {
 			report.listCommodities(args[2:], ndb)
 		} else {
 			report.listCommoditiesV(args[2:], ndb)

@@ -1,4 +1,4 @@
-package main
+package reports
 
 import "fmt"
 import "reflect"
@@ -144,7 +144,7 @@ func (reports *Reports) String() string {
 func (reports *Reports) trystrict(
 	db api.Datastorer, trans api.Transactor, p api.Poster) {
 
-	if options.strict == false {
+	if api.Options.Strict == false {
 		return
 	}
 
@@ -178,7 +178,7 @@ func (reports *Reports) trystrict(
 	if db.IsAccountDeclared(accname) == false {
 		log.Warnf("account %q not pre-declared\n", accname)
 	}
-	if options.checkpayee {
+	if api.Options.Checkpayee {
 		if payee := p.Payee(); db.IsPayeeDeclared(payee) == false {
 			log.Warnf("payee %q not pre-declared\n", payee)
 		}
@@ -188,7 +188,7 @@ func (reports *Reports) trystrict(
 func (reports *Reports) trypedantic(
 	db api.Datastorer, trans api.Transactor, p api.Poster) error {
 
-	if options.pedantic == false {
+	if api.Options.Pedantic == false {
 		return nil
 	}
 
@@ -222,7 +222,7 @@ func (reports *Reports) trypedantic(
 	if db.IsAccountDeclared(accname) == false {
 		return fmt.Errorf("account %q not declared before\n", accname)
 	}
-	if options.checkpayee {
+	if api.Options.Checkpayee {
 		if payee := p.Payee(); db.IsPayeeDeclared(payee) == false {
 			return fmt.Errorf("payee %q not pre-declared", payee)
 		}

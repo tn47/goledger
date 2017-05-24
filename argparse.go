@@ -6,27 +6,6 @@ import "flag"
 
 import "github.com/tn47/goledger/api"
 
-var options struct {
-	dbname     string
-	journals   []string
-	currentdt  string
-	begindt    string
-	enddt      string
-	period     string
-	cleared    bool
-	uncleared  bool
-	pending    bool
-	onlyreal   bool
-	onlyactual bool
-	related    bool
-	dcformat   bool
-	strict     bool
-	pedantic   bool
-	checkpayee bool
-	verbose    bool
-	loglevel   string
-}
-
 func argparse() []string {
 	var journals string
 
@@ -37,48 +16,48 @@ func argparse() []string {
 		f.PrintDefaults()
 	}
 
-	f.StringVar(&options.dbname, "db", "devjournal",
+	f.StringVar(&api.Options.Dbname, "db", "devjournal",
 		"Provide datastore name")
 	f.StringVar(&journals, "f", "example/first.ldg",
 		"Comma separated list of input files.")
-	f.StringVar(&options.currentdt, "current", "",
+	f.StringVar(&api.Options.Currentdt, "current", "",
 		"Display only transactions on or before the current date.")
-	f.StringVar(&options.begindt, "begin", "",
+	f.StringVar(&api.Options.Begindt, "begin", "",
 		"Display only transactions on or before the current date.")
-	f.StringVar(&options.enddt, "end", "",
+	f.StringVar(&api.Options.Enddt, "end", "",
 		"Display only transactions on or before the current date.")
-	f.StringVar(&options.period, "period", "",
+	f.StringVar(&api.Options.Period, "period", "",
 		"Limit the processing to transactions in PERIOD_EXPRESSION.")
-	f.BoolVar(&options.cleared, "cleared", true,
+	f.BoolVar(&api.Options.Cleared, "cleared", true,
 		"Display only cleared postings.")
-	f.BoolVar(&options.uncleared, "uncleared", true,
+	f.BoolVar(&api.Options.Uncleared, "uncleared", true,
 		"Display only uncleared postings.")
-	f.BoolVar(&options.pending, "pending", true,
+	f.BoolVar(&api.Options.Pending, "pending", true,
 		"Display only pending postings.")
-	f.BoolVar(&options.onlyreal, "real", true,
+	f.BoolVar(&api.Options.Onlyreal, "real", true,
 		"Display only real postings.")
-	f.BoolVar(&options.onlyactual, "actual", true,
+	f.BoolVar(&api.Options.Onlyactual, "actual", true,
 		"Display only actual postings, not automated ones.")
-	f.BoolVar(&options.related, "related", false,
+	f.BoolVar(&api.Options.Related, "related", false,
 		"Display only related postings.")
-	f.BoolVar(&options.dcformat, "dc", true,
+	f.BoolVar(&api.Options.Dcformat, "dc", true,
 		"Display only real postings.")
-	f.BoolVar(&options.strict, "strict", false,
+	f.BoolVar(&api.Options.Strict, "strict", false,
 		"Accounts, tags or commodities not previously declared "+
 			"will cause warnings.")
-	f.BoolVar(&options.pedantic, "pedantic", false,
+	f.BoolVar(&api.Options.Pedantic, "pedantic", false,
 		"Accounts, tags or commodities not previously declared "+
 			"will cause errors.")
-	f.BoolVar(&options.checkpayee, "checkpayee", false,
+	f.BoolVar(&api.Options.Checkpayee, "checkpayee", false,
 		"Payee not previously declared will cause error.")
-	f.BoolVar(&options.verbose, "v", false,
+	f.BoolVar(&api.Options.Verbose, "v", false,
 		"verbose reporting / listing")
 
-	f.StringVar(&options.loglevel, "log", "info",
+	f.StringVar(&api.Options.Loglevel, "log", "info",
 		"Console log level")
 	f.Parse(os.Args[1:])
 
-	options.journals = gatherjournals(journals)
+	api.Options.Journals = gatherjournals(journals)
 
 	return f.Args()
 }
