@@ -21,6 +21,8 @@ var options struct {
 	related    bool
 	dcformat   bool
 	strict     bool
+	pedantic   bool
+	checkpayee bool
 	verbose    bool
 	loglevel   string
 }
@@ -64,6 +66,11 @@ func argparse() []string {
 	f.BoolVar(&options.strict, "strict", false,
 		"Accounts, tags or commodities not previously declared "+
 			"will cause warnings.")
+	f.BoolVar(&options.pedantic, "pedantic", false,
+		"Accounts, tags or commodities not previously declared "+
+			"will cause errors.")
+	f.BoolVar(&options.checkpayee, "checkpayee", false,
+		"Payee not previously declared will cause error.")
 	f.BoolVar(&options.verbose, "v", false,
 		"verbose reporting / listing")
 

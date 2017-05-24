@@ -34,6 +34,9 @@ type Datastore struct {
 	pass        ParsePhase
 	commodities map[string]*Commodity
 	accntdb     map[string]*Account // full account-name -> account
+	dclrdacc    []string
+	dclrdcomm   []string
+	dclrdpayee  []string
 	balance     map[string]*Commodity
 	transdb     *DB
 	pricedb     *DB
@@ -110,24 +113,27 @@ func (db *Datastore) PrintAccounts() {
 
 //---- api.Datastorer methods
 
-func (db *Datastore) HasCommodity(name string) bool {
-	if name == "" && db.getDefaultcomm() != "" {
-		return true
-	} else if name == "" {
-		return false
+func (db *Datastore) IsCommodityDeclared(name string) bool {
+	for _, xname := range db.dclrdcomm {
+		if xname == name {
+			return true
+		}
 	}
-	_, ok := db.commodities[name]
-	return ok
+	return false
 }
 
-func (db *Datastore) HasAccount(name string) bool {
-	_, ok := db.accntdb[name]
-	return ok
+func (db *Datastore) IsAccountDeclared(name string) bool {
+	for _, xname := range db.dclrdacc {
+		if xname == name {
+			return true
+		}
+	}
+	return false
 }
 
-func (db *Datastore) HasPayee(name string) bool {
-	for payee := range db.dpayees {
-		if name == payee {
+func (db *Datastore) IsPayeeDeclared(name string) bool {
+	for _, xname := range db.dclrdpayee {
+		if xname == name {
 			return true
 		}
 	}
@@ -318,6 +324,7 @@ func (db *Datastore) declare(value interface{}) error {
 			if d.ndefault {
 				db.setBalancingaccount(account.name)
 			}
+			db.dclrdacc = append(db.dclrdacc, d.accname)
 
 		case "commodity":
 			scanner := parsec.NewScanner([]byte(d.commdfmt))
@@ -336,6 +343,7 @@ func (db *Datastore) declare(value interface{}) error {
 			}
 			// now finally update the datastore.commodity db.
 			db.commodities[commodity.name] = commodity
+			db.dclrdcomm = append(db.dclrdcomm, d.commdname)
 
 		case "payee":
 			payee := db.findpayee(d.dpayee)
@@ -347,6 +355,7 @@ func (db *Datastore) declare(value interface{}) error {
 			for _, uuid := range d.dpayeeuuid {
 				payee.addUuid(uuid)
 			}
+			db.dclrdpayee = append(db.dclrdpayee, d.dpayee)
 
 		}
 		return nil

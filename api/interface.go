@@ -47,11 +47,17 @@ type Datastorer interface {
 	// Clone this instance and all its nested reference.
 	Clone(Reporter) Datastorer
 
-	// SetStrict option
-	SetStrict()
-
 	// AggregateTotal containing ledger for each posting.
 	AggregateTotal(Transactor, Poster) error
+
+	// IsCommodityDeclared return true if commodity is pre-declared
+	IsCommodityDeclared(name string) bool
+
+	// IsAccountDeclared return true if account is pre-declared
+	IsAccountDeclared(name string) bool
+
+	// IsPayeeDeclared return true if payee is pre-declared
+	IsPayeeDeclared(name string) bool
 
 	Formatter
 }
@@ -74,6 +80,15 @@ type Transactor interface {
 type Poster interface {
 	// Commodity posted as credit or debit.
 	Commodity() Commoditiser
+
+	// Lotprice return the lot-price of this posting's commodity.
+	Lotprice() Commoditiser
+
+	// Costprice return the cost-price of this posting's commodity.
+	Costprice() Commoditiser
+
+	// Balanceprice return the balance-price of this posting's account.
+	Balanceprice() Commoditiser
 
 	// Payee for this posting, if unspecified in the posting, shall return the
 	// transaction's payee.
@@ -139,6 +154,8 @@ type Accounter interface {
 // Reporter encapsulates callbacks that can be used by report generating
 // plugins.
 type Reporter interface {
+	Firstpass(Datastorer, Transactor, Poster) error
+
 	Transaction(Datastorer, Transactor) error
 
 	Posting(Datastorer, Transactor, Poster) error

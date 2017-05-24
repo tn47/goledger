@@ -1,2 +1,13 @@
-[Error] *dblentry.Transaction at lineno 6: account "Assets:Checking" not declared before
+[Warng] account "Assets:Checking" not pre-declared
+[Warng] account "Income:Salary" not pre-declared
+[Warng] account "Expenses:Groceries" not pre-declared
+[Warng] account "Assets:Checking" not pre-declared
+
+  By-date      Account                Balance 
+                                              
+  2011/Mar/15  Assets:Checking      INR400.00 
+  2011/Mar/15  Expenses:Groceries   INR100.00 
+  2011/Mar/01  Income:Salary       INR-500.00 
+                                   ---------- 
+  2011/Mar/15                         INR0.00 
 

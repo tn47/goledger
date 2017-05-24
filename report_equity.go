@@ -29,6 +29,12 @@ func NewReportEquity(args []string) *ReportEquity {
 
 //---- api.Reporter methods
 
+func (report *ReportEquity) Firstpass(
+	db api.Datastorer, trans api.Transactor, p api.Poster) error {
+
+	return nil
+}
+
 func (report *ReportEquity) Transaction(
 	db api.Datastorer, trans api.Transactor) error {
 

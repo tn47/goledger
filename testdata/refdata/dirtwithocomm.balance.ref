@@ -1,1 +1,12 @@
-[Error] lineno 11: commodity "$" is not pre-declared
+[Warng] commodity "$" is not pre-declared
+[Warng] commodity "$" is not pre-declared
+[Warng] commodity "$" is not pre-declared
+
+  By-date      Account              Balance 
+                                            
+  2011/Mar/15  Assets:Checking      $400.00 
+  2011/Mar/15  Expenses:Groceries   $100.00 
+  2011/Mar/01  Income:Salary       $-500.00 
+                                   -------- 
+  2011/Mar/15                         $0.00 
+

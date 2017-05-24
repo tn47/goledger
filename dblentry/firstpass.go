@@ -17,10 +17,6 @@ type firstpass struct {
 	captures     map[string]string
 	recaptures   map[string]*regexp.Regexp
 	dpayees      map[string]*Payee
-
-	// options
-	strict     bool
-	checkpayee bool
 }
 
 func (fp *firstpass) initfirstpass() {
@@ -31,24 +27,6 @@ func (fp *firstpass) initfirstpass() {
 	fp.repayees = map[string]*regexp.Regexp{}
 	fp.captures = map[string]string{}
 	fp.recaptures = map[string]*regexp.Regexp{}
-}
-
-//---- exported accessors
-
-func (fp *firstpass) SetStrict() {
-	fp.strict = true
-}
-
-func (fp *firstpass) IsStrict() bool {
-	return fp.strict
-}
-
-func (fp *firstpass) SetCheckPayee() {
-	fp.checkpayee = true
-}
-
-func (fp *firstpass) IsCheckPayee() bool {
-	return fp.checkpayee
 }
 
 //---- local accessors

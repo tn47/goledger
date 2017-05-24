@@ -763,6 +763,10 @@ func TestDirtAccount(t *testing.T) {
 			[]string{"-f", "dirtwithoacc.ldg", "-strict", "balance"},
 			"refdata/dirtwithoacc.balance.ref",
 		},
+		[]interface{}{
+			[]string{"-f", "dirtwithoacc.ldg", "-strict", "register"},
+			"refdata/dirtwithoacc.register.ref",
+		},
 	}
 	for _, testcase := range testcases {
 		ref := testdataFile(testcase[1].(string))
@@ -896,6 +900,10 @@ func TestDirtCommodity(t *testing.T) {
 		[]interface{}{
 			[]string{"-f", "dirtwithocomm.ldg", "-strict", "balance"},
 			"refdata/dirtwithocomm.balance.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "dirtwithocomm.ldg", "-strict", "register"},
+			"refdata/dirtwithocomm.register.ref",
 		},
 	}
 	for _, testcase := range testcases {

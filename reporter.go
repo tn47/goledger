@@ -1,7 +1,9 @@
 package main
 
 import "fmt"
+import "reflect"
 
+import "github.com/prataprc/golog"
 import "github.com/tn47/goledger/api"
 
 // Reports manages all reporting commands.
@@ -39,6 +41,23 @@ func NewReporter(args []string) (reporter api.Reporter) {
 }
 
 //---- api.Reporter methods
+
+func (reports *Reports) Firstpass(
+	db api.Datastorer, trans api.Transactor, p api.Poster) error {
+
+	reports.trystrict(db, trans, p)
+
+	if err := reports.trypedantic(db, trans, p); err != nil {
+		return err
+	}
+
+	for _, reporter := range reports.reporters {
+		if err := reporter.Firstpass(db, trans, p); err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 func (reports *Reports) Transaction(
 	db api.Datastorer, trans api.Transactor) error {
@@ -120,4 +139,93 @@ func (reports *Reports) Clone() api.Reporter {
 
 func (reports *Reports) String() string {
 	return fmt.Sprintf("Reports")
+}
+
+func (reports *Reports) trystrict(
+	db api.Datastorer, trans api.Transactor, p api.Poster) {
+
+	if options.strict == false {
+		return
+	}
+
+	comm := p.Commodity()
+	if comm != nil && reflect.ValueOf(comm).IsNil() == false {
+		if db.IsCommodityDeclared(comm.Name()) == false {
+			log.Warnf("commodity %q is not pre-declared\n", comm.Name())
+		}
+	}
+
+	pr := p.Lotprice()
+	if pr != nil && reflect.ValueOf(pr).IsNil() == false {
+		if db.IsCommodityDeclared(pr.Name()) == false {
+			log.Warnf("commodity %q not pre-declared\n\n", pr.Name())
+		}
+	}
+	pr = p.Costprice()
+	if pr != nil && reflect.ValueOf(pr).IsNil() == false {
+		if db.IsCommodityDeclared(pr.Name()) == false {
+			log.Warnf("commodity %q not pre-declared\n", pr.Name())
+		}
+	}
+	pr = p.Balanceprice()
+	if pr != nil && reflect.ValueOf(pr).IsNil() == false {
+		if db.IsCommodityDeclared(pr.Name()) == false {
+			log.Warnf("commodity %q not pre-declared\n", pr.Name())
+		}
+	}
+
+	accname := p.Account().Name()
+	if db.IsAccountDeclared(accname) == false {
+		log.Warnf("account %q not pre-declared\n", accname)
+	}
+	if options.checkpayee {
+		if payee := p.Payee(); db.IsPayeeDeclared(payee) == false {
+			log.Warnf("payee %q not pre-declared\n", payee)
+		}
+	}
+}
+
+func (reports *Reports) trypedantic(
+	db api.Datastorer, trans api.Transactor, p api.Poster) error {
+
+	if options.pedantic == false {
+		return nil
+	}
+
+	comm := p.Commodity()
+	if comm != nil && reflect.ValueOf(comm).IsNil() == false {
+		if db.IsCommodityDeclared(comm.Name()) == false {
+			return fmt.Errorf("commodity %q is not pre-declared", comm.Name())
+		}
+	}
+
+	pr := p.Lotprice()
+	if pr != nil && reflect.ValueOf(pr).IsNil() == false {
+		if db.IsCommodityDeclared(pr.Name()) == false {
+			return fmt.Errorf("commodity %q not pre-declared\n", pr.Name())
+		}
+	}
+	pr = p.Costprice()
+	if pr != nil && reflect.ValueOf(pr).IsNil() == false {
+		if db.IsCommodityDeclared(pr.Name()) == false {
+			return fmt.Errorf("commodity %q not pre-declared", pr.Name())
+		}
+	}
+	pr = p.Balanceprice()
+	if pr != nil && reflect.ValueOf(pr).IsNil() == false {
+		if db.IsCommodityDeclared(pr.Name()) == false {
+			return fmt.Errorf("commodity %q not pre-declared", pr.Name())
+		}
+	}
+
+	accname := p.Account().Name()
+	if db.IsAccountDeclared(accname) == false {
+		return fmt.Errorf("account %q not declared before\n", accname)
+	}
+	if options.checkpayee {
+		if payee := p.Payee(); db.IsPayeeDeclared(payee) == false {
+			return fmt.Errorf("payee %q not pre-declared", payee)
+		}
+	}
+	return nil
 }

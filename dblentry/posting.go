@@ -80,6 +80,18 @@ func (p *Posting) Commodity() api.Commoditiser {
 	return p.commodity
 }
 
+func (p *Posting) Lotprice() api.Commoditiser {
+	return p.lotprice
+}
+
+func (p *Posting) Costprice() api.Commoditiser {
+	return p.costprice
+}
+
+func (p *Posting) Balanceprice() api.Commoditiser {
+	return p.balprice
+}
+
 func (p *Posting) Payee() string {
 	payee := p.getMetadata("payee")
 	if payee == nil {
@@ -219,9 +231,6 @@ func (p *Posting) fixcommodity(
 
 	if commodity, ok := item.(*Commodity); ok {
 		cname := commodity.name
-		if db.IsStrict() && db.HasCommodity(cname) == false {
-			return nil, fmt.Errorf("commodity %q is not pre-declared", cname)
-		}
 		c := db.getCommodity(cname, commodity).makeSimilar(commodity.amount)
 		return c, nil
 	}
@@ -232,10 +241,6 @@ func (p *Posting) fixlotprice(
 	db *Datastore, item interface{}) (*Commodity, error) {
 
 	if lotprice, ok := item.(*Commodity); ok {
-		lname := lotprice.name
-		if db.IsStrict() && db.HasCommodity(lname) == false {
-			return nil, fmt.Errorf("commodity %q is not pre-declared", lname)
-		}
 		return lotprice, nil
 	}
 	return nil, nil
@@ -252,10 +257,6 @@ func (p *Posting) fixcostprice(
 	db *Datastore, item interface{}) (*Commodity, error) {
 
 	if costprice, ok := item.(*Commodity); ok {
-		cname := costprice.name
-		if db.IsStrict() && db.HasCommodity(cname) == false {
-			return nil, fmt.Errorf("commodity %q is not pre-declared", cname)
-		}
 		return costprice, nil
 	}
 	return nil, nil
@@ -265,10 +266,6 @@ func (p *Posting) fixbalprice(
 	db *Datastore, item interface{}) (*Commodity, error) {
 
 	if balprice, ok := item.(*Commodity); ok {
-		bname := balprice.name
-		if db.IsStrict() && db.HasCommodity(bname) == false {
-			return nil, fmt.Errorf("commodity %q is not pre-declared", bname)
-		}
 		return balprice, nil
 	}
 	return nil, nil
@@ -317,10 +314,6 @@ func (p *Posting) Firstpass(db *Datastore, trans *Transaction) error {
 			p.setMetadata("payee", payee)
 		}
 	}
-	payee := p.Payee()
-	if db.IsCheckPayee() && db.HasPayee(payee) == false {
-		return fmt.Errorf("payee %q is not pre-declared", payee)
-	}
 
 	accname := p.account.name
 
@@ -346,10 +339,6 @@ func (p *Posting) Firstpass(db *Datastore, trans *Transaction) error {
 		accname = db.applyroot(db.lookupAlias(accname))
 	}
 
-	if db.IsStrict() && db.HasAccount(accname) == false {
-		return fmt.Errorf("account %q not declared before\n", accname)
-	}
-
 	p.account = db.GetAccount(accname).(*Account)
 
 	if err := p.account.Firstpass(db, trans, p); err != nil {
@@ -358,6 +347,9 @@ func (p *Posting) Firstpass(db *Datastore, trans *Transaction) error {
 	if err := p.commodity.Firstpass(db, trans, p); err != nil {
 		return err
 	}
+
+	db.reporter.Firstpass(db, trans, p)
+
 	return nil
 }
 

@@ -400,9 +400,6 @@ func (d *Directive) Firstpass(db *Datastore) error {
 		return db.setrootaccount(d.accname)
 
 	case "alias":
-		if db.IsStrict() && db.HasAccount(d.accname) == false {
-			return fmt.Errorf("account %q not declared before", d.accname)
-		}
 		db.addAlias(d.aliasname, d.accname)
 		return nil
 
@@ -410,16 +407,10 @@ func (d *Directive) Firstpass(db *Datastore) error {
 		return fmt.Errorf("assert directive not-implemented")
 
 	case "bucket":
-		if db.IsStrict() && db.HasAccount(d.accname) == false {
-			return fmt.Errorf("account %q not declared before", d.accname)
-		}
 		db.setBalancingaccount(d.accname)
 		return nil
 
 	case "capture":
-		if db.IsStrict() && db.HasAccount(d.accname) == false {
-			return fmt.Errorf("account %q not declared before", d.accname)
-		}
 		db.addCapture(d.capture, d.accname)
 		return nil
 

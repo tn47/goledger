@@ -1,1 +1,3 @@
-[Error] *dblentry.Directive at lineno 2: account "Expenses:Entertainment:Dining" not declared before
+
+  Expenses:Entertainment:Dining  Eating out once a week 
+

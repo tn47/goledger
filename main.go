@@ -67,9 +67,6 @@ func phase2(args []string) (api.Reporter, api.Datastorer) {
 
 	reporter := NewReporter(args)
 	db := dblentry.NewDatastore(options.dbname, reporter)
-	if options.strict {
-		db.SetStrict()
-	}
 
 	for _, journal := range options.journals {
 		log.Debugf("processing journal %q\n", journal)

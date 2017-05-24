@@ -1,1 +1,4 @@
 alias Dining=Expenses:Entertainment:Dining
+
+account Expenses:Entertainment:Dining
+    note  Eating out once a week

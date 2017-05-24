@@ -33,6 +33,12 @@ func NewReportBalance(args []string) *ReportBalance {
 
 //---- api.Reporter methods
 
+func (report *ReportBalance) Firstpass(
+	db api.Datastorer, trans api.Transactor, p api.Poster) error {
+
+	return nil
+}
+
 func (report *ReportBalance) Transaction(
 	db api.Datastorer, trans api.Transactor) error {
 

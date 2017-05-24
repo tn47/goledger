@@ -18,6 +18,12 @@ func NewReportList(args []string) *ReportList {
 
 //---- api.Reporter methods
 
+func (report *ReportList) Firstpass(
+	db api.Datastorer, trans api.Transactor, p api.Poster) error {
+
+	return nil
+}
+
 func (report *ReportList) Transaction(
 	_ api.Datastorer, _ api.Transactor) error {
 

@@ -1,0 +1,11 @@
+[Warng] commodity "$" is not pre-declared
+[Warng] commodity "$" is not pre-declared
+[Warng] commodity "$" is not pre-declared
+
+  By-date      Payee               Account               Amount   Balance 
+                                                                          
+  2011-Mar-01  My Employer         Assets:Checking      $500.00   $500.00 
+                                   Income:Salary       $-500.00  $-500.00 
+  2011-Mar-15  Departmental store  Expenses:Groceries   $100.00   $100.00 
+                                   Assets:Checking     $-100.00   $400.00 
+

@@ -32,6 +32,12 @@ func NewReportRegister(args []string) *ReportRegister {
 
 //---- api.Reporter methods
 
+func (report *ReportRegister) Firstpass(
+	db api.Datastorer, trans api.Transactor, p api.Poster) error {
+
+	return nil
+}
+
 func (report *ReportRegister) Transaction(
 	db api.Datastorer, trans api.Transactor) error {
 
