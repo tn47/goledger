@@ -1,0 +1,36 @@
+Usage of command: ../goledger [OPTIONS] COMMAND [ARGS]
+  -actual
+    	Display only actual postings, not automated ones. (default true)
+  -begin string
+    	Display only transactions on or before the current date.
+  -checkpayee
+    	Payee not previously declared will cause error.
+  -cleared
+    	Display only cleared postings. (default true)
+  -current string
+    	Display only transactions on or before the current date.
+  -db string
+    	Provide datastore name (default "devjournal")
+  -dc
+    	Display only real postings. (default true)
+  -end string
+    	Display only transactions on or before the current date.
+  -f string
+    	Comma separated list of input files. (default "example/first.ldg")
+  -log string
+    	Console log level (default "info")
+  -pedantic
+    	Accounts, tags or commodities not previously declared will cause errors.
+  -pending
+    	Display only pending postings. (default true)
+  -period string
+    	Limit the processing to transactions in PERIOD_EXPRESSION.
+  -real
+    	Display only real postings. (default true)
+  -related
+    	Display only related postings.
+  -strict
+    	Accounts, tags or commodities not previously declared will cause warnings.
+  -uncleared
+    	Display only uncleared postings. (default true)
+  -v	verbose reporting / listing
