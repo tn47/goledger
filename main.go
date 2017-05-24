@@ -46,7 +46,12 @@ func phase1() (args []string) {
 		}
 	}()
 
-	args = argparse()
+	var err error
+
+	if args, err = argparse(); err != nil {
+		os.Exit(1)
+	}
+
 	logsetts := map[string]interface{}{
 		"log.level":      api.Options.Loglevel,
 		"log.file":       "",

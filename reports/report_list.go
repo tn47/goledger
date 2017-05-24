@@ -97,11 +97,12 @@ func (report *ReportList) listAccounts(args []string, ndb api.Datastorer) {
 	fmsg := rcf.Fmsg(" %%-%vs%%-%vs\n")
 
 	// start printing
-	fmt.Println()
+	outfd := api.Options.Outfd
+	fmt.Fprintln(outfd)
 	for _, cols := range rcf.rows {
-		fmt.Printf(fmsg, cols[0], cols[1])
+		fmt.Fprintf(outfd, fmsg, cols[0], cols[1])
 	}
-	fmt.Println()
+	fmt.Fprintln(outfd)
 }
 
 func (report *ReportList) listAccountsV(args []string, ndb api.Datastorer) {
@@ -109,13 +110,14 @@ func (report *ReportList) listAccountsV(args []string, ndb api.Datastorer) {
 		return
 	}
 
-	fmt.Println()
+	outfd := api.Options.Outfd
+	fmt.Fprintln(outfd)
 	for _, accname := range ndb.Accountnames() {
 		account := ndb.GetAccount(accname)
-		fmt.Println(account.Directive())
-		fmt.Println()
+		fmt.Fprintln(outfd, account.Directive())
+		fmt.Fprintln(outfd)
 	}
-	fmt.Println()
+	fmt.Fprintln(outfd)
 }
 
 func (report *ReportList) listCommodities(args []string, ndb api.Datastorer) {
@@ -144,11 +146,12 @@ func (report *ReportList) listCommodities(args []string, ndb api.Datastorer) {
 	fmsg := rcf.Fmsg(" %%-%vs%%-%vs\n")
 
 	// start printing
-	fmt.Println()
+	outfd := api.Options.Outfd
+	fmt.Fprintln(outfd)
 	for _, cols := range rcf.rows {
-		fmt.Printf(fmsg, cols[0], cols[1])
+		fmt.Fprintf(outfd, fmsg, cols[0], cols[1])
 	}
-	fmt.Println()
+	fmt.Fprintln(outfd)
 }
 
 func (report *ReportList) listCommoditiesV(args []string, ndb api.Datastorer) {
@@ -156,11 +159,12 @@ func (report *ReportList) listCommoditiesV(args []string, ndb api.Datastorer) {
 		return
 	}
 
-	fmt.Println()
+	outfd := api.Options.Outfd
+	fmt.Fprintln(outfd)
 	for _, commdname := range ndb.Commoditynames() {
 		commodity := ndb.GetCommodity(commdname)
-		fmt.Println(commodity.Directive())
-		fmt.Println()
+		fmt.Fprintln(outfd, commodity.Directive())
+		fmt.Fprintln(outfd)
 	}
-	fmt.Println()
+	fmt.Fprintln(outfd)
 }

@@ -110,15 +110,16 @@ func (reports *Reports) BubblePosting(
 }
 
 func (reports *Reports) Render(args []string, db api.Datastorer) {
+	outfd := api.Options.Outfd
 	if len(args) == 0 {
-		fmt.Printf("  No. of transactions: %5v\n", reports.n_transactions)
-		fmt.Printf("  No. of postings:     %5v\n", reports.n_postings)
-		fmt.Printf("  No. of accounts:	%5v\n", len(reports.n_accounts))
-		fmt.Println()
-		fmt.Printf("  Accountwise postings\n")
-		fmt.Printf("  --------------------\n")
+		fmt.Fprintf(outfd, "  No. of transactions: %5v\n", reports.n_transactions)
+		fmt.Fprintf(outfd, "  No. of postings:     %5v\n", reports.n_postings)
+		fmt.Fprintf(outfd, "  No. of accounts:	%5v\n", len(reports.n_accounts))
+		fmt.Fprintln(outfd)
+		fmt.Fprintf(outfd, "  Accountwise postings\n")
+		fmt.Fprintf(outfd, "  --------------------\n")
 		for name, count := range reports.n_accounts {
-			fmt.Printf("  %15v %5v\n", name, count)
+			fmt.Fprintf(outfd, "  %15v %5v\n", name, count)
 		}
 	}
 

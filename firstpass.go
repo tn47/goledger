@@ -13,7 +13,10 @@ func dofirstpass(db *dblentry.Datastore, journalfile string) error {
 	var node parsec.ParsecNode
 	var index int
 
-	lines := readlines(journalfile)
+	lines, err := readlines(journalfile)
+	if err != nil {
+		return err
+	}
 
 	iterate := blockiterate(lines)
 	lineno, block, eof, err := iterate()

@@ -112,11 +112,12 @@ func (report *ReportRegister) Render(args []string, db api.Datastorer) {
 	fmsg := rcf.Fmsg(" %%-%vs%%-%vs%%-%vs%%%vs%%%vs\n")
 
 	// start printing
-	fmt.Println()
+	outfd := api.Options.Outfd
+	fmt.Fprintln(outfd)
 	for _, cols := range report.rcf.rows {
-		fmt.Printf(fmsg, cols[0], cols[1], cols[2], cols[3], cols[4])
+		fmt.Fprintf(outfd, fmsg, cols[0], cols[1], cols[2], cols[3], cols[4])
 	}
-	fmt.Println()
+	fmt.Fprintln(outfd)
 }
 
 func (report *ReportRegister) Clone() api.Reporter {

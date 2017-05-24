@@ -4,10 +4,12 @@ import "os"
 import "fmt"
 import "flag"
 
+import "github.com/prataprc/golog"
 import "github.com/tn47/goledger/api"
 
-func argparse() []string {
+func argparse() ([]string, error) {
 	var journals string
+	var outfile string
 
 	f := flag.NewFlagSet("ledger", flag.ExitOnError)
 	f.Usage = func() {
@@ -20,6 +22,8 @@ func argparse() []string {
 		"Provide datastore name")
 	f.StringVar(&journals, "f", "example/first.ldg",
 		"Comma separated list of input files.")
+	f.StringVar(&outfile, "o", "",
+		"outfile to report")
 	f.StringVar(&api.Options.Currentdt, "current", "",
 		"Display only transactions on or before the current date.")
 	f.StringVar(&api.Options.Begindt, "begin", "",
@@ -58,8 +62,17 @@ func argparse() []string {
 	f.Parse(os.Args[1:])
 
 	api.Options.Journals = gatherjournals(journals)
+	api.Options.Outfd = os.Stdout
+	if outfile != "" {
+		fd, err := os.Create(outfile)
+		if err != nil {
+			log.Errorf("%v\n", err)
+			return nil, err
+		}
+		api.Options.Outfd = fd
+	}
 
-	return f.Args()
+	return f.Args(), nil
 }
 
 func gatherjournals(journals string) (files []string) {

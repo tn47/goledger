@@ -5,9 +5,10 @@ import "fmt"
 import "strings"
 import "testing"
 import "bytes"
-import "compress/gzip"
 import "io/ioutil"
 import "os/exec"
+import "compress/gzip"
+import "path/filepath"
 
 var _ = fmt.Sprintf("dummy")
 var LEDGEREXEC = "../goledger"
@@ -995,6 +996,82 @@ func TestDirtInclude(t *testing.T) {
 //		}
 //	}
 //}
+
+func TestVersion(t *testing.T) {
+	testcases := [][]interface{}{
+		[]interface{}{
+			[]string{"version"},
+			"refdata/version.ref",
+		},
+	}
+	for _, testcase := range testcases {
+		ref := testdataFile(testcase[1].(string))
+		args := testcase[0].([]string)
+		cmd := exec.Command(LEDGEREXEC, args...)
+		out, _ := cmd.CombinedOutput()
+		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if bytes.Compare(out, ref) != 0 {
+			t.Logf(strings.Join(args, " "))
+			t.Logf("expected %s", ref)
+			t.Errorf("got %s", out)
+		}
+	}
+}
+
+func TestOutfile(t *testing.T) {
+	tempdir, ofile := os.TempDir(), "output"
+	outfile := filepath.Join(tempdir, ofile)
+	testcases := [][]interface{}{
+		[]interface{}{
+			[]string{"-f", "basic.ldg", "-o", outfile, "balance"},
+			"refdata/basic.balance.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "basic.ldg", "-o", outfile, "register"},
+			"refdata/basic.register.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "basic.ldg", "-o", outfile, "equity"},
+			"refdata/basic.equity.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "dirtaccount1.ldg", "-strict", "-o", outfile,
+				"list", "accounts"},
+			"refdata/dirtaccount1.list.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "dirtaccount1.ldg", "-strict", "-v", "-o", outfile,
+				"list", "accounts"},
+			"refdata/dirtaccount1.vlist.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "dirtcomm1.ldg", "-strict", "-o", outfile,
+				"list", "commodity"},
+			"refdata/dirtcomm1.list.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "dirtcomm1.ldg", "-strict", "-v", "-o", outfile,
+				"list", "commodity"},
+			"refdata/dirtcomm1.vlist.ref",
+		},
+	}
+	for _, testcase := range testcases {
+		ref := testdataFile(testcase[1].(string))
+		args := testcase[0].([]string)
+		cmd := exec.Command(LEDGEREXEC, args...)
+		cmd.CombinedOutput()
+		data, err := ioutil.ReadFile(outfile)
+		if err != nil {
+			t.Error(err)
+		}
+		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if bytes.Compare(data, ref) != 0 {
+			t.Logf(strings.Join(args, " "))
+			t.Logf("expected %s", ref)
+			t.Errorf("got %s", data)
+		}
+	}
+}
 
 func testdataFile(filename string) []byte {
 	f, err := os.Open(filename)

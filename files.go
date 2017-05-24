@@ -10,8 +10,12 @@ import "path/filepath"
 
 import "github.com/prataprc/golog"
 
-func readlines(filepath string) []string {
-	fd, _ := os.Open(filepath)
+func readlines(filepath string) ([]string, error) {
+	fd, err := os.Open(filepath)
+	if err != nil {
+		log.Errorf("%v\n", err)
+		return nil, err
+	}
 	defer fd.Close()
 
 	scanner := bufio.NewScanner(fd)
@@ -21,7 +25,7 @@ func readlines(filepath string) []string {
 	for scanner.Scan() {
 		lines = append(lines, scanner.Text())
 	}
-	return lines
+	return lines, nil
 }
 
 func coveringjournals(cwd string) (files []string) {

@@ -1,5 +1,7 @@
 package api
 
+import "os"
+
 var Options struct {
 	Dbname     string
 	Journals   []string
@@ -18,5 +20,6 @@ var Options struct {
 	Pedantic   bool
 	Checkpayee bool
 	Verbose    bool
+	Outfd      *os.File
 	Loglevel   string
 }
