@@ -57,7 +57,7 @@ func listjournals(cwd string) ([]string, error) {
 	files := []string{}
 	items, err := ioutil.ReadDir(cwd)
 	if err != nil {
-		log.Errorf("%v", err)
+		log.Errorf("%v\n", err)
 		return nil, err
 	}
 	for _, item := range items {

@@ -14,7 +14,9 @@ func main() {
 	args := phase1()
 	reporter, db := phase2(args)
 	nreporter, ndb := phase3(args, reporter, db)
-	nreporter.Render(args, ndb)
+	if nreporter != nil {
+		nreporter.Render(args, ndb)
+	}
 }
 
 func trycommand(args []string, phase string) bool {
@@ -92,6 +94,11 @@ func phase3(
 			os.Exit(0)
 		}
 	}()
+
+	if len(args) == 0 {
+		log.Consolef("command not supplied.\n")
+		return nil, nil
+	}
 
 	switch args[0] {
 	case "list", "ls":
