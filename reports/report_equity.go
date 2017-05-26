@@ -5,6 +5,7 @@ import "time"
 import "sort"
 
 import "github.com/tn47/goledger/api"
+import "github.com/tn47/goledger/dblentry"
 
 // ReportEquity for equity reporting.
 type ReportEquity struct {
@@ -99,12 +100,23 @@ func (report *ReportEquity) Render(args []string, db api.Datastorer) {
 
 	rcf.paddcells()
 	fmsg := rcf.Fmsg(" %%-%vs%%-%vs%%%vs\n")
+	comm := dblentry.NewCommodity("")
 
 	// start printing
 	outfd := api.Options.Outfd
 	fmt.Fprintln(outfd)
-	for _, cols := range report.rcf.rows {
-		fmt.Fprintf(outfd, fmsg, cols[0], cols[1], cols[2])
+	for i, cols := range report.rcf.rows {
+		items := []interface{}{cols[0]}
+		if i < 1 {
+			items = append(items, cols[1], cols[2])
+		} else {
+			items = append(
+				items,
+				api.YellowFn(cols[1]),
+				CommodityColor(db, comm, cols[2]),
+			)
+		}
+		fmt.Fprintf(outfd, fmsg, items...)
 	}
 	fmt.Fprintln(outfd)
 }

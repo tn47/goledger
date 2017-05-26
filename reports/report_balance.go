@@ -127,12 +127,23 @@ func (report *ReportBalance) Render(args []string, db api.Datastorer) {
 
 	rcf.paddcells()
 	fmsg := rcf.Fmsg(" %%-%vs%%-%vs%%%vs\n")
+	comm := dblentry.NewCommodity("")
 
 	// start printing
 	outfd := api.Options.Outfd
 	fmt.Fprintln(outfd)
-	for _, cols := range rcf.rows {
-		fmt.Fprintf(outfd, fmsg, cols[0], cols[1], cols[2])
+	for i, cols := range rcf.rows {
+		items := []interface{}{cols[0]}
+		if i < 2 {
+			items = append(items, cols[1], cols[2])
+		} else {
+			items = append(
+				items,
+				api.YellowFn(cols[1]),
+				CommodityColor(db, comm, cols[2]),
+			)
+		}
+		fmt.Fprintf(outfd, fmsg, items...)
 	}
 	fmt.Fprintln(outfd)
 }

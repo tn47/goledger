@@ -4,6 +4,7 @@ import "fmt"
 import "sort"
 
 import "github.com/tn47/goledger/api"
+import "github.com/tn47/goledger/dblentry"
 
 // ReportRegister for register reporting.
 type ReportRegister struct {
@@ -108,12 +109,22 @@ func (report *ReportRegister) Render(args []string, db api.Datastorer) {
 
 	rcf.paddcells()
 	fmsg := rcf.Fmsg(" %%-%vs%%-%vs%%-%vs%%%vs%%%vs\n")
+	comm1 := dblentry.NewCommodity("")
+	comm2 := dblentry.NewCommodity("")
 
 	// start printing
 	outfd := api.Options.Outfd
 	fmt.Fprintln(outfd)
-	for _, cols := range report.rcf.rows {
-		fmt.Fprintf(outfd, fmsg, cols[0], cols[1], cols[2], cols[3], cols[4])
+	for i, cols := range report.rcf.rows {
+		items := []interface{}{cols[0], cols[1]}
+		if i < 2 {
+			items = append(items, cols[2], cols[3], cols[4])
+		} else {
+			x := CommodityColor(db, comm1, cols[3])
+			y := CommodityColor(db, comm2, cols[4])
+			items = append(items, api.YellowFn(cols[2]), x, y)
+		}
+		fmt.Fprintf(outfd, fmsg, items...)
 	}
 	fmt.Fprintln(outfd)
 }

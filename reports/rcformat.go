@@ -1,7 +1,10 @@
 package reports
 
 import "fmt"
+import "strings"
 
+import "github.com/prataprc/goparsec"
+import "github.com/tn47/goledger/api"
 import "github.com/tn47/goledger/dblentry"
 
 // RCformat for {row, column} tabular formatting.
@@ -93,4 +96,25 @@ func (rcf *RCformat) Clone() *RCformat {
 	nrcf := *rcf
 	nrcf.rows = [][]string{}
 	return &nrcf
+}
+
+func CommodityColor(
+	db api.Datastorer, comm *dblentry.Commodity, text string) (out interface{}) {
+
+	if strings.Trim(text, " \t") == "" {
+		return text
+	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			out = text
+		}
+	}()
+
+	scanner := parsec.NewScanner([]byte(text))
+	node, _ := comm.Yledger(db.(*dblentry.Datastore))(scanner)
+	if node.(api.Commoditiser).Amount() < 0 {
+		return api.RedFn(text)
+	}
+	return text
 }
