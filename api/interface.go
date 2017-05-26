@@ -112,9 +112,15 @@ type Commoditiser interface {
 	// Currency is true if commodity is of type bool.
 	Currency() bool
 
+	// ApplyAmount commodities
+	ApplyAmount(other Commoditiser) error
+
 	// BalanceEqual is equality between two commodity, which implies equality
 	// in Name(), Amount() and Currency().
 	BalanceEqual(Commoditiser) bool
+
+	// MakeSimilar create a new instance of commodity simlar to this commodity
+	MakeSimilar(amount float64) Commoditiser
 
 	// Directive return the commodity details as directive declaration.
 	Directive() string

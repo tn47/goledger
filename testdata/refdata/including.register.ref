@@ -1,18 +1,36 @@
 
-  By-date      Payee               Account                 Amount      Balance 
-                                                                               
-  2004-May-01  Stock purchase      Assets:Share            50 KVB       50 KVB 
-                                   Assets:Checking      $-1500.00    $-1500.00 
-  2011-Mar-01  My Employer         Assets:Checking      INR500.00    INR500.00 
-                                   Income:Salary       INR-500.00   INR-500.00 
-  2011-Mar-15  Departmental store  Expenses:Groceries   INR100.00    INR100.00 
-                                   Assets:Checking     INR-100.00    INR400.00 
-  2011-Mar-15  Departmental store  Expenses:Groceries   INR100.00    INR200.00 
-                                   Assets:Checking     INR-100.00    INR300.00 
-  2011-Mar-29  My Employer         Assets:Checking      INR500.00    INR800.00 
-                                   Income:Salary       INR-500.00  INR-1000.00 
-  2011-Apr-29  My Employer         Assets:Checking        $500.00    $-1000.00 
-                                   Income:Salary         $-500.00     $-500.00 
-  2011-May-29  My Employer         Assets:Checking      INR500.00   INR1300.00 
-                                   Income:Salary       INR-500.00  INR-1500.00 
+  By-date      Payee               Account                 Amount    Balance 
+                                                                             
+  2004-May-01  Stock purchase      Assets:Share            50 KVB     50 KVB 
+                                   Assets:Checking      $-1500.00  $-1500.00 
+                                                                      50 KVB 
+  2011-Feb-28  My Employer         Assets:Checking      INR500.00  $-1500.00 
+                                                                   INR500.00 
+                                                                      50 KVB 
+                                   Income:Salary       INR-500.00  $-1500.00 
+                                                                      50 KVB 
+  2011-Mar-15  Departmental store  Expenses:Groceries   INR100.00  $-1500.00 
+                                                                   INR100.00 
+                                                                      50 KVB 
+                                   Assets:Checking     INR-100.00  $-1500.00 
+                                                                      50 KVB 
+  2011-Mar-15  Departmental store  Expenses:Groceries   INR100.00  $-1500.00 
+                                                                   INR100.00 
+                                                                      50 KVB 
+                                   Assets:Checking     INR-100.00  $-1500.00 
+                                                                      50 KVB 
+  2011-Mar-29  My Employer         Assets:Checking      INR500.00  $-1500.00 
+                                                                   INR500.00 
+                                                                      50 KVB 
+                                   Income:Salary       INR-500.00  $-1500.00 
+                                                                      50 KVB 
+  2011-Apr-29  My Employer         Assets:Checking        $500.00  $-1000.00 
+                                                                      50 KVB 
+                                   Income:Salary         $-500.00  $-1500.00 
+                                                                      50 KVB 
+  2011-May-29  My Employer         Assets:Checking      INR500.00  $-1500.00 
+                                                                   INR500.00 
+                                                                      50 KVB 
+                                   Income:Salary       INR-500.00  $-1500.00 
+                                                                      50 KVB 
 

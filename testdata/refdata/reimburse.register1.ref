@@ -1,12 +1,12 @@
 
-  By-date      Payee    Account                                 Amount   Balance 
+  By-date      Payee     Account                                 Amount  Balance 
                                                                                  
-  2004-Sep-29  Cir Cit  Assets:Reimbursements:MyCompany        $100.00   $100.00 
-                        Liabilities:MasterCard                $-100.00  $-100.00 
-  2004-Sep-29  MyCompa  Assets:Checking                        $100.00   $100.00 
-                        Assets:Reimbursements:MyCompany       $-100.00     $0.00 
-  2004-Sep-29  Cir Cit  MyCompany:Expenses:Computer:Software   $100.00   $100.00 
-                        MyCompany:Liabilities:Payable:Myname  $-100.00  $-100.00 
-  2004-Oct-15  MyCompa  MyCompany:Liabilities:Payable:Myname   $100.00     $0.00 
-                        MyCompany:Assets:Checking             $-100.00  $-100.00 
+  2004-Sep-29  Cir City  Assets:Reimbursements:MyCompany        $100.00  $100.00 
+                         Liabilities:MasterCard                $-100.00    $0.00 
+  2004-Sep-29  MyCompan  Assets:Checking                        $100.00  $100.00 
+                         Assets:Reimbursements:MyCompany       $-100.00    $0.00 
+  2004-Sep-29  Cir City  MyCompany:Expenses:Computer:Software   $100.00  $100.00 
+                         MyCompany:Liabilities:Payable:Myname  $-100.00    $0.00 
+  2004-Oct-15  MyCompan  MyCompany:Liabilities:Payable:Myname   $100.00  $100.00 
+                         MyCompany:Assets:Checking             $-100.00    $0.00 
 

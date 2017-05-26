@@ -67,6 +67,10 @@ func (comm *Commodity) Currency() bool {
 	return comm.currency
 }
 
+func (comm *Commodity) ApplyAmount(other api.Commoditiser) error {
+	return comm.doAdd(other.(*Commodity))
+}
+
 func (comm *Commodity) BalanceEqual(other api.Commoditiser) bool {
 	if comm.name != other.Name() {
 		panic("impossible situation")
@@ -76,6 +80,24 @@ func (comm *Commodity) BalanceEqual(other api.Commoditiser) bool {
 	return comm.amount == other.Amount()
 }
 
+func (comm *Commodity) MakeSimilar(amount float64) api.Commoditiser {
+	return comm.makeSimilar(amount)
+}
+
+func (comm *Commodity) makeSimilar(amount float64) *Commodity {
+	newcomm := &Commodity{
+		name:      comm.name,
+		notes:     comm.notes,
+		amount:    amount,
+		currency:  comm.currency,
+		precision: comm.precision,
+		mark1k:    comm.mark1k,
+		fixprice:  comm.fixprice,
+		total:     comm.total,
+		nomarket:  comm.nomarket,
+	}
+	return newcomm
+}
 func (comm *Commodity) String() string {
 	amountstr := fmt.Sprintf("%v", comm.amount)
 	if comm.precision >= 0 {
@@ -247,6 +269,7 @@ func (comm *Commodity) doAdd(other *Commodity) error {
 	n1, c1, n2, c2 := comm.name, comm.currency, other.name, other.currency
 	if comm.name == other.name && comm.currency == other.currency {
 		comm.amount += other.amount
+		return nil
 	}
 	return fmt.Errorf("can't <%v:%v> + <%v:%v>", n1, c1, n2, c2)
 }
@@ -255,21 +278,7 @@ func (comm *Commodity) doDeduct(other *Commodity) error {
 	n1, c1, n2, c2 := comm.name, comm.currency, other.name, other.currency
 	if comm.name == other.name && comm.currency == other.currency {
 		comm.amount -= other.amount
+		return nil
 	}
 	return fmt.Errorf("can't <%v:%v> - <%v:%v>", n1, c1, n2, c2)
-}
-
-func (comm *Commodity) makeSimilar(amount float64) *Commodity {
-	newcomm := &Commodity{
-		name:      comm.name,
-		notes:     comm.notes,
-		amount:    amount,
-		currency:  comm.currency,
-		precision: comm.precision,
-		mark1k:    comm.mark1k,
-		fixprice:  comm.fixprice,
-		total:     comm.total,
-		nomarket:  comm.nomarket,
-	}
-	return newcomm
 }

@@ -3,10 +3,10 @@
 [Warng] account "Expenses:Groceries" not pre-declared
 [Warng] account "Assets:Checking" not pre-declared
 
-  By-date      Payee               Account                 Amount     Balance 
-                                                                              
-  2011-Mar-01  My Employer         Assets:Checking      INR500.00   INR500.00 
-                                   Income:Salary       INR-500.00  INR-500.00 
-  2011-Mar-15  Departmental store  Expenses:Groceries   INR100.00   INR100.00 
-                                   Assets:Checking     INR-100.00   INR400.00 
+  By-date      Payee               Account                 Amount    Balance 
+                                                                             
+  2011-Mar-01  My Employer         Assets:Checking      INR500.00  INR500.00 
+                                   Income:Salary       INR-500.00    INR0.00 
+  2011-Mar-15  Departmental store  Expenses:Groceries   INR100.00  INR100.00 
+                                   Assets:Checking     INR-100.00    INR0.00 
 

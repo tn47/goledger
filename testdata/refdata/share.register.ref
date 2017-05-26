@@ -3,9 +3,11 @@
                                                                                  
   2004-May-01  Stock purchase  Assets:Broker                  50 AAPL    50 AAPL 
                                Expenses:Broker:Commissions     $19.95     $19.95 
-                               Assets:Broker                $-1519.95  $-1519.95 
-  2005-Aug-01  Stock sale      Assets:Broker                 -50 AAPL     0 AAPL 
-                               Expenses:Broker:Commissions     $19.95     $39.90 
-                               Income:Capital Gains         $-1000.00  $-1000.00 
-                               Assets:Broker                 $2480.05    $960.10 
+                                                                         50 AAPL 
+                               Assets:Broker                $-1519.95  $-1500.00 
+                                                                         50 AAPL 
+  2005-Aug-01  Stock sale      Assets:Broker                 -50 AAPL  $-1500.00 
+                               Expenses:Broker:Commissions     $19.95  $-1480.05 
+                               Income:Capital Gains         $-1000.00  $-2480.05 
+                               Assets:Broker                 $2480.05      $0.00 
 

@@ -2,9 +2,9 @@
   By-date      Payee            Account               Amount    Balance 
                                                                         
   2011-Jan-25  Tom's Used Cars  Assets:Checking    $-5500.00  $-5500.00 
-                                Expenses:CarLease   $5500.00   $5500.00 
+                                Expenses:CarLease   $5500.00      $0.00 
   2011-Jan-27  Book Store       Expenses:Books        $20.00     $20.00 
-                                Assets:Checking      $-20.00  $-5520.00 
+                                Assets:Checking      $-20.00      $0.00 
   2011-Dec-01  Sale             Expenses:KFC          $30.00     $30.00 
-                                Assets:Cash          $-30.00    $-30.00 
+                                Assets:Cash          $-30.00      $0.00 
 

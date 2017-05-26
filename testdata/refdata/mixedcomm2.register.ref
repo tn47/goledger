@@ -2,9 +2,11 @@
   By-date      Payee                   Account                   Amount    Balance 
                                                                                    
   2017-Sep-29  Get som stu at the Inn  Places:Black's Tavern  -3 Apples  -3 Apples 
-                                                              -5 Steaks  -5 Steaks 
-                                       EverQuest:Inventory     3 Apples   3 Apples 
-                                                               5 Steaks   5 Steaks 
-  2017-Oct-02  Sturm Brightblade       EverQuest:Inventory    -2 Steaks   3 Steaks 
-                                                                15 Gold    15 Gold 
+                                       Places:Black's Tavern  -5 Steaks  -3 Apples 
+                                                                         -5 Steaks 
+                                       EverQuest:Inventory     3 Apples  -5 Steaks 
+                                       EverQuest:Inventory     5 Steaks   0 Steaks 
+  2017-Oct-02  Sturm Brightblade       EverQuest:Inventory    -2 Steaks  -2 Steaks 
+                                       EverQuest:Inventory      15 Gold    15 Gold 
+                                                                         -2 Steaks 
 

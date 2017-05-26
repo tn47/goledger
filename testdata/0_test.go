@@ -1064,7 +1064,7 @@ func TestOutfile(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		//ioutil.WriteFile(testcase[1].(string), data, 0660)
 		if bytes.Compare(data, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)

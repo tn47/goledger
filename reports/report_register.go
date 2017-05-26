@@ -1,6 +1,7 @@
 package reports
 
 import "fmt"
+import "sort"
 
 import "github.com/tn47/goledger/api"
 
@@ -10,6 +11,8 @@ type ReportRegister struct {
 	filteraccounts []string
 	filterpayees   []string
 	register       [][]string
+	balances       map[string]api.Commoditiser
+	lastcomm       api.Commoditiser
 }
 
 // NewReportRegister create an instance for register reporting.
@@ -19,6 +22,7 @@ func NewReportRegister(args []string) *ReportRegister {
 		filteraccounts: make([]string, 0),
 		filterpayees:   make([]string, 0),
 		register:       make([][]string, 0),
+		balances:       make(map[string]api.Commoditiser),
 	}
 	for i, arg := range args[1:] {
 		if arg == "@" || arg == "payee" {
@@ -42,7 +46,6 @@ func (report *ReportRegister) Transaction(
 	db api.Datastorer, trans api.Transactor) error {
 
 	date, transpayee := trans.Date().Format("2006-Jan-02"), trans.Payee()
-	prevaccname := ""
 	for _, p := range trans.GetPostings() {
 		accname := p.Account().Name()
 		if report.isfiltered() {
@@ -54,20 +57,15 @@ func (report *ReportRegister) Transaction(
 			}
 		}
 		commodity := p.Commodity()
-		row := []string{
-			date, transpayee, accname, commodity.String(),
-			p.Account().Balance(commodity.Name()).String(),
-		}
+		report.applyBalance(commodity)
+		row := []string{date, transpayee, accname, commodity.String(), ""}
 		if p.Payee() != trans.Payee() {
 			row[1] = p.Payee()
 		}
-		if prevaccname == accname {
-			row[2] = ""
-		}
-		report.register = append(report.register, row)
+		rows := report.fillbalances(row)
+		report.register = append(report.register, rows...)
 
 		date, transpayee = "", ""
-		prevaccname = accname
 	}
 	return nil
 }
@@ -131,4 +129,44 @@ func (report *ReportRegister) Clone() api.Reporter {
 
 func (report *ReportRegister) isfiltered() bool {
 	return (len(report.filteraccounts) + len(report.filterpayees)) > 0
+}
+
+func (report *ReportRegister) applyBalance(comm api.Commoditiser) {
+	name := comm.Name()
+	if _, ok := report.balances[name]; ok == false {
+		report.balances[name] = comm.MakeSimilar(0)
+	}
+	report.balances[name].ApplyAmount(comm)
+}
+
+func (report *ReportRegister) fillbalances(row []string) [][]string {
+	if len(report.balances) == 0 {
+		return [][]string{row}
+	}
+	names := []string{}
+	for name := range report.balances {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+
+	bal := report.balances[names[0]]
+	row[len(row)-1] = bal.String()
+
+	date, payee, accname, amount := row[0], row[1], row[2], row[3]
+	rows := [][]string{}
+	for _, name := range names {
+		balance := report.balances[name]
+		if balance.Amount() == 0 {
+			continue
+		}
+		rw := []string{date, payee, accname, amount, balance.String()}
+		rows = append(rows, rw)
+		date, payee, accname, amount = "", "", "", ""
+		report.lastcomm = balance
+	}
+	if len(rows) == 0 {
+		rw := []string{date, payee, accname, amount, report.lastcomm.String()}
+		rows = append(rows, rw)
+	}
+	return rows
 }
