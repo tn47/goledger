@@ -3,13 +3,13 @@ package main
 import "os"
 import "fmt"
 import "flag"
+import "strconv"
 
 import "github.com/prataprc/golog"
 import "github.com/tn47/goledger/api"
 
 func argparse() ([]string, error) {
-	var journals string
-	var outfile string
+	var journals, outfile, finyear string
 
 	f := flag.NewFlagSet("ledger", flag.ExitOnError)
 	f.Usage = func() {
@@ -30,6 +30,8 @@ func argparse() ([]string, error) {
 		"Display only transactions on or before the current date.")
 	f.StringVar(&api.Options.Enddt, "end", "",
 		"Display only transactions on or before the current date.")
+	f.StringVar(&finyear, "fy", "",
+		"financial year.")
 	f.StringVar(&api.Options.Period, "period", "",
 		"Limit the processing to transactions in PERIOD_EXPRESSION.")
 	f.BoolVar(&api.Options.Cleared, "cleared", true,
@@ -62,16 +64,8 @@ func argparse() ([]string, error) {
 	f.Parse(os.Args[1:])
 
 	api.Options.Journals = gatherjournals(journals)
-	api.Options.Outfd = os.Stdout
-	if outfile != "" {
-		fd, err := os.Create(outfile)
-		if err != nil {
-			log.Errorf("%v\n", err)
-			return nil, err
-		}
-		api.Options.Outfd = fd
-	}
-
+	api.Options.Outfd = argOutfd(outfile)
+	api.Options.Finyear = argFinyear(finyear)
 	return f.Args(), nil
 }
 
@@ -99,4 +93,30 @@ func gatherjournals(journals string) (files []string) {
 	}
 	files = append(files, coveringjournals(cwd)...)
 	return files
+}
+
+func argOutfd(outfile string) *os.File {
+	outfd := os.Stdout
+	if outfile != "" {
+		fd, err := os.Create(outfile)
+		if err != nil {
+			log.Errorf("%v\n", err)
+			os.Exit(1)
+		}
+		outfd = fd
+	}
+	return outfd
+}
+
+func argFinyear(finyear string) int {
+	if finyear == "" {
+		return 0
+	}
+
+	fy, err := strconv.Atoi(finyear)
+	if err != nil {
+		log.Errorf("arg `-fy` invalid: %v\n", err)
+		os.Exit(1)
+	}
+	return fy
 }

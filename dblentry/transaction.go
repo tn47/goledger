@@ -19,6 +19,7 @@ type Transaction struct {
 	metadata map[string]interface{}
 	notes    []string
 	lineno   int
+	lines    []string
 
 	postings []*Posting
 }
@@ -29,6 +30,7 @@ func NewTransaction() *Transaction {
 		tags:     []string{},
 		metadata: map[string]interface{}{},
 		notes:    []string{},
+		lines:    []string{},
 	}
 	return trans
 }
@@ -64,6 +66,14 @@ func (trans *Transaction) SetLineno(lineno int) {
 // Lineno get lineno in journal file for this transaction.
 func (trans *Transaction) Lineno() int {
 	return trans.lineno
+}
+
+func (trans *Transaction) Addlines(lines ...string) {
+	trans.lines = append(trans.lines, lines...)
+}
+
+func (trans *Transaction) Printlines() []string {
+	return trans.lines
 }
 
 //---- api.Transactor methods.

@@ -2,6 +2,7 @@ package dblentry
 
 import "fmt"
 import "sort"
+import "time"
 import "strings"
 
 import "github.com/prataprc/goparsec"
@@ -40,6 +41,9 @@ type Datastore struct {
 	balance     map[string]*Commodity
 	transdb     *DB
 	pricedb     *DB
+
+	// configuration
+	periodtill *time.Time
 }
 
 // NewDatastore return a new datastore.
@@ -92,6 +96,11 @@ func (db *Datastore) getCommodity(name string, defcomm *Commodity) *Commodity {
 
 func (db *Datastore) GetCommodity(name string) api.Commoditiser {
 	return db.getCommodity(name, nil)
+}
+
+func (db *Datastore) Applytill(till time.Time) {
+	periodtill := till
+	db.periodtill = &periodtill
 }
 
 // Firstpassok to track parsephase
@@ -246,8 +255,10 @@ func (db *Datastore) Secondpass() error {
 
 	for _, kv := range db.transdb.Range(nil, nil, "both", kvfull) {
 		trans := kv.v.(*Transaction)
-		if err := trans.Secondpass(db); err != nil {
-			return err
+		if db.periodtill == nil || trans.Date().Before(*db.periodtill) {
+			if err := trans.Secondpass(db); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

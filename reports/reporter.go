@@ -36,6 +36,8 @@ func NewReporter(args []string) (reporter api.Reporter) {
 		reports.reporters = append(reports.reporters, NewReportEquity(args))
 	case "list", "ls":
 		reports.reporters = append(reports.reporters, NewReportList(args))
+	case "print":
+		reports.reporters = append(reports.reporters, NewReportPrint(args))
 	}
 	return reports
 }

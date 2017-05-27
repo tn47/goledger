@@ -74,6 +74,9 @@ type Transactor interface {
 
 	// GetPostings return list of all postings under this transaction.
 	GetPostings() []Poster
+
+	// Printlines return the original lines from which transaction was parsed.
+	Printlines() []string
 }
 
 // Poster encapsulates a single posting within a transaction.

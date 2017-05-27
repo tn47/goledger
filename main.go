@@ -2,6 +2,7 @@ package main
 
 import "os"
 import "fmt"
+import "time"
 
 import "github.com/prataprc/golog"
 import "github.com/tn47/goledger/dblentry"
@@ -59,6 +60,7 @@ func phase1() (args []string) {
 		"log.prefix":     "[%v]",
 	}
 	log.SetLogger(nil, logsetts)
+
 	return args
 }
 
@@ -75,6 +77,12 @@ func phase2(args []string) (api.Reporter, api.Datastorer) {
 
 	reporter := reports.NewReporter(args)
 	db := dblentry.NewDatastore(api.Options.Dbname, reporter)
+
+	// apply command line arguments here.
+	if api.Options.Finyear > 0 {
+		till := time.Date(api.Options.Finyear, 4, 1, 0, 0, 0, 0, time.Local)
+		db.Applytill(till)
+	}
 
 	for _, journal := range api.Options.Journals {
 		log.Debugf("processing journal %q\n", journal)

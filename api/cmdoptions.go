@@ -8,6 +8,7 @@ var Options struct {
 	Currentdt  string
 	Begindt    string
 	Enddt      string
+	Finyear    int
 	Period     string
 	Cleared    bool
 	Uncleared  bool

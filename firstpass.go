@@ -42,9 +42,13 @@ func dofirstpass(db *dblentry.Datastore, journalfile string) error {
 
 		switch obj := node.(type) {
 		case *dblentry.Transaction:
+			obj.Addlines(block[0])
+
 			index, err = obj.Yledgerblock(db, block[1:])
 			lineno += 1 + index
 			obj.SetLineno(lineno)
+
+			obj.Addlines(block[1:]...)
 
 		case *dblentry.Directive:
 			index, err = obj.Yledgerblock(db, block[1:])
@@ -98,7 +102,7 @@ func blockiterate(lines []string) func() (int, []string, bool, error) {
 		for ; row < len(lines); row++ {
 			line := lines[row]
 			if (len(line) > 0) && (line[0] == ' ' || line[0] == '\t') {
-				if line = strings.TrimLeft(line, " \t"); line == "" {
+				if line1 := strings.TrimLeft(line, " \t"); line1 == "" {
 					break
 				}
 				blocklines = append(blocklines, line)
@@ -117,8 +121,8 @@ func blockiterate(lines []string) func() (int, []string, bool, error) {
 				continue
 			}
 			if line[0] == ' ' || line[0] == '\t' {
-				line = strings.TrimLeft(line, " \t")
-				if line == "" { // emptyline
+				line1 := strings.TrimLeft(line, " \t")
+				if line1 == "" { // emptyline
 					continue
 				} else {
 					fmsg := "must be at the begnning: row:%v column: 0"
