@@ -3,6 +3,7 @@ package reports
 import "fmt"
 import "time"
 import "sort"
+import "strings"
 
 import "github.com/tn47/goledger/api"
 import "github.com/tn47/goledger/dblentry"
@@ -100,9 +101,10 @@ func (report *ReportEquity) Render(args []string, db api.Datastorer) {
 	}
 
 	rcf.paddcells()
-	fmsg := rcf.Fmsg(" %%-%vs%%-%vs%%%vs\n")
+	fmsg := rcf.Fmsg("%%-%vs%%-%vs%%%vs\n")
 	comm := dblentry.NewCommodity("")
 
+	report.rcf.rows[0][0] = strings.TrimLeft(report.rcf.rows[0][0], " ")
 	// start printing
 	outfd := api.Options.Outfd
 	fmt.Fprintln(outfd)
