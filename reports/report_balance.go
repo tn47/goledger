@@ -106,11 +106,15 @@ func (report *ReportBalance) Render(args []string, db api.Datastorer) {
 
 	for i, key := range keys {
 		rows := report.balance[key]
-		for _, cols := range rows {
-			cols[1] = fmtkeys[i]
+		for j, cols := range rows {
+			cols[1] = ""
+			if j == len(rows)-1 {
+				cols[1] = fmtkeys[i]
+			}
 			rcf.addrow(cols...)
 		}
 	}
+
 	if report.isfiltered() == false {
 		dashes := api.Repeatstr("-", rcf.maxwidth(rcf.column(2)))
 		rcf.addrow([]string{"", "", dashes}...)
