@@ -99,15 +99,16 @@ func (report *ReportBalance) Render(args []string, db api.Datastorer) {
 	}
 	sort.Strings(keys)
 
-	report.indent("", "", keys)
+	fmtkeys := Indent(keys)
 
 	rcf.addrow([]string{"By-date", "Account", "Balance"}...)
 	rcf.addrow([]string{"", "", ""}...) // empty line
 
-	for _, key := range keys {
+	for i, key := range keys {
 		rows := report.balance[key]
-		for _, row := range rows {
-			rcf.addrow(row...)
+		for _, cols := range rows {
+			cols[1] = fmtkeys[i]
+			rcf.addrow(cols...)
 		}
 	}
 	if report.isfiltered() == false {
@@ -176,58 +177,6 @@ func (report *ReportBalance) prunebubbled() {
 			delete(report.balance, bbname)
 		}
 	}
-}
-
-func (report *ReportBalance) indent(
-	indent, prefix string, keys []string) []string {
-
-	adjustname := func(key string) {
-		rows := report.balance[key]
-		name := rows[len(rows)-1][1]
-		if prefix != "" {
-			name = strings.Trim(name[len(prefix):], ":")
-			name = indent + name
-		}
-		rows[len(rows)-1][1] = name
-	}
-
-	newargs := func(start int, keys []string) (int, int, string, int) {
-		rows := report.balance[keys[start]]
-		first := rows[len(rows)-1][1] // accountname
-		return start + 1, start + 1, first, len(first)
-	}
-
-	var okkeys []string
-
-	if len(keys) > 1 {
-		start, end, first, fln := newargs(0, keys)
-		//fmt.Printf("enter %q %v %v\n", first, start, end)
-		for end < len(keys) {
-			if strings.HasPrefix(keys[end], first) && keys[end][fln] == ':' {
-				end++
-				continue
-			}
-			if end > start {
-				okkeys = report.indent(indent+"  ", first, keys[start:end])
-			}
-			start, end, first, fln = newargs(end, keys)
-		}
-		if end > start {
-			okkeys = report.indent(indent+"  ", first, keys[start:end])
-		}
-	}
-
-	//fmt.Printf("adjustname %q %q \n", indent, prefix)
-outer:
-	for _, key := range keys {
-		for _, okkey := range okkeys {
-			if key == okkey {
-				continue outer
-			}
-		}
-		adjustname(key)
-	}
-	return keys
 }
 
 func (report *ReportBalance) isfiltered() bool {
