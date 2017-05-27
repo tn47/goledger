@@ -28,7 +28,7 @@ var ytokTransnote = parsec.Token(";.*", "TRANSNOTE")
 
 //---- Posting tokens
 
-var ytokPostacc1 = parsec.Token(`[a-zA-Z]([0-9a-zA-Z`+accchars+`]* )*([  ]|[\t])`, "POSTACCN1")
+var ytokPostacc1 = parsec.Token(`[a-zA-Z]([0-9a-zA-Z`+accchars+`]+ )*([  ]|[\t])`, "POSTACCN1")
 var ytokPostnote = parsec.Token(";[^;]+", "POSTNOTE")
 var ytokAt = parsec.Token("@", "COSTAT")
 var ytokAtat = parsec.Token("@@", "COSTATAT")
