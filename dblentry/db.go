@@ -84,6 +84,9 @@ func (db *DB) Len() int {
 }
 
 func (db *DB) Less(i, j int) bool {
+	if db.entries[i].k.Equal(db.entries[j].k) {
+		return true
+	}
 	return db.entries[i].k.Before(db.entries[j].k)
 }
 
