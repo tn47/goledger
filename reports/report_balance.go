@@ -72,6 +72,10 @@ func (report *ReportBalance) BubblePosting(
 	db api.Datastorer, trans api.Transactor,
 	p api.Poster, account api.Accounter) error {
 
+	if api.Options.Nosubtotal {
+		return nil
+	}
+
 	bbname := account.Name()
 
 	// final balance
@@ -99,7 +103,10 @@ func (report *ReportBalance) Render(args []string, db api.Datastorer) {
 	}
 	sort.Strings(keys)
 
-	fmtkeys := Indent(keys)
+	fmtkeys := keys
+	if api.Options.Nosubtotal == false {
+		fmtkeys = Indent(keys)
+	}
 
 	rcf.addrow([]string{"By-date", "Account", "Balance"}...)
 	rcf.addrow([]string{"", "", ""}...) // empty line

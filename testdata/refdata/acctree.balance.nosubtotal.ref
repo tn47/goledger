@@ -1,0 +1,16 @@
+
+  By-date      Account             Balance 
+                                           
+  2011/Jan/29  Asset              1500.00  
+  2011/Mar/15  Asset:Cash          -50.00  
+  2011/Feb/15  Asset:FD           -100.00  
+  2011/Mar/15  Asset:FD:KVB1        75.00  
+  2011/Mar/15  Asset:FD:KVB2        75.00  
+  2011/Jan/29  Assets              500.00  
+  2011/Jan/29  Income:Contract1   -500.00  
+  2011/Jan/29  Incomes            -500.00  
+  2011/Jan/29  Incomes:Contract2  -500.00  
+  2011/Jan/29  Incomes:Contract3  -500.00  
+                                  -------- 
+  2011/Mar/15                        0.00  
+

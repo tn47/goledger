@@ -10,6 +10,7 @@ var Options struct {
 	Enddt      string
 	Finyear    int
 	Period     string
+	Nosubtotal bool
 	Cleared    bool
 	Uncleared  bool
 	Pending    bool

@@ -34,6 +34,8 @@ func argparse() ([]string, error) {
 		"financial year.")
 	f.StringVar(&api.Options.Period, "period", "",
 		"Limit the processing to transactions in PERIOD_EXPRESSION.")
+	f.BoolVar(&api.Options.Nosubtotal, "nosubtotal", false,
+		"Don't accumulate postings on sub-leger to parent ledger.")
 	f.BoolVar(&api.Options.Cleared, "cleared", true,
 		"Display only cleared postings.")
 	f.BoolVar(&api.Options.Uncleared, "uncleared", true,

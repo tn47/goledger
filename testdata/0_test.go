@@ -260,6 +260,10 @@ func TestDates(t *testing.T) {
 			"refdata/dates.balance.ref",
 		},
 		[]interface{}{
+			[]string{"-f", "dates.ldg", "-nosubtotal", "balance"},
+			"refdata/dates.balance.nosubtotal.ref",
+		},
+		[]interface{}{
 			[]string{"-f", "dates.ldg", "register"},
 			"refdata/dates.register1.ref",
 		},
@@ -679,6 +683,10 @@ func TestAcctree(t *testing.T) {
 		[]interface{}{
 			[]string{"-f", "acctree.ldg", "balance"},
 			"refdata/acctree.balance.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "acctree.ldg", "-nosubtotal", "balance"},
+			"refdata/acctree.balance.nosubtotal.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "acctree.ldg", "register"},

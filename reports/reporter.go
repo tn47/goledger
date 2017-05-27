@@ -92,8 +92,10 @@ func (reports *Reports) Posting(
 		}
 	}
 
-	if err := db.AggregateTotal(trans, p); err != nil {
-		return err
+	if api.Options.Nosubtotal == false {
+		if err := db.AggregateTotal(trans, p); err != nil {
+			return err
+		}
 	}
 
 	return nil

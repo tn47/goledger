@@ -1,7 +1,9 @@
 package dblentry
 
 import "time"
-import "sort"
+import "fmt"
+
+var _ = fmt.Sprintf("dummy")
 
 // DB impelements array based sorted key-value entries.
 type DB struct {
@@ -22,8 +24,21 @@ func NewDB(name string) *DB {
 
 // Insert a KV entry into DB.
 func (db *DB) Insert(k time.Time, v interface{}) error {
-	db.entries = append(db.entries, KV{k: k, v: v})
-	sort.Sort(db)
+	entry := KV{k: k, v: v}
+	db.entries = append(db.entries, entry)
+	if len(db.entries) == 1 {
+		return nil
+	}
+	nentries := make([]KV, len(db.entries))
+	for i, kv := range db.entries[:len(db.entries)-1] {
+		if k.Before(kv.k) {
+			copy(nentries, db.entries[:i])
+			nentries[i] = entry
+			copy(nentries[i+1:], db.entries[i:])
+			db.entries = nentries
+			return nil
+		}
+	}
 	return nil
 }
 

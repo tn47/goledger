@@ -22,6 +22,7 @@ func NewReportEquity(args []string) *ReportEquity {
 		filteraccounts: make([]string, 0),
 		equity:         make(map[string][][]string),
 	}
+	api.Options.Nosubtotal = true
 	if len(args) > 1 {
 		report.filteraccounts = args[1:]
 	}
