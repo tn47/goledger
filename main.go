@@ -57,7 +57,7 @@ func phase1() (args []string) {
 		"log.level":      api.Options.Loglevel,
 		"log.file":       "",
 		"log.timeformat": "",
-		"log.prefix":     "[%v]",
+		"log.prefix":     "%v:",
 	}
 	log.SetLogger(nil, logsetts)
 
