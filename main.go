@@ -58,6 +58,9 @@ func phase1() (args []string) {
 		"log.file":       "",
 		"log.timeformat": "",
 		"log.prefix":     "%v:",
+		"log.colorfatal": "red",
+		"log.colorerror": "hired",
+		"log.colorwarn":  "yellow",
 	}
 	log.SetLogger(nil, logsetts)
 
