@@ -339,7 +339,9 @@ func (trans *Transaction) doBalance() ([]*Commodity, bool) {
 	unbcs := []*Commodity{}
 	for _, name := range commnames {
 		unbc := unbalanced[name]
-		if unbc.amount > float64(0.009) {
+		// it is supposed to be unbc.amount == 0.0
+		// issue #38
+		if unbc.amount > float64(0.009) || unbc.amount < -float64(0.009) {
 			unbcs = append(unbcs, unbc)
 		}
 	}
