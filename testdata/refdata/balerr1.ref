@@ -1,1 +1,1 @@
-[Error] lineno 3: balance-commodity(Gold) != posting-commodity($)
+Error: lineno 3: balance-commodity(Gold) != posting-commodity($)

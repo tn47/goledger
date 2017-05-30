@@ -1,1 +1,1 @@
-[Error] *dblentry.Transaction at lineno 7: Unknown account "Expenses:Unknown" has no matching payee "Chats"
+Error: *dblentry.Transaction at lineno 7: Unknown account "Expenses:Unknown" has no matching payee "Chats"

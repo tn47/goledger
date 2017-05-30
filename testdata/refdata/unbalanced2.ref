@@ -1,1 +1,1 @@
-[Error] *dblentry.Transaction at lineno 1: Only one null posting allowed per transaction
+Error: *dblentry.Transaction at lineno 1: Only one null posting allowed per transaction

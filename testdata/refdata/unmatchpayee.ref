@@ -1,1 +1,1 @@
-[Error] *dblentry.Transaction at lineno 7: Unknown account "Expenses:Unknown" has no matching prefix with "MyCompany:Expenses:Food:KFC"
+Error: *dblentry.Transaction at lineno 7: Unknown account "Expenses:Unknown" has no matching prefix with "MyCompany:Expenses:Food:KFC"

@@ -1,7 +1,7 @@
-[Warng] account "Assets:Checking" not pre-declared
-[Warng] account "Income:Salary" not pre-declared
-[Warng] account "Expenses:Groceries" not pre-declared
-[Warng] account "Assets:Checking" not pre-declared
+Warng: account "Assets:Checking" not pre-declared
+Warng: account "Income:Salary" not pre-declared
+Warng: account "Expenses:Groceries" not pre-declared
+Warng: account "Assets:Checking" not pre-declared
 
   By-date      Payee               Account                 Amount    Balance 
                                                                              
