@@ -1,4 +1,8 @@
-alias Dining=Expenses:Entertainment:Dining
-
 account Expenses:Entertainment:Dining
     note  Eating out once a week
+
+account Expenses:Dining
+    note  Food expenses
+
+alias Dining=Expenses:Entertainment:Dining
+alias Dining=Expenses:Dining

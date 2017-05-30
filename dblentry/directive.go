@@ -400,6 +400,8 @@ func (d *Directive) Firstpass(db *Datastore) error {
 		return db.setrootaccount(d.accname)
 
 	case "alias":
+		account := db.GetAccount(d.accname).(*Account)
+		account.addAlias(d.aliasname)
 		db.addAlias(d.aliasname, d.accname)
 		return nil
 

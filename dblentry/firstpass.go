@@ -4,6 +4,8 @@ import "time"
 import "fmt"
 import "regexp"
 
+import "github.com/prataprc/golog"
+
 type firstpass struct {
 	defaultcomm string
 	comments    []string
@@ -95,6 +97,10 @@ func (fp *firstpass) getBalancingaccount() string {
 
 func (fp *firstpass) addAlias(aliasname, accountname string) {
 	if aliasname != "" {
+		if _, ok := fp.aliases[aliasname]; ok {
+			fmsg := "alias %q already defined for account %q\n"
+			log.Warnf(fmsg, aliasname, accountname)
+		}
 		fp.aliases[aliasname] = accountname
 	}
 }
