@@ -7,10 +7,6 @@ import "strings"
 import "github.com/prataprc/goparsec"
 import "github.com/tn47/goledger/api"
 
-var inclusives = []string{
-	"asset", "liability", "capital", "equity", "income", "expense",
-}
-
 // Account implements api.Accounter{} interface.
 type Account struct {
 	name       string
@@ -22,6 +18,7 @@ type Account struct {
 	notes   []string
 	aliases []string
 	payees  []string
+	atype   string
 }
 
 // NewAccount create a new instance of Account{}.
@@ -29,6 +26,7 @@ func NewAccount(name string) *Account {
 	acc := &Account{
 		name:    name,
 		balance: make(map[string]*Commodity),
+		atype:   "exchange", // default type
 	}
 	return acc
 }
@@ -37,11 +35,6 @@ func NewAccount(name string) *Account {
 
 func (acc *Account) setPosting() {
 	acc.hasposting = true
-}
-
-func (acc *Account) setOpeningbalance(commodity *Commodity) *Account {
-	acc.balance[commodity.name] = commodity.makeSimilar(commodity.amount)
-	return acc
 }
 
 func (acc *Account) isVirtual() bool {
@@ -262,7 +255,9 @@ func (acc *Account) Firstpass(
 func (acc *Account) Secondpass(
 	db *Datastore, trans *Transaction, p *Posting) error {
 
-	p.account.addBalance(p.commodity)
+	if err := p.account.addBalance(p.commodity); err != nil {
+		return err
+	}
 
 	balance := p.account.Balance(p.commodity.name)
 	if p.balprice != nil {
@@ -287,22 +282,61 @@ func (acc *Account) Clone(ndb *Datastore) *Account {
 	return &nacc
 }
 
-func (acc *Account) addBalance(commodity *Commodity) {
+func (acc *Account) addBalance(commodity *Commodity) error {
 	if balance, ok := acc.balance[commodity.name]; ok {
 		balance.amount += commodity.amount
 		acc.balance[commodity.name] = balance
-		return
+	} else {
+		acc.balance[commodity.name] = commodity.makeSimilar(commodity.amount)
 	}
-	acc.balance[commodity.name] = commodity.makeSimilar(commodity.amount)
+	balance := acc.balance[commodity.name]
+	if err := acc.assert(commodity, balance); err != nil {
+		return err
+	}
+	return nil
 }
 
-func (acc *Account) deductBalance(commodity *Commodity) {
-	if balance, ok := acc.balance[commodity.name]; ok {
-		balance.amount -= commodity.amount
-		acc.balance[commodity.name] = balance
-		return
+func (acc *Account) assert(comm, bal *Commodity) error {
+	switch acc.atype {
+	case "credit":
+		return acc.assertcredit(comm)
+	case "debit":
+		return acc.assertdebit(comm)
+	case "creditbalance":
+		return acc.assertcrb(bal)
+	case "debitbalance":
+		return acc.assertdrb(bal)
+	case "exchange":
 	}
-	acc.balance[commodity.name] = commodity.makeSimilar(commodity.amount)
+	return nil
+}
+
+func (acc *Account) assertcredit(comm *Commodity) error {
+	if comm != nil && comm.isCredit() == false {
+		return fmt.Errorf("account %q cannot be target", acc.name)
+	}
+	return nil
+}
+
+func (acc *Account) assertdebit(comm *Commodity) error {
+	if comm != nil && comm.isDebit() == false {
+		return fmt.Errorf("account %q cannot be source", acc.name)
+	}
+	return nil
+}
+
+func (acc *Account) assertcrb(bal *Commodity) error {
+	if bal != nil && bal.isCredit() == false {
+		return fmt.Errorf("account %q cannot have debit balance", acc.name)
+	}
+	return nil
+}
+
+func (acc *Account) assertdrb(bal *Commodity) error {
+	if bal != nil && bal.isDebit() == false {
+		return fmt.Errorf("account %q cannot have credit balance", acc.name)
+	}
+	return nil
 }
 
 // FitAccountname for formatting.

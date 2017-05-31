@@ -49,6 +49,7 @@ var ytokAlias = parsec.Token("alias", "DRTV_ACCOUNT_ALIAS")
 var ytokPayee = parsec.Token("payee", "DRTV_ACCOUNT_PAYEE")
 var ytokCheck = parsec.Token("check", "DRTV_ACCOUNT_CHECK")
 var ytokEval = parsec.Token("eval", "DRTV_ACCOUNT_EVAL")
+var ytokType = parsec.Token("type", "DRTV_ACCOUNT_TYPE")
 var ytokValue = parsec.Token(".*", "DRTV_VALUE")
 
 var ytokApply = parsec.Token("apply", "DRTV_APPLY")

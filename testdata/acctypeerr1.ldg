@@ -1,0 +1,6 @@
+account Expenses:ElectricityBill
+    type  debit
+
+2004/05/01 Stock purchase
+    Asset:Checking           200.00
+    Expenses:ElectricityBill

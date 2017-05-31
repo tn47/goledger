@@ -296,14 +296,14 @@ func (p *Posting) isCredit() bool {
 	if p.commodity == nil {
 		panic("impossible situation")
 	}
-	if p.commodity.amount < 0 {
-		return true
-	}
-	return false
+	return p.commodity.isCredit()
 }
 
 func (p *Posting) isDebit() bool {
-	return !p.isCredit()
+	if p.commodity == nil {
+		panic("impossible situation")
+	}
+	return p.commodity.isDebit()
 }
 
 func (p *Posting) Firstpass(db *Datastore, trans *Transaction) error {

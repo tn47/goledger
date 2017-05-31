@@ -1,0 +1,14 @@
+account Liability:SBICreditCard
+    type  creditbalance
+
+2004/05/01 Pay EB
+    Expense:ElectricityBill  200.00
+    Liability:SBICreditCard
+
+2004/05/01 Pay For food
+    Expense:Food           200.00
+    Liability:SBICreditCard
+
+2004/05/01 Creditcard Bill
+    Liability:SBICreditCard  500
+    Asset:CurrentAccount

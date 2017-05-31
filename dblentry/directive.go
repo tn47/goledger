@@ -19,6 +19,7 @@ type Directive struct {
 	acccheck    string   // account
 	accassert   string   // account
 	acceval     string   // account
+	acctype     string   // account
 	aliasname   string   // alias
 	expression  string   // assert, check
 	capture     string   // capture pattern
@@ -82,6 +83,10 @@ func (d *Directive) Yledger(db *Datastore) parsec.Parser {
 // Yledgerblock return a parser-combinator that can parse sub directives under
 // account directive.
 func (d *Directive) Yledgerblock(db *Datastore, block []string) (int, error) {
+	trimstr := func(n parsec.ParsecNode) string {
+		return strings.Trim(n.(*parsec.Terminal).Value, " \t")
+	}
+
 	var node parsec.ParsecNode
 	switch d.dtype {
 	case "account":
@@ -99,17 +104,19 @@ func (d *Directive) Yledgerblock(db *Datastore, block []string) (int, error) {
 			t := nodes[0].(*parsec.Terminal)
 			switch t.Name {
 			case "DRTV_NOTE":
-				d.note = string(nodes[2].(*parsec.Terminal).Value)
+				d.note = trimstr(nodes[2])
 			case "DRTV_ACCOUNT_ALIAS":
-				d.accalias = string(nodes[2].(*parsec.Terminal).Value)
+				d.accalias = trimstr(nodes[2])
 			case "DRTV_ACCOUNT_PAYEE":
-				d.accpayee = string(nodes[2].(*parsec.Terminal).Value)
+				d.accpayee = trimstr(nodes[2])
 			case "DRTV_ACCOUNT_CHECK":
-				d.acccheck = string(nodes[2].(*parsec.Terminal).Value)
+				d.acccheck = trimstr(nodes[2])
 			case "DRTV_ACCOUNT_ASSERT":
-				d.accassert = string(nodes[2].(*parsec.Terminal).Value)
+				d.accassert = trimstr(nodes[2])
 			case "DRTV_ACCOUNT_EVAL":
-				d.acceval = string(nodes[2].(*parsec.Terminal).Value)
+				d.acceval = trimstr(nodes[2])
+			case "DRTV_ACCOUNT_TYPE":
+				d.acctype = trimstr(nodes[2])
 			case "DRTV_DEFAULT":
 				d.ndefault = true
 			}
@@ -365,10 +372,11 @@ func (d *Directive) yaccountdirectives(db *Datastore) parsec.Parser {
 	ycheck := parsec.And(nil, ytokCheck, ytokHardSpace, ytokValue)
 	yassert := parsec.And(nil, ytokAssert, ytokHardSpace, ytokValue)
 	yeval := parsec.And(nil, ytokEval, ytokHardSpace, ytokValue)
+	ytype := parsec.And(nil, ytokType, ytokHardSpace, ytokValue)
 	ydefault := parsec.And(nil, ytokDefault)
 	y := parsec.OrdChoice(
 		Vector2scalar,
-		ynote, yalias, ypayee, ycheck, yassert, yeval, ydefault,
+		ynote, yalias, ypayee, ycheck, yassert, yeval, ytype, ydefault,
 	)
 	return y
 }

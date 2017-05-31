@@ -275,11 +275,16 @@ func (comm *Commodity) doAdd(other *Commodity) error {
 	return fmt.Errorf("can't <%v:%v> + <%v:%v>", n1, c1, n2, c2)
 }
 
-func (comm *Commodity) doDeduct(other *Commodity) error {
-	n1, c1, n2, c2 := comm.name, comm.currency, other.name, other.currency
-	if comm.name == other.name && comm.currency == other.currency {
-		comm.amount -= other.amount
-		return nil
+func (comm *Commodity) isCredit() bool {
+	if comm.amount < 0 {
+		return true
 	}
-	return fmt.Errorf("can't <%v:%v> - <%v:%v>", n1, c1, n2, c2)
+	return false
+}
+
+func (comm *Commodity) isDebit() bool {
+	if comm.amount > 0 {
+		return true
+	}
+	return false
 }

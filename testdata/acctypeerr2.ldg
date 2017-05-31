@@ -1,0 +1,6 @@
+account Income:InterestFromDeposits
+    type  credit
+
+2004/05/01 Stock purchase
+    Income:InterestFromDeposits  200
+    Assets:CurrentAccount

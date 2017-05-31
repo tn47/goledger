@@ -218,7 +218,9 @@ func (db *Datastore) AggregateTotal(trans api.Transactor, p api.Poster) error {
 		parts = append(parts, name)
 		fullname := strings.Join(parts, ":")
 		consacc := db.GetAccount(fullname).(*Account)
-		consacc.addBalance(posting.commodity)
+		if err := consacc.addBalance(posting.commodity); err != nil {
+			return err
+		}
 		err := db.reporter.BubblePosting(db, trans, posting, consacc)
 		if err != nil {
 			return err
@@ -306,15 +308,6 @@ func (db *Datastore) addBalance(commodity *Commodity) {
 	db.balance[commodity.name] = commodity.makeSimilar(commodity.amount)
 }
 
-func (db *Datastore) deductBalance(commodity *Commodity) {
-	if balance, ok := db.balance[commodity.name]; ok {
-		balance.amount -= commodity.amount
-		db.balance[commodity.name] = balance
-		return
-	}
-	db.balance[commodity.name] = commodity.makeSimilar(commodity.amount)
-}
-
 // directive-account
 
 func (db *Datastore) declare(value interface{}) error {
@@ -329,6 +322,7 @@ func (db *Datastore) declare(value interface{}) error {
 				return err
 			}
 			account := db.GetAccount(d.accname).(*Account)
+			account.atype = strings.ToLower(v.acctype)
 			account.addNote(d.note)
 			account.addAlias(d.accalias)
 			account.addPayee(d.accpayee)
