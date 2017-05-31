@@ -2,7 +2,7 @@ package dblentry
 
 import "github.com/prataprc/goparsec"
 
-var ytokHardSpace = parsec.TokenStrict(` {2}|\t`, "HARDSPACE")
+var ytokHardSpace = parsec.TokenExact(` {2}|\t`, "HARDSPACE")
 var ytokEqual = parsec.Token("=", "EQUAL")
 var ytokCurrency = parsec.Token(`[^0-9 \t\r\n.,;:?!/@+*/^&|=<>(){}\[\]-]+`, "CURRENCY")
 var ytokAmount = parsec.Token(`[0-9,.-]+`, "AMOUNT")
