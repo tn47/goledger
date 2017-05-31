@@ -11,7 +11,7 @@ func yperiod(year, month, day int) parsec.Parser {
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			return nodes[1].([3]int)
 		},
-		parsec.Token("in", ""), yspec(year, month, day),
+		parsec.Atom("in", ""), yspec(year, month, day),
 	)
 
 	return parsec.And(
@@ -27,27 +27,27 @@ func yperiod(year, month, day int) parsec.Parser {
 }
 
 func yinterval() parsec.Parser {
-	yevery := parsec.Token("every", "EVERY")
+	yevery := parsec.Atom("every", "EVERY")
 	yint := parsec.Int()
 	return parsec.OrdChoice(
 		nil,
-		parsec.Token("every day", "EVERYDAY"),
-		parsec.Token("every week", "EVERYWEEK"),
-		parsec.Token("every month", "EVERYMONTH"),
-		parsec.Token("every quarter", "EVERYQUARTER"),
-		parsec.Token("every year", "EVERYYEAR"),
-		parsec.And(nil, yevery, yint, parsec.Token("days", "DAYS")),
-		parsec.And(nil, yevery, yint, parsec.Token("weeks", "WEEKS")),
-		parsec.And(nil, yevery, yint, parsec.Token("months", "MONTHS")),
-		parsec.And(nil, yevery, yint, parsec.Token("quarters", "QUARTERS")),
-		parsec.And(nil, yevery, yint, parsec.Token("years", "YEARS")),
-		parsec.Token("daily", "DAILY"),
-		parsec.Token("weekly", "WEEKLY"),
-		parsec.Token("biweekly", "BIWEEKLY"),
-		parsec.Token("monthly", "MONTHLY"),
-		parsec.Token("bimonthly", "BIMONTHLY"),
-		parsec.Token("quarterly", "QUARTERLY"),
-		parsec.Token("yearly", "YEARLY"),
+		parsec.Atom("every day", "EVERYDAY"),
+		parsec.Atom("every week", "EVERYWEEK"),
+		parsec.Atom("every month", "EVERYMONTH"),
+		parsec.Atom("every quarter", "EVERYQUARTER"),
+		parsec.Atom("every year", "EVERYYEAR"),
+		parsec.And(nil, yevery, yint, parsec.Atom("days", "DAYS")),
+		parsec.And(nil, yevery, yint, parsec.Atom("weeks", "WEEKS")),
+		parsec.And(nil, yevery, yint, parsec.Atom("months", "MONTHS")),
+		parsec.And(nil, yevery, yint, parsec.Atom("quarters", "QUARTERS")),
+		parsec.And(nil, yevery, yint, parsec.Atom("years", "YEARS")),
+		parsec.Atom("daily", "DAILY"),
+		parsec.Atom("weekly", "WEEKLY"),
+		parsec.Atom("biweekly", "BIWEEKLY"),
+		parsec.Atom("monthly", "MONTHLY"),
+		parsec.Atom("bimonthly", "BIMONTHLY"),
+		parsec.Atom("quarterly", "QUARTERLY"),
+		parsec.Atom("yearly", "YEARLY"),
 	)
 }
 
