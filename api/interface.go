@@ -188,3 +188,24 @@ type Formatter interface {
 	// FmtEquity used for `equity` reporting.
 	FmtEquity(Datastorer, Transactor, Poster, Accounter) [][]string
 }
+
+// Store maintains an index of key,vlue pairs, key being time.Time and value
+// as interface.
+type Store interface {
+	// Insert a new {key,value} pair
+	Insert(k time.Time, v interface{}) error
+
+	// Range over {key,value} pairs, entries can be used for returning the
+	// results.
+	Range(low, high *time.Time, incl string, entries []TimeEntry) []TimeEntry
+}
+
+// TimeEntry captures a single key,value pair, key being time.Time and value
+// as interface.
+type TimeEntry interface {
+	// Key return the key part.
+	Key() time.Time
+
+	// Value return the value part.
+	Value() interface{}
+}

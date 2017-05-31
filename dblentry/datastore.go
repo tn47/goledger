@@ -256,7 +256,7 @@ func (db *Datastore) Secondpass() error {
 	var kvfull []KV
 
 	for _, kv := range db.transdb.Range(nil, nil, "both", kvfull) {
-		trans := kv.v.(*Transaction)
+		trans := kv.Value().(*Transaction)
 		if db.periodtill == nil || trans.Date().Before(*db.periodtill) {
 			if err := trans.Secondpass(db); err != nil {
 				return err
@@ -287,13 +287,13 @@ func (db *Datastore) Clone(nreporter api.Reporter) api.Datastorer {
 
 	ndb.transdb = NewDB(fmt.Sprintf("%v-transactions", ndb.name))
 	for _, kv := range db.transdb.Range(nil, nil, "both", []KV{}) {
-		k, ntrans := kv.k, kv.v.(*Transaction).Clone(&ndb)
+		k, ntrans := kv.Key(), kv.Value().(*Transaction).Clone(&ndb)
 		ndb.transdb.Insert(k, ntrans)
 	}
 
 	ndb.pricedb = NewDB(fmt.Sprintf("%v-pricedb", ndb.name))
 	for _, kv := range db.pricedb.Range(nil, nil, "both", []KV{}) {
-		k, nprice := kv.k, kv.v.(*Price).Clone(&ndb)
+		k, nprice := kv.Key(), kv.Value().(*Price).Clone(&ndb)
 		ndb.pricedb.Insert(k, nprice)
 	}
 	return &ndb

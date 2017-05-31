@@ -11,12 +11,6 @@ type DB struct {
 	entries []KV
 }
 
-// KV entry within DB.
-type KV struct {
-	k time.Time
-	v interface{}
-}
-
 // NewDB create a new DB.
 func NewDB(name string) *DB {
 	return &DB{name: name, entries: make([]KV, 0)}
@@ -43,9 +37,7 @@ func (db *DB) Insert(k time.Time, v interface{}) error {
 }
 
 // Range over DB entries, from low to high with specified include option.
-func (db *DB) Range(
-	low *time.Time, high *time.Time, incl string, entries []KV) []KV {
-
+func (db *DB) Range(low, high *time.Time, incl string, entries []KV) []KV {
 	var entry KV
 
 	index := 0
@@ -107,4 +99,18 @@ func (db *DB) Less(i, j int) bool {
 
 func (db *DB) Swap(i, j int) {
 	db.entries[i], db.entries[j] = db.entries[j], db.entries[i]
+}
+
+// KV entry within DB.
+type KV struct {
+	k time.Time
+	v interface{}
+}
+
+func (kv KV) Key() time.Time {
+	return kv.k
+}
+
+func (kv KV) Value() interface{} {
+	return kv.v
 }
