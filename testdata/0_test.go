@@ -114,6 +114,10 @@ func TestBasic(t *testing.T) {
 			[]string{"-f", "basic.ldg", "equity"},
 			"refdata/basic.equity.ref",
 		},
+		[]interface{}{
+			[]string{"-f", "notes.ldg", "print"},
+			"refdata/notes.print.ref",
+		},
 	}
 	for _, testcase := range testcases {
 		ref := testdataFile(testcase[1].(string))
