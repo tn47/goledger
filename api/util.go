@@ -2,6 +2,7 @@ package api
 
 import "strings"
 import "regexp"
+import "time"
 import "fmt"
 
 var _ = fmt.Sprintf("dummy")
@@ -77,4 +78,15 @@ outer:
 		ys = append(ys, x)
 	}
 	return ys
+}
+
+func ValidateDate(tm time.Time, year, month, date, hour, min, sec int) bool {
+	y, m, d := tm.Date()
+	h, t, s := tm.Clock()
+	if y != year || m != time.Month(month) || d != date {
+		return false
+	} else if h != hour || t != min || s != sec {
+		return false
+	}
+	return true
 }

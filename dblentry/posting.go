@@ -156,7 +156,10 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 				if err != nil {
 					return err
 				}
-				p.lotdate = p.fixlotdate(items[4])              // lot date
+				p.lotdate, err = p.fixlotdate(items[4]) // lot date
+				if err != nil {
+					return err
+				}
 				p.costprice, err = p.fixcostprice(db, items[5]) // cost price
 				if err != nil {
 					return err
@@ -246,11 +249,16 @@ func (p *Posting) fixlotprice(
 	return nil, nil
 }
 
-func (p *Posting) fixlotdate(item interface{}) (tm time.Time) {
+func (p *Posting) fixlotdate(item interface{}) (time.Time, error) {
+	var tm time.Time
+
 	if lotnodes, ok := item.([]parsec.ParsecNode); ok {
-		return lotnodes[1].(time.Time)
+		if tm, ok = lotnodes[1].(time.Time); ok {
+			return tm, nil
+		}
+		return tm, lotnodes[1].(error)
 	}
-	return
+	return tm, nil
 }
 
 func (p *Posting) fixcostprice(

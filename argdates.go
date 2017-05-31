@@ -4,12 +4,13 @@ import "fmt"
 import "time"
 import "regexp"
 
+import "github.com/tn47/goledger/api"
 import "github.com/prataprc/goparsec"
 
 func yperiod(year, month, day int) parsec.Parser {
 	inspec := parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
-			return nodes[1].([3]int)
+			return nodes[1] // can be error or [3]int
 		},
 		parsec.Atom("in", ""), yspec(year, month, day),
 	)
@@ -54,7 +55,7 @@ func yinterval() parsec.Parser {
 func ybegindate(year, month, day int) parsec.Parser {
 	return parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
-			return nodes[1].([3]int)
+			return nodes[1] // can be error or [3]int
 		},
 		parsec.Token("from|since", ""), yspec(year, month, day),
 	)
@@ -63,7 +64,7 @@ func ybegindate(year, month, day int) parsec.Parser {
 func yenddate(year, month, day int) parsec.Parser {
 	return parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
-			return nodes[1].([3]int)
+			return nodes[1] // can be error or [3]int
 		},
 		parsec.Token("to|until|till", ""), yspec(year, month, day),
 	)
@@ -121,8 +122,11 @@ func yspec(year, month, day int) parsec.Parser {
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			k := string(nodes[0].(*parsec.Terminal).Value)
 			tm := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.Local)
-			tm = tm.Add(lookupbyday[k])
-			return [3]int{tm.Year(), int(tm.Month()), tm.Day()}
+			if api.ValidateDate(tm, year, month, day, 0, 0, 0) {
+				tm = tm.Add(lookupbyday[k])
+				return [3]int{tm.Year(), int(tm.Month()), tm.Day()}
+			}
+			return fmt.Errorf("invalid date %v\n", tm.Format("2006/Jan/02"))
 		},
 		parsec.Token(
 			"yest|yesterday|last day|today|this day|tomm|tommorow|next day", ""),
@@ -183,7 +187,7 @@ func yspec(year, month, day int) parsec.Parser {
 	)
 	return parsec.OrdChoice(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
-			return nodes[0].([3]int)
+			return nodes[0] // can be error or [3]int
 		},
 		ydate1, ydate2, ydate3, ydate4, ybyday, ybymonth, ybyyear, ybyquarter,
 	)

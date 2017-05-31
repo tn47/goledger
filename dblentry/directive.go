@@ -452,8 +452,7 @@ func (d *Directive) Firstpass(db *Datastore) error {
 		return db.clearRootaccount()
 
 	case "year":
-		db.setYear(d.year)
-		return nil
+		return db.setYear(d.year)
 	}
 	panic("unreachable code")
 }

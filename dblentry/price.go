@@ -26,6 +26,7 @@ func (price *Price) Yledger(db *Datastore) parsec.Parser {
 	y := parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			price.when = nodes[1].(time.Time)
+			// TODO: Validate date as well.
 			//price.this = NewCommodity("")
 			//price.this.name = string(nodes[2].(*parsec.Terminal).Value)
 			//price.this.amount = 1

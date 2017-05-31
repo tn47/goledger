@@ -1,0 +1,4 @@
+2004/05/01 Stock purchase
+    Assets:Broker                     50 AAPL [2004-05-32] @ $30.00
+    Expenses:Broker:Commissions        $19.95
+    Assets:Broker

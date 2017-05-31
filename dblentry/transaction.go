@@ -116,10 +116,17 @@ func (trans *Transaction) Yledger(db *Datastore) parsec.Parser {
 
 	y := parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			if err, ok := nodes[0].(error); ok {
+				return err
+			}
 			trans.date = nodes[0].(time.Time)
-			if edate, ok := nodes[1].(time.Time); ok {
+
+			if err, ok := nodes[1].(error); ok {
+				return err
+			} else if edate, ok := nodes[1].(time.Time); ok {
 				trans.edate = edate
 			}
+
 			if t, ok := nodes[2].(*parsec.Terminal); ok {
 				trans.setMetadata("state", prefix2state[[]rune(t.Value)[0]])
 			}

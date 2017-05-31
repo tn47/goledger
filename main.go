@@ -72,6 +72,11 @@ func phase2(args []string) (api.Reporter, api.Datastorer) {
 	// apply command line arguments here.
 	if api.Options.Finyear > 0 {
 		till := time.Date(api.Options.Finyear, 4, 1, 0, 0, 0, 0, time.Local)
+		ok := api.ValidateDate(till, api.Options.Finyear, 4, 1, 0, 0, 0)
+		if ok == false {
+			log.Errorf("invalid finyear %v\n", api.Options.Finyear)
+			os.Exit(1)
+		}
 		db.Applytill(till)
 	}
 

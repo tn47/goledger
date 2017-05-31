@@ -8,6 +8,7 @@ import "strconv"
 
 import "github.com/prataprc/goparsec"
 import "github.com/prataprc/golog"
+import "github.com/tn47/goledger/api"
 
 //---- ledger parser
 
@@ -54,6 +55,11 @@ func Ydate(year int) parsec.Parser {
 				year, time.Month(month), date, hour, min, sec, 0,
 				time.Local, /*locale*/
 			)
+			ok := api.ValidateDate(tm, year, month, date, hour, min, sec)
+			if ok == false {
+				fmsg := "invalid date %v/%v/%v %v:%v:%v"
+				return fmt.Errorf(fmsg, year, month, date, hour, min, sec)
+			}
 			log.Debugf("Ydate: %v\n", tm)
 			return tm
 		},

@@ -56,6 +56,18 @@ func TestErrors(t *testing.T) {
 			[]string{"-f", "error2.ldg", "-strict", "-checkpayee", "balance"},
 			"refdata/error2.strict.ref",
 		},
+		[]interface{}{
+			[]string{"-f", "dateerr1.ldg", "print"},
+			"refdata/dateerr1.print.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "dateerr2.ldg", "print"},
+			"refdata/dateerr2.print.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "dateerr3.ldg", "print"},
+			"refdata/dateerr3.print.ref",
+		},
 	}
 	for _, testcase := range testcases {
 		ref := testdataFile(testcase[1].(string))
@@ -117,6 +129,10 @@ func TestBasic(t *testing.T) {
 		[]interface{}{
 			[]string{"-f", "notes.ldg", "print"},
 			"refdata/notes.print.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "lotdate.ldg", "print"},
+			"refdata/lotdate.print.ref",
 		},
 	}
 	for _, testcase := range testcases {
@@ -873,7 +889,7 @@ func TestDirtAccount(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		ioutil.WriteFile(testcase[1].(string), out, 0660)
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -1011,7 +1027,7 @@ func TestDirtCommodity(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		ioutil.WriteFile(testcase[1].(string), out, 0660)
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)

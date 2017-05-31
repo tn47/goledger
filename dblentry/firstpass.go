@@ -45,8 +45,12 @@ func (fp *firstpass) addComment(comment string) {
 	fp.comments = append(fp.comments, comment)
 }
 
-func (fp *firstpass) setYear(year int) {
+func (fp *firstpass) setYear(year int) error {
 	fp.currdate = time.Date(year, 1, 1, 0, 0, 0, 0, time.Local)
+	if fp.currdate.Year() != year {
+		return fmt.Errorf("invalid year %v", year)
+	}
+	return nil
 }
 
 func (fp *firstpass) getYear() int {
