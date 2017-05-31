@@ -65,6 +65,17 @@ func argparse() ([]string, error) {
 		"Console log level")
 	f.Parse(os.Args[1:])
 
+	logsetts := map[string]interface{}{
+		"log.level":      api.Options.Loglevel,
+		"log.file":       "",
+		"log.timeformat": "",
+		"log.prefix":     "%v:",
+		"log.colorfatal": "red",
+		"log.colorerror": "hired",
+		"log.colorwarn":  "yellow",
+	}
+	log.SetLogger(nil, logsetts)
+
 	api.Options.Journals = gatherjournals(journals)
 	api.Options.Outfd = argOutfd(outfile)
 	api.Options.Finyear = argFinyear(finyear)
@@ -117,7 +128,7 @@ func argFinyear(finyear string) int {
 
 	fy, err := strconv.Atoi(finyear)
 	if err != nil {
-		log.Errorf("arg `-fy` invalid: %v\n", err)
+		log.Errorf("arg `-fy` %v\n", err)
 		os.Exit(1)
 	}
 	return fy

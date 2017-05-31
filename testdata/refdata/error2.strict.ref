@@ -1,0 +1,9 @@
+Warng: commodity "AAP" is not pre-declared
+Warng: commodity "INR" not pre-declared
+Warng: commodity "$" not pre-declared
+Warng: account "Assets:Checking" not pre-declared
+Warng: payee "My Employer" not pre-declared
+Warng: commodity "XYZ" not pre-declared
+Warng: account "Income:Salary" not pre-declared
+Warng: payee "My Employer" not pre-declared
+Error: lineno 3: mismatch in balancing commodity "$" != "XYZ"

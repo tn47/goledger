@@ -52,18 +52,6 @@ func phase1() (args []string) {
 	if args, err = argparse(); err != nil {
 		os.Exit(1)
 	}
-
-	logsetts := map[string]interface{}{
-		"log.level":      api.Options.Loglevel,
-		"log.file":       "",
-		"log.timeformat": "",
-		"log.prefix":     "%v:",
-		"log.colorfatal": "red",
-		"log.colorerror": "hired",
-		"log.colorwarn":  "yellow",
-	}
-	log.SetLogger(nil, logsetts)
-
 	return args
 }
 

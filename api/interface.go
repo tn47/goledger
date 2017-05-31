@@ -120,7 +120,7 @@ type Commoditiser interface {
 
 	// BalanceEqual is equality between two commodity, which implies equality
 	// in Name(), Amount() and Currency().
-	BalanceEqual(Commoditiser) bool
+	BalanceEqual(Commoditiser) (bool, error)
 
 	// MakeSimilar create a new instance of commodity simlar to this commodity
 	MakeSimilar(amount float64) Commoditiser

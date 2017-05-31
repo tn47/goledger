@@ -59,6 +59,7 @@ func dofirstpass(db *dblentry.Datastore, journalfile string) error {
 
 		case *dblentry.Comment, *dblentry.Price:
 		}
+
 		if err != nil {
 			log.Errorf("lineno %v: %v\n", lineno, err)
 			return err
@@ -73,10 +74,11 @@ func dofirstpass(db *dblentry.Datastore, journalfile string) error {
 
 		lineno, block, eof, err = iterate()
 	}
-	if eof == false {
+	if err != nil {
+		log.Errorf("%v", err)
+	} else if eof == false {
 		log.Errorf("expected eof")
 	}
-
 	return nil
 }
 
@@ -125,7 +127,7 @@ func blockiterate(lines []string) func() (int, []string, bool, error) {
 				if line1 == "" { // emptyline
 					continue
 				} else {
-					fmsg := "must be at the begnning: row:%v column: 0"
+					fmsg := "must be at the beginning: row:%v column: 0"
 					return row + 1, nil, false, fmt.Errorf(fmsg, row+1)
 				}
 

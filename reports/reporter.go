@@ -163,7 +163,7 @@ func (reports *Reports) trystrict(
 	pr := p.Lotprice()
 	if pr != nil && reflect.ValueOf(pr).IsNil() == false {
 		if db.IsCommodityDeclared(pr.Name()) == false {
-			log.Warnf("commodity %q not pre-declared\n\n", pr.Name())
+			log.Warnf("commodity %q not pre-declared\n", pr.Name())
 		}
 	}
 	pr = p.Costprice()
@@ -200,36 +200,48 @@ func (reports *Reports) trypedantic(
 	comm := p.Commodity()
 	if comm != nil && reflect.ValueOf(comm).IsNil() == false {
 		if db.IsCommodityDeclared(comm.Name()) == false {
-			return fmt.Errorf("commodity %q is not pre-declared", comm.Name())
+			err := fmt.Errorf("commodity %q is not pre-declared", comm.Name())
+			log.Errorf("%v\n", err)
+			return err
 		}
 	}
 
 	pr := p.Lotprice()
 	if pr != nil && reflect.ValueOf(pr).IsNil() == false {
 		if db.IsCommodityDeclared(pr.Name()) == false {
-			return fmt.Errorf("commodity %q not pre-declared\n", pr.Name())
+			err := fmt.Errorf("commodity %q not pre-declared\n", pr.Name())
+			log.Errorf("%v\n", err)
+			return err
 		}
 	}
 	pr = p.Costprice()
 	if pr != nil && reflect.ValueOf(pr).IsNil() == false {
 		if db.IsCommodityDeclared(pr.Name()) == false {
-			return fmt.Errorf("commodity %q not pre-declared", pr.Name())
+			err := fmt.Errorf("commodity %q not pre-declared", pr.Name())
+			log.Errorf("%v\n", err)
+			return err
 		}
 	}
 	pr = p.Balanceprice()
 	if pr != nil && reflect.ValueOf(pr).IsNil() == false {
 		if db.IsCommodityDeclared(pr.Name()) == false {
-			return fmt.Errorf("commodity %q not pre-declared", pr.Name())
+			err := fmt.Errorf("commodity %q not pre-declared", pr.Name())
+			log.Errorf("%v\n", err)
+			return err
 		}
 	}
 
 	accname := p.Account().Name()
 	if db.IsAccountDeclared(accname) == false {
-		return fmt.Errorf("account %q not declared before\n", accname)
+		err := fmt.Errorf("account %q not declared before\n", accname)
+		log.Errorf("%v\n", err)
+		return err
 	}
 	if api.Options.Checkpayee {
 		if payee := p.Payee(); db.IsPayeeDeclared(payee) == false {
-			return fmt.Errorf("payee %q not pre-declared", payee)
+			err := fmt.Errorf("payee %q not pre-declared", payee)
+			log.Errorf("%v\n", err)
+			return err
 		}
 	}
 	return nil

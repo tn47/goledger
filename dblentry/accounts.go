@@ -265,10 +265,15 @@ func (acc *Account) Secondpass(
 	p.account.addBalance(p.commodity)
 
 	balance := p.account.Balance(p.commodity.name)
-	if p.balprice != nil && balance.BalanceEqual(p.balprice) == false {
-		accname := p.account.name
-		fmsg := "account(%v) should balance as %s, got %s"
-		return fmt.Errorf(fmsg, accname, p.balprice.String(), balance.String())
+	if p.balprice != nil {
+		if balok, err := balance.BalanceEqual(p.balprice); err != nil {
+			return err
+
+		} else if balok == false {
+			accname := p.account.name
+			fmsg := "account(%v) should balance as %s, got %s"
+			return fmt.Errorf(fmsg, accname, p.balprice.String(), balance.String())
+		}
 	}
 	return nil
 }

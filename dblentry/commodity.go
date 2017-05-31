@@ -71,13 +71,14 @@ func (comm *Commodity) ApplyAmount(other api.Commoditiser) error {
 	return comm.doAdd(other.(*Commodity))
 }
 
-func (comm *Commodity) BalanceEqual(other api.Commoditiser) bool {
+func (comm *Commodity) BalanceEqual(other api.Commoditiser) (bool, error) {
 	if comm.name != other.Name() {
-		panic("impossible situation")
+		fmsg := "mismatch in balancing commodity %q != %q"
+		return false, fmt.Errorf(fmsg, comm.name, other.Name())
 	} else if comm.currency != other.Currency() {
-		panic("impossible situation")
+		return false, fmt.Errorf("mismatch in currency commodity")
 	}
-	return comm.amount == other.Amount()
+	return comm.amount == other.Amount(), nil
 }
 
 func (comm *Commodity) MakeSimilar(amount float64) api.Commoditiser {

@@ -13,6 +13,64 @@ import "path/filepath"
 var _ = fmt.Sprintf("dummy")
 var LEDGEREXEC = "../goledger"
 
+func TestCmdArgs(t *testing.T) {
+	testcases := [][]interface{}{
+		[]interface{}{
+			[]string{"-f", "/a/b/xyz", "balance"},
+			"refdata/cmdarg_f.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "first.ldg", "-o", "/a/b/xyz", "balance"},
+			"refdata/cmdarg_o.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "first.ldg", "-fy", "abc", "balance"},
+			"refdata/cmdarg_fy.ref",
+		},
+	}
+	for _, testcase := range testcases {
+		ref := testdataFile(testcase[1].(string))
+		args := testcase[0].([]string)
+		cmd := exec.Command(LEDGEREXEC, args...)
+		out, _ := cmd.CombinedOutput()
+		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if bytes.Compare(out, ref) != 0 {
+			t.Logf(strings.Join(args, " "))
+			t.Logf("expected %s", ref)
+			t.Errorf("got %s", out)
+		}
+	}
+}
+
+func TestErrors(t *testing.T) {
+	testcases := [][]interface{}{
+		[]interface{}{
+			[]string{"-f", "first.ldg", "list"},
+			"refdata/first.listerr.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "error1.ldg", "balance"},
+			"refdata/error1.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "error2.ldg", "-strict", "-checkpayee", "balance"},
+			"refdata/error2.strict.ref",
+		},
+	}
+	for _, testcase := range testcases {
+		ref := testdataFile(testcase[1].(string))
+		args := testcase[0].([]string)
+		cmd := exec.Command(LEDGEREXEC, args...)
+		out, _ := cmd.CombinedOutput()
+		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if bytes.Compare(out, ref) != 0 {
+			t.Logf(strings.Join(args, " "))
+			t.Logf("expected %s", ref)
+			t.Errorf("got %s", out)
+		}
+	}
+}
+
 func TestBasic(t *testing.T) {
 	testcases := [][]interface{}{
 		[]interface{}{
