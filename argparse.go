@@ -48,7 +48,7 @@ func argparse() ([]string, error) {
 		"Display only actual postings, not automated ones.")
 	f.BoolVar(&api.Options.Related, "related", false,
 		"Display only related postings.")
-	f.BoolVar(&api.Options.Dcformat, "dc", true,
+	f.BoolVar(&api.Options.Dcformat, "dc", false,
 		"Display only real postings.")
 	f.BoolVar(&api.Options.Strict, "strict", false,
 		"Accounts, tags or commodities not previously declared "+

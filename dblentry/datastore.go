@@ -38,7 +38,7 @@ type Datastore struct {
 	dclrdacc    []string
 	dclrdcomm   []string
 	dclrdpayee  []string
-	balance     map[string]*Commodity
+	de          *DoubleEntry
 	transdb     *DB
 	pricedb     *DB
 
@@ -57,8 +57,7 @@ func NewDatastore(name string, reporter api.Reporter) *Datastore {
 		pricedb:     NewDB(fmt.Sprintf("%v-pricedb", name)),
 		accntdb:     map[string]*Account{},
 		commodities: map[string]*Commodity{},
-
-		balance: make(map[string]*Commodity),
+		de:          newDoubleEntry("master"),
 	}
 	db.initfirstpass()
 	db.defaultprices()
@@ -185,29 +184,32 @@ func (db *Datastore) Commoditynames() []string {
 
 func (db *Datastore) Balance(obj interface{}) (balance api.Commoditiser) {
 	db.assertfirstpass()
-
-	switch v := obj.(type) {
-	case api.Commoditiser:
-		balance, _ = db.balance[v.Name()]
-	case string:
-		balance, _ = db.balance[v]
-	}
-	return balance
+	return db.de.Balance(obj)
 }
 
 func (db *Datastore) Balances() []api.Commoditiser {
 	db.assertfirstpass()
+	return db.de.Balances()
+}
 
-	keys := []string{}
-	for name := range db.balance {
-		keys = append(keys, name)
-	}
-	sort.Strings(keys)
-	comms := []api.Commoditiser{}
-	for _, key := range keys {
-		comms = append(comms, db.balance[key])
-	}
-	return comms
+func (db *Datastore) Debit(obj interface{}) (balance api.Commoditiser) {
+	db.assertfirstpass()
+	return db.de.Debit(obj)
+}
+
+func (db *Datastore) Debits() []api.Commoditiser {
+	db.assertfirstpass()
+	return db.de.Debits()
+}
+
+func (db *Datastore) Credit(obj interface{}) (balance api.Commoditiser) {
+	db.assertfirstpass()
+	return db.de.Credit(obj)
+}
+
+func (db *Datastore) Credits() []api.Commoditiser {
+	db.assertfirstpass()
+	return db.de.Credits()
 }
 
 func (db *Datastore) AggregateTotal(trans api.Transactor, p api.Poster) error {
@@ -280,10 +282,7 @@ func (db *Datastore) Clone(nreporter api.Reporter) api.Datastorer {
 		ndb.accntdb[name] = account.Clone(&ndb)
 	}
 
-	ndb.balance = map[string]*Commodity{}
-	for name, commodity := range db.balance {
-		ndb.balance[name] = commodity.Clone(&ndb)
-	}
+	ndb.de = db.de.Clone()
 
 	ndb.transdb = NewDB(fmt.Sprintf("%v-transactions", ndb.name))
 	for _, kv := range db.transdb.Range(nil, nil, "both", []KV{}) {
@@ -299,13 +298,8 @@ func (db *Datastore) Clone(nreporter api.Reporter) api.Datastorer {
 	return &ndb
 }
 
-func (db *Datastore) addBalance(commodity *Commodity) {
-	if balance, ok := db.balance[commodity.name]; ok {
-		balance.amount += commodity.amount
-		db.balance[commodity.name] = balance
-		return
-	}
-	db.balance[commodity.name] = commodity.makeSimilar(commodity.amount)
+func (db *Datastore) addBalance(commodity *Commodity) error {
+	return db.de.AddBalance(commodity)
 }
 
 // directive-account
@@ -382,6 +376,30 @@ func (db *Datastore) FmtBalances(
 
 	for _, balance := range db.Balances() {
 		rows = append(rows, []string{"", "", balance.String()})
+	}
+	if len(rows) > 0 { // last row to include date.
+		lastrow := rows[len(rows)-1]
+		date := trans.Date().Format("2006/Jan/02")
+		lastrow[0] = date
+	}
+	return rows
+}
+
+func (db *Datastore) FmtDCBalances(
+	_ api.Datastorer, trans api.Transactor, p api.Poster,
+	acc api.Accounter) [][]string {
+
+	var rows [][]string
+
+	if len(db.Balances()) == 0 {
+		return append(rows, []string{"", "", "-", "-", "-"})
+	}
+
+	for _, bal := range db.Balances() {
+		name := bal.Name()
+		dr, cr := db.Debit(name), db.Credit(name)
+		cols := []string{"", "", dr.String(), cr.String(), bal.String()}
+		rows = append(rows, cols)
 	}
 	if len(rows) > 0 { // last row to include date.
 		lastrow := rows[len(rows)-1]

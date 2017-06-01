@@ -1,0 +1,14 @@
+
+  By-date      Account                         Debit   Credit   Balance 
+                                                                        
+  2004/Sep/29  Assets                        $200.00  $100.00   $100.00 
+  2004/Sep/29    Checking                    $100.00            $100.00 
+  2004/Sep/29    Reimbursements:MyCompany    $100.00  $100.00     $0.00 
+  2004/Sep/29  Liabilities:MasterCard                 $100.00  $-100.00 
+  2004/Oct/15  MyCompany                     $200.00  $200.00     $0.00 
+  2004/Oct/15    Assets:Checking                      $100.00  $-100.00 
+  2004/Sep/29    Expenses:Computer:Software  $100.00            $100.00 
+  2004/Oct/15    Liabilities:Payable:Myname  $100.00  $100.00     $0.00 
+                                             -------  -------  -------- 
+  2004/Oct/15                                $400.00  $400.00     $0.00 
+

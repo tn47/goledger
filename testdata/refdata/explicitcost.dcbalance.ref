@@ -1,0 +1,10 @@
+
+  By-date      Account             Debit   Credit   Balance 
+                                                            
+                                          $500.00  $-500.00 
+  2012/Mar/10  Assets:Brokerage  10 AAPL            10 AAPL 
+  2012/Mar/10    Cash                     $500.00  $-500.00 
+                                 -------  -------  -------- 
+                                          $500.00  $-500.00 
+  2012/Mar/10                    10 AAPL            10 AAPL 
+

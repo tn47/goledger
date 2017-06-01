@@ -1,0 +1,15 @@
+
+  By-date      Account              Debit   Credit   Balance 
+                                                             
+  2011/Dec/15  Assets             500.00   385.00    115.00  
+  2011/Dec/15    Checking                  385.00   -385.00  
+  2011/Jan/29    Checking Income  500.00             500.00  
+  2011/Feb/15  Expen              100.00             100.00  
+  2011/Dec/15  Expenses           285.00             285.00  
+  2011/Dec/15    Dinning          225.00             225.00  
+  2011/Sep/15    Groceries         50.00              50.00  
+  2011/Aug/29    Stationary        10.00              10.00  
+  2011/Jan/29  Income:Salary               500.00   -500.00  
+                                  -------  -------  -------- 
+  2011/Dec/15                     885.00   885.00      0.00  
+

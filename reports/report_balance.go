@@ -51,14 +51,24 @@ func (report *ReportBalance) Posting(
 	acc := p.Account()
 
 	// final balance
-	report.finaltally = db.FmtBalances(db, trans, p, acc)
+	if api.Options.Dcformat {
+		report.finaltally = db.FmtDCBalances(db, trans, p, acc)
+	} else {
+		report.finaltally = db.FmtBalances(db, trans, p, acc)
+	}
 
 	// filter account
 	if api.Filterstring(acc.Name(), report.filteraccounts) == false {
 		return nil
 	}
 	// format account balance
-	if balances := acc.FmtBalances(db, trans, p, acc); len(balances) > 0 {
+	var balances [][]string
+	if api.Options.Dcformat {
+		balances = acc.FmtDCBalances(db, trans, p, acc)
+	} else {
+		balances = acc.FmtBalances(db, trans, p, acc)
+	}
+	if len(balances) > 0 {
 		report.balance[acc.Name()] = balances
 	} else {
 		delete(report.balance, acc.Name())
@@ -79,14 +89,22 @@ func (report *ReportBalance) BubblePosting(
 	bbname := account.Name()
 
 	// final balance
-	report.finaltally = db.FmtBalances(db, trans, p, account)
+	if api.Options.Dcformat {
+		report.finaltally = db.FmtDCBalances(db, trans, p, account)
+	} else {
+		report.finaltally = db.FmtBalances(db, trans, p, account)
+	}
 
 	// filter account
 	if api.Filterstring(bbname, report.filteraccounts) == false {
 		return nil
 	}
 	// format account balance
-	report.balance[bbname] = account.FmtBalances(db, trans, p, account)
+	if api.Options.Dcformat {
+		report.balance[bbname] = account.FmtDCBalances(db, trans, p, account)
+	} else {
+		report.balance[bbname] = account.FmtBalances(db, trans, p, account)
+	}
 
 	report.bubbleacc[bbname] = true
 	return nil
@@ -95,7 +113,6 @@ func (report *ReportBalance) BubblePosting(
 func (report *ReportBalance) Render(args []string, db api.Datastorer) {
 	report.prunebubbled()
 
-	rcf := report.rcf
 	// sort
 	keys := []string{}
 	for name := range report.balance {
@@ -108,6 +125,17 @@ func (report *ReportBalance) Render(args []string, db api.Datastorer) {
 		fmtkeys = Indent(keys)
 	}
 
+	if api.Options.Dcformat {
+		report.renderDCBalance(args, keys, fmtkeys, db)
+	} else {
+		report.renderBalance(args, keys, fmtkeys, db)
+	}
+}
+
+func (report *ReportBalance) renderBalance(
+	args, keys, fmtkeys []string, db api.Datastorer) {
+
+	rcf := report.rcf
 	rcf.addrow([]string{"By-date", "Account", "Balance"}...)
 	rcf.addrow([]string{"", "", ""}...) // empty line
 
@@ -153,6 +181,71 @@ func (report *ReportBalance) Render(args []string, db api.Datastorer) {
 				items,
 				api.YellowFn(cols[1]),
 				CommodityColor(db, comm, cols[2]),
+			)
+		}
+		fmt.Fprintf(outfd, fmsg, items...)
+	}
+	fmt.Fprintln(outfd)
+}
+
+func (report *ReportBalance) renderDCBalance(
+	args, keys, fmtkeys []string, db api.Datastorer) {
+
+	rcf := report.rcf
+
+	rcf.addrow([]string{"By-date", "Account", "Debit", "Credit", "Balance"}...)
+	rcf.addrow([]string{"", "", "", "", ""}...) // empty line
+
+	for i, key := range keys {
+		rows := report.balance[key]
+		for j, cols := range rows {
+			cols[1] = ""
+			if j == len(rows)-1 {
+				cols[1] = fmtkeys[i]
+			}
+			rcf.addrow(cols...)
+		}
+	}
+
+	if report.isfiltered() == false {
+		drdashes := api.Repeatstr("-", rcf.maxwidth(rcf.column(2)))
+		crdashes := api.Repeatstr("-", rcf.maxwidth(rcf.column(3)))
+		baldashes := api.Repeatstr("-", rcf.maxwidth(rcf.column(4)))
+		rcf.addrow([]string{"", "", drdashes, crdashes, baldashes}...)
+		for _, row := range report.finaltally {
+			rcf.addrow(row...)
+		}
+	}
+
+	w0 := rcf.maxwidth(rcf.column(0)) // Date
+	w1 := rcf.maxwidth(rcf.column(1)) // Account name
+	w2 := rcf.maxwidth(rcf.column(2)) // Debit (amount)
+	w3 := rcf.maxwidth(rcf.column(3)) // Credit (amount)
+	w4 := rcf.maxwidth(rcf.column(4)) // Balance (amount)
+	if (w0 + w1 + w2 + w3 + w4) > 70 {
+		_ /*w1*/ = rcf.FitAccountname(1, 70-w0-w2-w3-w4)
+	}
+
+	rcf.paddcells()
+	fmsg := rcf.Fmsg(" %%-%vs%%-%vs%%%vs%%%vs%%%vs\n")
+	comm1 := dblentry.NewCommodity("")
+	comm2 := dblentry.NewCommodity("")
+	comm3 := dblentry.NewCommodity("")
+
+	// start printing
+	outfd := api.Options.Outfd
+	fmt.Fprintln(outfd)
+	for i, cols := range rcf.rows {
+		items := []interface{}{cols[0]}
+		if i < 2 {
+			items = append(items, cols[1], cols[2], cols[3], cols[4])
+		} else {
+			items = append(
+				items,
+				api.YellowFn(cols[1]),
+				CommodityColor(db, comm1, cols[2]),
+				CommodityColor(db, comm2, cols[3]),
+				CommodityColor(db, comm3, cols[4]),
 			)
 		}
 		fmt.Fprintf(outfd, fmsg, items...)

@@ -113,6 +113,9 @@ func (comm *Commodity) makeSimilar(amount float64) *Commodity {
 	return newcomm
 }
 func (comm *Commodity) String() string {
+	if comm == nil {
+		return ""
+	}
 	amountstr := fmt.Sprintf("%v", comm.amount)
 	if comm.precision >= 0 {
 		fmsg := fmt.Sprintf("%%.%vf", comm.precision)

@@ -119,6 +119,10 @@ func TestBasic(t *testing.T) {
 			"refdata/basic.balance.ref",
 		},
 		[]interface{}{
+			[]string{"-f", "basic.ldg", "-dc", "balance"},
+			"refdata/basic.dcbalance.ref",
+		},
+		[]interface{}{
 			[]string{"-f", "basic.ldg", "register"},
 			"refdata/basic.register.ref",
 		},
@@ -354,6 +358,10 @@ func TestExplicitCost(t *testing.T) {
 			"refdata/explicitcost.balance.ref",
 		},
 		[]interface{}{
+			[]string{"-f", "explicitcost.ldg", "-dc", "balance"},
+			"refdata/explicitcost.dcbalance.ref",
+		},
+		[]interface{}{
 			[]string{"-f", "explicitcost.ldg", "register"},
 			"refdata/explicitcost.register.ref",
 		},
@@ -410,6 +418,10 @@ func TestDates(t *testing.T) {
 		[]interface{}{
 			[]string{"-f", "dates.ldg", "balance"},
 			"refdata/dates.balance.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "dates.ldg", "-dc", "balance"},
+			"refdata/dates.dcbalance.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "dates.ldg", "-nosubtotal", "balance"},
@@ -588,6 +600,10 @@ func TestReimburse(t *testing.T) {
 			"refdata/reimburse.balance1.ref",
 		},
 		[]interface{}{
+			[]string{"-f", "reimburse.ldg", "-dc", "balance"},
+			"refdata/reimburse.dcbalance.ref",
+		},
+		[]interface{}{
 			[]string{"-f", "reimburse.ldg", "register"},
 			"refdata/reimburse.register1.ref",
 		},
@@ -666,6 +682,10 @@ func TestMixedComm(t *testing.T) {
 		[]interface{}{
 			[]string{"-f", "mixedcomm1.ldg", "balance"},
 			"refdata/mixedcomm1.balance.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "mixedcomm1.ldg", "-dc", "balance"},
+			"refdata/mixedcomm1.dcbalance.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "mixedcomm1.ldg", "register"},
@@ -748,6 +768,10 @@ func TestTrip(t *testing.T) {
 		[]interface{}{
 			[]string{"-f", "trip.ldg", "balance"},
 			"refdata/trip.balance.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "trip.ldg", "-dc", "balance"},
+			"refdata/trip.dcbalance.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "trip.ldg", "register"},
@@ -835,6 +859,10 @@ func TestAcctree(t *testing.T) {
 		[]interface{}{
 			[]string{"-f", "acctree.ldg", "balance"},
 			"refdata/acctree.balance.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "acctree.ldg", "-dc", "balance"},
+			"refdata/acctree.dcbalance.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "acctree.ldg", "-nosubtotal", "balance"},

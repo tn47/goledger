@@ -1,7 +1,6 @@
 package dblentry
 
 import "fmt"
-import "sort"
 import "strings"
 
 import "github.com/prataprc/goparsec"
@@ -13,7 +12,7 @@ type Account struct {
 	virtual    bool
 	balanced   bool
 	hasposting bool
-	balance    map[string]*Commodity
+	de         *DoubleEntry
 	// from account directive
 	notes   []string
 	aliases []string
@@ -24,9 +23,9 @@ type Account struct {
 // NewAccount create a new instance of Account{}.
 func NewAccount(name string) *Account {
 	acc := &Account{
-		name:    name,
-		balance: make(map[string]*Commodity),
-		atype:   "exchange", // default type
+		name:  name,
+		de:    newDoubleEntry(name),
+		atype: "exchange", // default type
 	}
 	return acc
 }
@@ -80,26 +79,27 @@ func (acc *Account) Notes() []string {
 }
 
 func (acc *Account) Balance(obj interface{}) (balance api.Commoditiser) {
-	switch v := obj.(type) {
-	case *Commodity:
-		balance, _ = acc.balance[v.name]
-	case string:
-		balance, _ = acc.balance[v]
-	}
-	return balance
+	return acc.de.Balance(obj)
 }
 
 func (acc *Account) Balances() []api.Commoditiser {
-	keys := []string{}
-	for name := range acc.balance {
-		keys = append(keys, name)
-	}
-	sort.Strings(keys)
-	comms := []api.Commoditiser{}
-	for _, key := range keys {
-		comms = append(comms, acc.balance[key])
-	}
-	return comms
+	return acc.de.Balances()
+}
+
+func (acc *Account) Debit(obj interface{}) (balance api.Commoditiser) {
+	return acc.de.Debit(obj)
+}
+
+func (acc *Account) Debits() []api.Commoditiser {
+	return acc.de.Debits()
+}
+
+func (acc *Account) Credit(obj interface{}) (balance api.Commoditiser) {
+	return acc.de.Credit(obj)
+}
+
+func (acc *Account) Credits() []api.Commoditiser {
+	return acc.de.Credits()
 }
 
 func (acc *Account) Balanced() bool {
@@ -124,12 +124,36 @@ func (acc *Account) FmtBalances(
 		return nil
 	}
 
-	rows := make([][]string, 0)
+	rows := make([][]string, 0) // Date, Accountname, Balance
 	for _, balance := range acc.Balances() {
 		if balance.Amount() != 0 || acc.HasPosting() == false {
 			rows = append(rows, []string{"", "", balance.String()})
 		}
 	}
+	if len(rows) > 0 { // last row to include date and account name.
+		lastrow := rows[len(rows)-1]
+		date := trans.Date().Format("2006/Jan/02")
+		lastrow[0], lastrow[1] = date, acc.Name()
+	}
+	return rows
+}
+
+func (acc *Account) FmtDCBalances(
+	db api.Datastorer, trans api.Transactor, p api.Poster,
+	_ api.Accounter) [][]string {
+
+	if len(acc.Balances()) == 0 {
+		return nil
+	}
+
+	rows := make([][]string, 0) // Date, Accountname, Dr, Cr, Balance
+	for _, bal := range acc.Balances() {
+		name := bal.Name()
+		dr, cr := acc.Debit(name), acc.Credit(name)
+		cols := []string{"", "", dr.String(), cr.String(), bal.String()}
+		rows = append(rows, cols)
+	}
+
 	if len(rows) > 0 { // last row to include date and account name.
 		lastrow := rows[len(rows)-1]
 		date := trans.Date().Format("2006/Jan/02")
@@ -283,15 +307,15 @@ func (acc *Account) Secondpass(
 		return err
 	}
 
-	balance := p.account.Balance(p.commodity.name)
+	bal := p.account.Balance(p.commodity.name)
 	if p.balprice != nil {
-		if balok, err := balance.BalanceEqual(p.balprice); err != nil {
+		if balok, err := bal.BalanceEqual(p.balprice); err != nil {
 			return err
 
 		} else if balok == false {
 			accname := p.account.name
 			fmsg := "account(%v) should balance as %s, got %s"
-			return fmt.Errorf(fmsg, accname, p.balprice.String(), balance.String())
+			return fmt.Errorf(fmsg, accname, p.balprice.String(), bal.String())
 		}
 	}
 	return nil
@@ -299,21 +323,15 @@ func (acc *Account) Secondpass(
 
 func (acc *Account) Clone(ndb *Datastore) *Account {
 	nacc := *acc
-	nacc.balance = map[string]*Commodity{}
-	for name, commodity := range acc.balance {
-		nacc.balance[name] = commodity.Clone(ndb)
-	}
+	nacc.de = acc.de.Clone()
 	return &nacc
 }
 
 func (acc *Account) addBalance(commodity *Commodity) error {
-	if balance, ok := acc.balance[commodity.name]; ok {
-		balance.amount += commodity.amount
-		acc.balance[commodity.name] = balance
-	} else {
-		acc.balance[commodity.name] = commodity.makeSimilar(commodity.amount)
+	if err := acc.de.AddBalance(commodity); err != nil {
+		return err
 	}
-	balance := acc.balance[commodity.name]
+	balance := acc.de.Balance(commodity.name).(*Commodity)
 	if err := acc.assert(commodity, balance); err != nil {
 		return err
 	}

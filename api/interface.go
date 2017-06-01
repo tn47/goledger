@@ -194,6 +194,9 @@ type Formatter interface {
 	// FmtBalances used for `balance` reporting.
 	FmtBalances(Datastorer, Transactor, Poster, Accounter) [][]string
 
+	// FmtDCBalances used for `balance` reporting, in debit-credit format.
+	FmtDCBalances(Datastorer, Transactor, Poster, Accounter) [][]string
+
 	// FmtRegister used for `register` reporting.
 	FmtRegister(Datastorer, Transactor, Poster, Accounter) [][]string
 

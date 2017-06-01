@@ -1,0 +1,11 @@
+
+  By-date      Account                   Debit    Credit    Balance 
+                                                                    
+                                      6 Apples             6 Apples 
+  2017/Sep/29  EverQuest:Inventory    8 Steaks             8 Steaks 
+                                                6 Apples  -6 Apples 
+  2017/Sep/29  Places:Black's Tavern            8 Steaks  -8 Steaks 
+                                      --------  --------  --------- 
+                                      6 Apples  6 Apples   0 Apples 
+  2017/Sep/29                         8 Steaks  8 Steaks   0 Steaks 
+
