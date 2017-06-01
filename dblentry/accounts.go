@@ -163,6 +163,30 @@ func (acc *Account) FmtRegister(
 	panic("not supported")
 }
 
+func (acc *Account) FmtPassbook(
+	db api.Datastorer, trans api.Transactor, p api.Poster,
+	_ api.Accounter) [][]string {
+
+	rows := make([][]string, 0)
+	for _, balance := range acc.Balances() {
+		if balance.Amount() != 0 {
+			rows = append(rows, []string{"", "", "", "", balance.String()})
+		}
+	}
+
+	row := rows[len(rows)-1] // pick the last balance entry
+
+	comm := p.Commodity()
+	row[0], row[1] = trans.Date().Format("2006/Jan/02"), p.Payee()
+	if comm.IsDebit() {
+		row[2] = comm.String()
+	} else {
+		row[3] = comm.MakeSimilar(-comm.Amount()).String()
+	}
+
+	return rows
+}
+
 func (acc *Account) Directive() string {
 	lines := []string{fmt.Sprintf("account %v", acc.name)}
 	for _, note := range acc.notes {
@@ -312,28 +336,28 @@ func (acc *Account) assert(comm, bal *Commodity) error {
 }
 
 func (acc *Account) assertcredit(comm *Commodity) error {
-	if comm != nil && comm.isCredit() == false {
+	if comm != nil && comm.IsCredit() == false {
 		return fmt.Errorf("account %q cannot be target", acc.name)
 	}
 	return nil
 }
 
 func (acc *Account) assertdebit(comm *Commodity) error {
-	if comm != nil && comm.isDebit() == false {
+	if comm != nil && comm.IsDebit() == false {
 		return fmt.Errorf("account %q cannot be source", acc.name)
 	}
 	return nil
 }
 
 func (acc *Account) assertcrb(bal *Commodity) error {
-	if bal != nil && bal.isCredit() == false {
+	if bal != nil && bal.IsCredit() == false {
 		return fmt.Errorf("account %q cannot have debit balance", acc.name)
 	}
 	return nil
 }
 
 func (acc *Account) assertdrb(bal *Commodity) error {
-	if bal != nil && bal.isDebit() == false {
+	if bal != nil && bal.IsDebit() == false {
 		return fmt.Errorf("account %q cannot have credit balance", acc.name)
 	}
 	return nil

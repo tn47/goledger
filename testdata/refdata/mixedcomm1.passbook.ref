@@ -1,0 +1,11 @@
+
+  By-date      Payee                      Debit     Credit   Balance 
+                                                                     
+  2017/Sep/29  Get some stuff at the Inn  3 Apples          3 Apples 
+                                                            3 Apples 
+  2017/Sep/29  Get some stuff at the Inn  5 Steaks          5 Steaks 
+                                                            6 Apples 
+  2017/Sep/29  Get some stuff at the Inn  3 Apples          5 Steaks 
+                                                            6 Apples 
+  2017/Sep/29  Get some stuff at the Inn  3 Steaks          8 Steaks 
+

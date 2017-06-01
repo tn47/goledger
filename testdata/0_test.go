@@ -149,6 +149,51 @@ func TestBasic(t *testing.T) {
 	}
 }
 
+func TestPassbook(t *testing.T) {
+	testcases := [][]interface{}{
+		[]interface{}{
+			[]string{"-f", "balassert.ldg", "passbook", "Assets:Cash"},
+			"refdata/balassert.passbook.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "date7.ldg", "passbook", "Assets:Checking"},
+			"refdata/date7.passbook.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "dates.ldg", "passbook", "Assets:Checking"},
+			"refdata/dates.passbook1.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "dates.ldg", "passbook", "Expenses:Dinning"},
+			"refdata/dates.passbook2.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "elidingamount2.ldg", "passbook", "Assets:Cash"},
+			"refdata/elidingamount2.passbook.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "fixprice.ldg", "passbook", "Assets:Checking"},
+			"refdata/fixprice.passbook.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "mixedcomm1.ldg", "passbook", "EverQuest:Inventory"},
+			"refdata/mixedcomm1.passbook.ref",
+		},
+	}
+	for _, testcase := range testcases {
+		ref := testdataFile(testcase[1].(string))
+		args := testcase[0].([]string)
+		cmd := exec.Command(LEDGEREXEC, args...)
+		out, _ := cmd.CombinedOutput()
+		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if bytes.Compare(out, ref) != 0 {
+			t.Logf(strings.Join(args, " "))
+			t.Logf("expected %s", ref)
+			t.Errorf("got %s", out)
+		}
+	}
+}
+
 func TestElidingAmount(t *testing.T) {
 	testcases := [][]interface{}{
 		[]interface{}{

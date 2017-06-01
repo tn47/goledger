@@ -100,6 +100,20 @@ func (p *Posting) Payee() string {
 	return payee.(string)
 }
 
+func (p *Posting) IsCredit() bool {
+	if p.commodity == nil {
+		panic("impossible situation")
+	}
+	return p.commodity.IsCredit()
+}
+
+func (p *Posting) IsDebit() bool {
+	if p.commodity == nil {
+		panic("impossible situation")
+	}
+	return p.commodity.IsDebit()
+}
+
 func (p *Posting) getState() string {
 	state := p.getMetadata("state")
 	if state == nil {
@@ -280,7 +294,7 @@ func (p *Posting) fixbalprice(
 }
 
 func (p *Posting) getCostprice() *Commodity {
-	checkdebit := p.isDebit() && p.commodity.currency == false
+	checkdebit := p.IsDebit() && p.commodity.currency == false
 	if checkdebit && p.costprice != nil {
 		if p.costprice.isTotal() { // first compute per unit price
 			p.costprice.amount /= p.commodity.amount
@@ -289,7 +303,7 @@ func (p *Posting) getCostprice() *Commodity {
 
 	}
 
-	checkcredit := p.isCredit() && p.commodity.currency == false
+	checkcredit := p.IsCredit() && p.commodity.currency == false
 	if checkcredit && p.lotprice != nil {
 		if p.lotprice.isTotal() { // first compute per unit price
 			p.lotprice.amount /= p.commodity.amount
@@ -298,20 +312,6 @@ func (p *Posting) getCostprice() *Commodity {
 	}
 
 	return p.commodity.makeSimilar(p.commodity.amount)
-}
-
-func (p *Posting) isCredit() bool {
-	if p.commodity == nil {
-		panic("impossible situation")
-	}
-	return p.commodity.isCredit()
-}
-
-func (p *Posting) isDebit() bool {
-	if p.commodity == nil {
-		panic("impossible situation")
-	}
-	return p.commodity.isDebit()
 }
 
 func (p *Posting) Firstpass(db *Datastore, trans *Transaction) error {
@@ -411,6 +411,13 @@ func (p *Posting) FmtRegister(
 }
 
 func (p *Posting) FmtEquity(
+	db api.Datastorer, trans api.Transactor, _ api.Poster,
+	_ api.Accounter) [][]string {
+
+	panic("not supported")
+}
+
+func (p *Posting) FmtPassbook(
 	db api.Datastorer, trans api.Transactor, _ api.Poster,
 	_ api.Accounter) [][]string {
 

@@ -1,0 +1,10 @@
+
+  By-date      Payee  Debit   Credit   Balance 
+                                               
+  2009/Jan/01  Shell          11 GAL   -11 GAL 
+  2009/Jan/01  Shell          11 GAL   -22 GAL 
+                                      $-25.289 
+  2009/Jan/01  Shell         $25.289   -22 GAL 
+                                      $-50.589 
+  2009/Jan/01  Shell          $25.30   -22 GAL 
+

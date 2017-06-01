@@ -17,29 +17,32 @@ type Reports struct {
 }
 
 // NewReporter create a new reporter.
-func NewReporter(args []string) (reporter api.Reporter) {
+func NewReporter(args []string) (reporter api.Reporter, err error) {
 	reports := &Reports{
 		reporters:  make([]api.Reporter, 0),
 		n_accounts: make(map[string]int64),
 	}
 
 	if len(args) == 0 {
-		return reports
+		return reports, nil
 	}
 
 	switch args[0] {
-	case "balance", "bal":
+	case "balance", "bal", "b":
 		reports.reporters = append(reports.reporters, NewReportBalance(args))
 	case "register", "reg", "r":
 		reports.reporters = append(reports.reporters, NewReportRegister(args))
-	case "equity":
+	case "equity", "eq":
 		reports.reporters = append(reports.reporters, NewReportEquity(args))
 	case "list", "ls":
 		reports.reporters = append(reports.reporters, NewReportList(args))
-	case "print":
+	case "print", "p":
 		reports.reporters = append(reports.reporters, NewReportPrint(args))
+	case "passbook", "pb", "pbook":
+		reporter, err = NewReportPassbook(args)
+		reports.reporters = append(reports.reporters, reporter)
 	}
-	return reports
+	return reports, err
 }
 
 //---- api.Reporter methods

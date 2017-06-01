@@ -97,6 +97,12 @@ type Poster interface {
 	// transaction's payee.
 	Payee() string
 
+	// IsCredit takes the amount from the account, giver.
+	IsCredit() bool
+
+	// IsDebit accumulates the amount to the account, taker.
+	IsDebit() bool
+
 	// Account to which the commodity should be posted.
 	Account() Accounter
 }
@@ -121,6 +127,12 @@ type Commoditiser interface {
 	// BalanceEqual is equality between two commodity, which implies equality
 	// in Name(), Amount() and Currency().
 	BalanceEqual(Commoditiser) (bool, error)
+
+	// IsCredit commodity is positive.
+	IsCredit() bool
+
+	// IsDebit commodity is negative.
+	IsDebit() bool
 
 	// MakeSimilar create a new instance of commodity simlar to this commodity
 	MakeSimilar(amount float64) Commoditiser
@@ -187,6 +199,9 @@ type Formatter interface {
 
 	// FmtEquity used for `equity` reporting.
 	FmtEquity(Datastorer, Transactor, Poster, Accounter) [][]string
+
+	// FmtPassbook used for `passbook` reporting.
+	FmtPassbook(Datastorer, Transactor, Poster, Accounter) [][]string
 }
 
 // Store maintains an index of key,vlue pairs, key being time.Time and value

@@ -66,7 +66,10 @@ func phase2(args []string) (api.Reporter, api.Datastorer) {
 		}
 	}()
 
-	reporter := reports.NewReporter(args)
+	reporter, err := reports.NewReporter(args)
+	if err != nil {
+		os.Exit(1)
+	}
 	db := dblentry.NewDatastore(api.Options.Dbname, reporter)
 
 	// apply command line arguments here.

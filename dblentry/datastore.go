@@ -398,6 +398,13 @@ func (db *Datastore) FmtEquity(
 	panic("not supported")
 }
 
+func (db *Datastore) FmtPassbook(
+	_ api.Datastorer, trans api.Transactor, _ api.Poster,
+	_ api.Accounter) [][]string {
+
+	panic("not supported")
+}
+
 func (db *Datastore) FmtRegister(
 	_ api.Datastorer, trans api.Transactor, p api.Poster,
 	acc api.Accounter) [][]string {

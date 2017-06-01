@@ -81,6 +81,19 @@ func (comm *Commodity) BalanceEqual(other api.Commoditiser) (bool, error) {
 	return comm.amount == other.Amount(), nil
 }
 
+func (comm *Commodity) IsCredit() bool {
+	if comm.amount < 0 {
+		return true
+	}
+	return false
+}
+
+func (comm *Commodity) IsDebit() bool {
+	if comm.amount > 0 {
+		return true
+	}
+	return false
+}
 func (comm *Commodity) MakeSimilar(amount float64) api.Commoditiser {
 	return comm.makeSimilar(amount)
 }
@@ -273,18 +286,4 @@ func (comm *Commodity) doAdd(other *Commodity) error {
 		return nil
 	}
 	return fmt.Errorf("can't <%v:%v> + <%v:%v>", n1, c1, n2, c2)
-}
-
-func (comm *Commodity) isCredit() bool {
-	if comm.amount < 0 {
-		return true
-	}
-	return false
-}
-
-func (comm *Commodity) isDebit() bool {
-	if comm.amount > 0 {
-		return true
-	}
-	return false
 }
