@@ -1,4 +1,5 @@
-Inspired by http://ledger-cli.org/.
+[![Build Status](https://travis-ci.org/tn47/goledger.svg?branch=master)](https://travis-ci.org/tn47/goledger)
+[![GoDoc](https://godoc.org/github.com/tn47/goledger?status.png)](https://godoc.org/github.com/tn47/goledger)
 
 Ledger-likes
 ------------
