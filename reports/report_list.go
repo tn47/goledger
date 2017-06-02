@@ -49,14 +49,14 @@ func (report *ReportList) Render(args []string, ndb api.Datastorer) {
 	}
 
 	switch args[1] {
-	case "accounts":
+	case "accounts", "acc":
 		if api.Options.Verbose == false {
 			report.listAccounts(args[2:], ndb)
 		} else {
 			report.listAccountsV(args[2:], ndb)
 		}
 
-	case "commodities", "commodity":
+	case "commodities", "commodity", "comm":
 		if api.Options.Verbose == false {
 			report.listCommodities(args[2:], ndb)
 		} else {
@@ -69,6 +69,10 @@ func (report *ReportList) Clone() api.Reporter {
 	nreport := *report
 	nreport.rcf = report.rcf.Clone()
 	return &nreport
+}
+
+func (report *ReportList) Startjournal(fname string, included bool) {
+	panic("not implemented")
 }
 
 func (report *ReportList) listAccounts(args []string, ndb api.Datastorer) {

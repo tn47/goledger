@@ -138,6 +138,10 @@ func (report *ReportEquity) Clone() api.Reporter {
 	return &nreport
 }
 
+func (report *ReportEquity) Startjournal(fname string, included bool) {
+	panic("not implemented")
+}
+
 func (report *ReportEquity) isfiltered() bool {
 	return report.fe != nil
 }

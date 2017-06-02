@@ -3,6 +3,7 @@ Warng: commodity "INR" not pre-declared
 Warng: commodity "$" not pre-declared
 Warng: account "Assets:Checking" not pre-declared
 Warng: payee "My Employer" not pre-declared
+Warng: commodity "$" is not pre-declared
 Warng: commodity "XYZ" not pre-declared
 Warng: account "Income:Salary" not pre-declared
 Warng: payee "My Employer" not pre-declared

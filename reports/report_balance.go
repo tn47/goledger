@@ -268,6 +268,10 @@ func (report *ReportBalance) Clone() api.Reporter {
 	return &nreport
 }
 
+func (report *ReportBalance) Startjournal(fname string, included bool) {
+	panic("not implemented")
+}
+
 func (report *ReportBalance) prunebubbled() {
 	for bbname := range report.bubbleacc {
 		ln, selfpost, children := len(bbname), 0, map[string]bool{}

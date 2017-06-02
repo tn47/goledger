@@ -98,6 +98,14 @@ func (trans *Transaction) GetPostings() []api.Poster {
 	return postings
 }
 
+func (trans *Transaction) Crc64() uint64 {
+	data := []byte{}
+	for _, line := range trans.Printlines() {
+		data = append(data, line...)
+	}
+	return api.Crc64(data)
+}
+
 //---- ledger parser
 
 // Yledger return a parser-combinator that can parse first line of a
@@ -206,12 +214,6 @@ func (trans *Transaction) Firstpass(db *Datastore) error {
 		trans.setMetadata("payee", payee)
 	}
 
-	for _, posting := range trans.postings {
-		if err := posting.Firstpass(db, trans); err != nil {
-			return err
-		}
-	}
-
 	if trans.shouldBalance() {
 		defaccount := db.GetAccount(db.getBalancingaccount()).(*Account)
 		if ok, err := trans.autobalance1(db, defaccount); err != nil {
@@ -221,6 +223,13 @@ func (trans *Transaction) Firstpass(db *Datastore) error {
 		}
 		log.Debugf("transaction balanced\n")
 	}
+
+	for _, posting := range trans.postings {
+		if err := posting.Firstpass(db, trans); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

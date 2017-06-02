@@ -150,6 +150,10 @@ func (report *ReportRegister) Clone() api.Reporter {
 	return &nreport
 }
 
+func (report *ReportRegister) Startjournal(fname string, included bool) {
+	panic("not implemented")
+}
+
 func (report *ReportRegister) isfilteracc() bool {
 	return report.fe != nil
 }

@@ -7,8 +7,11 @@ import "path/filepath"
 import "github.com/prataprc/goparsec"
 import "github.com/prataprc/golog"
 import "github.com/tn47/goledger/dblentry"
+import "github.com/tn47/goledger/api"
 
-func dofirstpass(db *dblentry.Datastore, journalfile string) error {
+func dofirstpass(
+	reporter api.Reporter, db *dblentry.Datastore, journalfile string) error {
+
 	log.Debugf("firstpass %v\n", journalfile)
 	var node parsec.ParsecNode
 	var index int
@@ -70,7 +73,7 @@ func dofirstpass(db *dblentry.Datastore, journalfile string) error {
 			return err
 		}
 
-		tryinclude(db, node, journalfile) // handle include here, if include
+		tryinclude(reporter, db, node, journalfile)
 
 		lineno, block, eof, err = iterate()
 	}
@@ -83,14 +86,16 @@ func dofirstpass(db *dblentry.Datastore, journalfile string) error {
 }
 
 func tryinclude(
-	db *dblentry.Datastore, node parsec.ParsecNode, including string) bool {
+	reporter api.Reporter, db *dblentry.Datastore, node parsec.ParsecNode,
+	includedby string) bool {
 
 	d, ok := node.(*dblentry.Directive)
 	if ok && d.Type() == "include" {
 		journalfile := d.Includefile()
 		journalfile = strings.Trim(journalfile, "/")
-		journalfile = filepath.Join(filepath.Dir(including), journalfile)
-		dofirstpass(db, journalfile)
+		journalfile = filepath.Join(filepath.Dir(includedby), journalfile)
+		reporter.Startjournal(journalfile, true /*included*/)
+		dofirstpass(reporter, db, journalfile)
 		return true
 	}
 	return false

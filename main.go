@@ -15,9 +15,7 @@ func main() {
 	args := phase1()
 	reporter, db := phase2(args)
 	nreporter, ndb := phase3(args, reporter, db)
-	if nreporter != nil {
-		nreporter.Render(args, ndb)
-	}
+	nreporter.Render(args, ndb)
 }
 
 func trycommand(args []string, phase string) bool {
@@ -85,7 +83,8 @@ func phase2(args []string) (api.Reporter, api.Datastorer) {
 
 	for _, journal := range api.Options.Journals {
 		log.Debugf("processing journal %q\n", journal)
-		if err := dofirstpass(db, journal); err != nil {
+		reporter.Startjournal(journal, false /*included*/)
+		if err := dofirstpass(reporter, db, journal); err != nil {
 			os.Exit(1)
 		}
 	}
@@ -108,8 +107,7 @@ func phase3(
 	}()
 
 	if len(args) == 0 {
-		log.Consolef("command not supplied.\n")
-		return nil, nil
+		return reporter, nil
 	}
 
 	switch args[0] {

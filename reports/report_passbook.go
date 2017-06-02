@@ -107,3 +107,7 @@ func (report *ReportPassbook) Clone() api.Reporter {
 	}
 	return &nreport
 }
+
+func (report *ReportPassbook) Startjournal(fname string, included bool) {
+	panic("not implemented")
+}

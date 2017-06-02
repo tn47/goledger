@@ -75,6 +75,8 @@ type Transactor interface {
 	// GetPostings return list of all postings under this transaction.
 	GetPostings() []Poster
 
+	Crc64() uint64
+
 	// Printlines return the original lines from which transaction was parsed.
 	Printlines() []string
 }
@@ -184,6 +186,8 @@ type Reporter interface {
 	BubblePosting(Datastorer, Transactor, Poster, Accounter) error
 
 	Render(args []string, db Datastorer)
+
+	Startjournal(journalfile string, included bool)
 
 	Clone() Reporter
 }

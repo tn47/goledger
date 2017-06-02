@@ -3,6 +3,7 @@ package api
 import "strings"
 import "time"
 import "fmt"
+import "hash/crc64"
 
 var _ = fmt.Sprintf("dummy")
 
@@ -70,4 +71,14 @@ func ValidateDate(tm time.Time, year, month, date, hour, min, sec int) bool {
 		return false
 	}
 	return true
+}
+
+var isoCrc64 *crc64.Table
+
+func Crc64(data []byte) uint64 {
+	return crc64.Checksum(data, isoCrc64)
+}
+
+func init() {
+	isoCrc64 = crc64.MakeTable(crc64.ISO)
 }

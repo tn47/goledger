@@ -60,3 +60,7 @@ func (report *ReportPrint) Clone() api.Reporter {
 	}
 	return &nreport
 }
+
+func (report *ReportPrint) Startjournal(fname string, included bool) {
+	panic("not implemented")
+}
