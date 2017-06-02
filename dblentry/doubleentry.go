@@ -11,7 +11,7 @@ type DoubleEntry struct {
 	debits   map[string]*Commodity
 }
 
-func newDoubleEntry(name string) *DoubleEntry {
+func NewDoubleEntry(name string) *DoubleEntry {
 	de := &DoubleEntry{
 		name:     name,
 		balances: make(map[string]*Commodity),
@@ -117,7 +117,7 @@ func (de *DoubleEntry) AddBalance(comm *Commodity) error {
 }
 
 func (de *DoubleEntry) Clone() *DoubleEntry {
-	nde := newDoubleEntry(de.name)
+	nde := NewDoubleEntry(de.name)
 	for k, v := range de.balances {
 		nde.balances[k] = v
 	}

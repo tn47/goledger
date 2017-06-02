@@ -24,7 +24,7 @@ type Account struct {
 func NewAccount(name string) *Account {
 	acc := &Account{
 		name:  name,
-		de:    newDoubleEntry(name),
+		de:    NewDoubleEntry(name),
 		atype: "exchange", // default type
 	}
 	return acc

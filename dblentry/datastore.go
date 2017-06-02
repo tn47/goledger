@@ -57,7 +57,7 @@ func NewDatastore(name string, reporter api.Reporter) *Datastore {
 		pricedb:     NewDB(fmt.Sprintf("%v-pricedb", name)),
 		accntdb:     map[string]*Account{},
 		commodities: map[string]*Commodity{},
-		de:          newDoubleEntry("master"),
+		de:          NewDoubleEntry("master"),
 	}
 	db.initfirstpass()
 	db.defaultprices()

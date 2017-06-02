@@ -962,7 +962,7 @@ func TestDirtAccount(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		ioutil.WriteFile(testcase[1].(string), out, 0660)
+		//ioutil.WriteFile(testcase[1].(string), out, 0660)
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -1100,7 +1100,7 @@ func TestDirtCommodity(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		ioutil.WriteFile(testcase[1].(string), out, 0660)
+		//ioutil.WriteFile(testcase[1].(string), out, 0660)
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)

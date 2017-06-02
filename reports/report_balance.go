@@ -2,33 +2,42 @@ package reports
 
 import "strings"
 import "sort"
+import "time"
 import "fmt"
 
+import "github.com/prataprc/goparsec"
 import "github.com/tn47/goledger/api"
 import "github.com/tn47/goledger/dblentry"
 
 // ReportBalance for balance reporting.
 type ReportBalance struct {
-	rcf            *RCformat
-	filteraccounts []string
-	balance        map[string][][]string
-	finaltally     [][]string
-	postings       map[string]bool
-	bubbleacc      map[string]bool
+	rcf       *RCformat
+	fe        *api.Filterexpr
+	balance   map[string][][]string
+	de        *dblentry.DoubleEntry
+	finaldate time.Time
+	postings  map[string]bool
+	bubbleacc map[string]bool
 }
 
 // NewReportBalance creates an instance for balance reporting
-func NewReportBalance(args []string) *ReportBalance {
+func NewReportBalance(args []string) (*ReportBalance, error) {
 	report := &ReportBalance{
 		rcf:       NewRCformat(),
 		balance:   make(map[string][][]string),
 		postings:  map[string]bool{},
 		bubbleacc: map[string]bool{},
+		de:        dblentry.NewDoubleEntry("finaltally"),
 	}
 	if len(args) > 1 {
-		report.filteraccounts = args[1:]
+		filterarg := api.MakeFilterexpr(args[1:])
+		node, _ := api.YExpr(parsec.NewScanner([]byte(filterarg)))
+		if err, ok := node.(error); ok {
+			return nil, err
+		}
+		report.fe = node.(*api.Filterexpr)
 	}
-	return report
+	return report, nil
 }
 
 //---- api.Reporter methods
@@ -50,17 +59,15 @@ func (report *ReportBalance) Posting(
 
 	acc := p.Account()
 
-	// final balance
-	if api.Options.Dcformat {
-		report.finaltally = db.FmtDCBalances(db, trans, p, acc)
-	} else {
-		report.finaltally = db.FmtBalances(db, trans, p, acc)
-	}
-
 	// filter account
-	if api.Filterstring(acc.Name(), report.filteraccounts) == false {
+	if report.isfiltered() && report.fe.Match(acc.Name()) == false {
 		return nil
 	}
+
+	// final balance
+	report.de.AddBalance(p.Commodity().(*dblentry.Commodity))
+	report.finaldate = trans.Date()
+
 	// format account balance
 	var balances [][]string
 	if api.Options.Dcformat {
@@ -82,23 +89,11 @@ func (report *ReportBalance) BubblePosting(
 	db api.Datastorer, trans api.Transactor,
 	p api.Poster, account api.Accounter) error {
 
-	if api.Options.Nosubtotal {
+	if api.Options.Nosubtotal || report.isfiltered() {
 		return nil
 	}
-
 	bbname := account.Name()
 
-	// final balance
-	if api.Options.Dcformat {
-		report.finaltally = db.FmtDCBalances(db, trans, p, account)
-	} else {
-		report.finaltally = db.FmtBalances(db, trans, p, account)
-	}
-
-	// filter account
-	if api.Filterstring(bbname, report.filteraccounts) == false {
-		return nil
-	}
 	// format account balance
 	if api.Options.Dcformat {
 		report.balance[bbname] = account.FmtDCBalances(db, trans, p, account)
@@ -150,11 +145,15 @@ func (report *ReportBalance) renderBalance(
 		}
 	}
 
-	if report.isfiltered() == false {
-		dashes := api.Repeatstr("-", rcf.maxwidth(rcf.column(2)))
-		rcf.addrow([]string{"", "", dashes}...)
-		for _, row := range report.finaltally {
-			rcf.addrow(row...)
+	dashes := api.Repeatstr("-", rcf.maxwidth(rcf.column(2)))
+	rcf.addrow([]string{"", "", dashes}...)
+	balances := report.de.Balances()
+	for i, bal := range balances {
+		if i < (len(balances) - 1) {
+			rcf.addrow([]string{"", "", bal.String()}...)
+		} else {
+			date := report.finaldate.Format("2006/Jan/02")
+			rcf.addrow([]string{date, "", bal.String()}...)
 		}
 	}
 
@@ -207,14 +206,19 @@ func (report *ReportBalance) renderDCBalance(
 		}
 	}
 
-	if report.isfiltered() == false {
-		drdashes := api.Repeatstr("-", rcf.maxwidth(rcf.column(2)))
-		crdashes := api.Repeatstr("-", rcf.maxwidth(rcf.column(3)))
-		baldashes := api.Repeatstr("-", rcf.maxwidth(rcf.column(4)))
-		rcf.addrow([]string{"", "", drdashes, crdashes, baldashes}...)
-		for _, row := range report.finaltally {
-			rcf.addrow(row...)
+	drdashes := api.Repeatstr("-", rcf.maxwidth(rcf.column(2)))
+	crdashes := api.Repeatstr("-", rcf.maxwidth(rcf.column(3)))
+	baldashes := api.Repeatstr("-", rcf.maxwidth(rcf.column(4)))
+	rcf.addrow([]string{"", "", drdashes, crdashes, baldashes}...)
+	balances := report.de.Balances()
+	for i, bal := range balances {
+		name := bal.Name()
+		dr, cr := report.de.Debit(name), report.de.Credit(name)
+		cols := []string{"", "", dr.String(), cr.String(), bal.String()}
+		if i == (len(balances) - 1) {
+			cols[0] = report.finaldate.Format("2006/Jan/02")
 		}
+		rcf.addrow(cols...)
 	}
 
 	w0 := rcf.maxwidth(rcf.column(0)) // Date
@@ -222,8 +226,8 @@ func (report *ReportBalance) renderDCBalance(
 	w2 := rcf.maxwidth(rcf.column(2)) // Debit (amount)
 	w3 := rcf.maxwidth(rcf.column(3)) // Credit (amount)
 	w4 := rcf.maxwidth(rcf.column(4)) // Balance (amount)
-	if (w0 + w1 + w2 + w3 + w4) > 70 {
-		_ /*w1*/ = rcf.FitAccountname(1, 70-w0-w2-w3-w4)
+	if (w0 + w1 + w2 + w3 + w4) > 125 {
+		_ /*w1*/ = rcf.FitAccountname(1, 125-w0-w2-w3-w4)
 	}
 
 	rcf.paddcells()
@@ -256,9 +260,9 @@ func (report *ReportBalance) renderDCBalance(
 func (report *ReportBalance) Clone() api.Reporter {
 	nreport := *report
 	nreport.rcf = report.rcf.Clone()
-	nreport.filteraccounts = report.filteraccounts
+	nreport.fe = report.fe
 	nreport.balance = make(map[string][][]string)
-	nreport.finaltally = [][]string{}
+	nreport.de = report.de.Clone()
 	nreport.postings = map[string]bool{}
 	nreport.bubbleacc = map[string]bool{}
 	return &nreport
@@ -284,5 +288,5 @@ func (report *ReportBalance) prunebubbled() {
 }
 
 func (report *ReportBalance) isfiltered() bool {
-	return len(report.filteraccounts) > 0
+	return report.fe != nil
 }

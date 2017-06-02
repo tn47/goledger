@@ -3,36 +3,50 @@ package reports
 import "fmt"
 import "sort"
 
+import "github.com/prataprc/goparsec"
 import "github.com/tn47/goledger/api"
 import "github.com/tn47/goledger/dblentry"
 
 // ReportRegister for register reporting.
 type ReportRegister struct {
-	rcf            *RCformat
-	filteraccounts []string
-	filterpayees   []string
-	register       [][]string
-	balances       map[string]api.Commoditiser
-	lastcomm       api.Commoditiser
+	rcf      *RCformat
+	fe       *api.Filterexpr
+	pfe      *api.Filterexpr
+	register [][]string
+	balances map[string]api.Commoditiser
+	lastcomm api.Commoditiser
 }
 
 // NewReportRegister create an instance for register reporting.
-func NewReportRegister(args []string) *ReportRegister {
+func NewReportRegister(args []string) (*ReportRegister, error) {
 	report := &ReportRegister{
-		rcf:            NewRCformat(),
-		filteraccounts: make([]string, 0),
-		filterpayees:   make([]string, 0),
-		register:       make([][]string, 0),
-		balances:       make(map[string]api.Commoditiser),
+		rcf:      NewRCformat(),
+		register: make([][]string, 0),
+		balances: make(map[string]api.Commoditiser),
 	}
+
+	filteraccounts := []string{}
 	for i, arg := range args[1:] {
-		if arg == "@" || arg == "payee" {
-			report.filterpayees = append(report.filterpayees, args[i+1+1:]...)
+		if arg == "@" || arg == "payee" && len(args[i:]) > 1 {
+			filterarg := api.MakeFilterexpr(args[i+1:])
+			node, _ := api.YExpr(parsec.NewScanner([]byte(filterarg)))
+			if err, ok := node.(error); ok {
+				return nil, err
+			}
+			report.pfe = node.(*api.Filterexpr)
 			break
 		}
-		report.filteraccounts = append(report.filteraccounts, arg)
+		filteraccounts = append(filteraccounts, arg)
 	}
-	return report
+	if len(filteraccounts) > 0 {
+		filterarg := api.MakeFilterexpr(filteraccounts)
+		node, _ := api.YExpr(parsec.NewScanner([]byte(filterarg)))
+		if err, ok := node.(error); ok {
+			return nil, err
+		}
+		report.fe = node.(*api.Filterexpr)
+	}
+	return report, nil
 }
 
 //---- api.Reporter methods
@@ -49,13 +63,11 @@ func (report *ReportRegister) Transaction(
 	date, transpayee := trans.Date().Format("2006-Jan-02"), trans.Payee()
 	for _, p := range trans.GetPostings() {
 		accname := p.Account().Name()
-		if report.isfiltered() {
-			if api.Filterstring(accname, report.filteraccounts) == false {
-				continue
-			}
-			if api.Filterstring(p.Payee(), report.filterpayees) == false {
-				continue
-			}
+		if report.isfilteracc() && report.fe.Match(accname) == false {
+			continue
+		}
+		if report.isfilterpayee() && report.pfe.Match(p.Payee()) == false {
+			continue
 		}
 		commodity := p.Commodity()
 		report.applyBalance(commodity)
@@ -132,14 +144,18 @@ func (report *ReportRegister) Render(args []string, db api.Datastorer) {
 func (report *ReportRegister) Clone() api.Reporter {
 	nreport := *report
 	nreport.rcf = report.rcf.Clone()
-	nreport.filteraccounts = report.filteraccounts
-	nreport.filterpayees = report.filterpayees
+	nreport.pfe = report.pfe
+	nreport.fe = report.fe
 	nreport.register = make([][]string, 0)
 	return &nreport
 }
 
-func (report *ReportRegister) isfiltered() bool {
-	return (len(report.filteraccounts) + len(report.filterpayees)) > 0
+func (report *ReportRegister) isfilteracc() bool {
+	return report.fe != nil
+}
+
+func (report *ReportRegister) isfilterpayee() bool {
+	return report.pfe != nil
 }
 
 func (report *ReportRegister) applyBalance(comm api.Commoditiser) {

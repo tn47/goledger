@@ -29,11 +29,14 @@ func NewReporter(args []string) (reporter api.Reporter, err error) {
 
 	switch args[0] {
 	case "balance", "bal", "b":
-		reports.reporters = append(reports.reporters, NewReportBalance(args))
+		reporter, err = NewReportBalance(args)
+		reports.reporters = append(reports.reporters, reporter)
 	case "register", "reg", "r":
-		reports.reporters = append(reports.reporters, NewReportRegister(args))
+		reporter, err = NewReportRegister(args)
+		reports.reporters = append(reports.reporters, reporter)
 	case "equity", "eq":
-		reports.reporters = append(reports.reporters, NewReportEquity(args))
+		reporter, err = NewReportEquity(args)
+		reports.reporters = append(reports.reporters, reporter)
 	case "list", "ls":
 		reports.reporters = append(reports.reporters, NewReportList(args))
 	case "print", "p":

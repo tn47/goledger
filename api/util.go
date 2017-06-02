@@ -1,7 +1,6 @@
 package api
 
 import "strings"
-import "regexp"
 import "time"
 import "fmt"
 
@@ -45,24 +44,6 @@ func Repeatstr(str string, n int) string {
 		out += str
 	}
 	return out
-}
-
-// Filterstring can be used for excluding or including patters.
-func Filterstring(strpatt string, strs []string) bool {
-	if len(strs) == 0 {
-		return true
-	}
-	for _, item := range strs {
-		if strings.HasPrefix(strpatt, item) {
-			return true
-		}
-		if ok, err := regexp.Match(item, []byte(strpatt)); err != nil {
-			panic(err)
-		} else if ok {
-			return true
-		}
-	}
-	return false
 }
 
 func StringSet(xs []string) []string {

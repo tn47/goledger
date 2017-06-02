@@ -5,29 +5,34 @@ import "time"
 import "sort"
 import "strings"
 
+import "github.com/prataprc/goparsec"
 import "github.com/tn47/goledger/api"
 import "github.com/tn47/goledger/dblentry"
 
 // ReportEquity for equity reporting.
 type ReportEquity struct {
-	rcf            *RCformat
-	filteraccounts []string
-	latestdate     time.Time
-	equity         map[string][][]string
+	rcf        *RCformat
+	fe         *api.Filterexpr
+	latestdate time.Time
+	equity     map[string][][]string
 }
 
 // NewReportEquity create a new instance for equity reporting.
-func NewReportEquity(args []string) *ReportEquity {
+func NewReportEquity(args []string) (*ReportEquity, error) {
 	report := &ReportEquity{
-		rcf:            NewRCformat(),
-		filteraccounts: make([]string, 0),
-		equity:         make(map[string][][]string),
+		rcf:    NewRCformat(),
+		equity: make(map[string][][]string),
 	}
 	api.Options.Nosubtotal = true
 	if len(args) > 1 {
-		report.filteraccounts = args[1:]
+		filterarg := api.MakeFilterexpr(args[1:])
+		node, _ := api.YExpr(parsec.NewScanner([]byte(filterarg)))
+		if err, ok := node.(error); ok {
+			return nil, err
+		}
+		report.fe = node.(*api.Filterexpr)
 	}
-	return report
+	return report, nil
 }
 
 //---- api.Reporter methods
@@ -50,9 +55,10 @@ func (report *ReportEquity) Posting(
 	acc := p.Account()
 
 	// filter account
-	if api.Filterstring(acc.Name(), report.filteraccounts) == false {
+	if report.isfiltered() && report.fe.Match(acc.Name()) == false {
 		return nil
 	}
+
 	report.latestdate = trans.Date()
 	// format account balance
 	if balances := acc.FmtEquity(db, trans, p, acc); len(balances) > 0 {
@@ -127,7 +133,11 @@ func (report *ReportEquity) Render(args []string, db api.Datastorer) {
 func (report *ReportEquity) Clone() api.Reporter {
 	nreport := *report
 	nreport.rcf = report.rcf.Clone()
-	nreport.filteraccounts = report.filteraccounts
+	nreport.fe = report.fe
 	nreport.equity = make(map[string][][]string)
 	return &nreport
+}
+
+func (report *ReportEquity) isfiltered() bool {
+	return report.fe != nil
 }
