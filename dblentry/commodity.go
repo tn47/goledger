@@ -180,16 +180,53 @@ func (comm *Commodity) Yledger(db *Datastore) parsec.Parser {
 			}
 			return comm
 		},
-		parsec.Maybe(maybenode, ytokCurrency),
+		parsec.Maybe(maybenode, comm.Ycurrencyname(db)),
 		ytokAmount,
-		parsec.Maybe(maybenode, ytokCommodity),
+		parsec.Maybe(maybenode, comm.Ycommodityname(db)),
 	)
 	return y
 }
 
 // Yname return a parser-combinator that can parse a commodity name.
 func (comm *Commodity) Yname(db *Datastore) parsec.Parser {
-	return parsec.OrdChoice(Vector2scalar, ytokCurrency, ytokCommodity)
+	return parsec.OrdChoice(
+		Vector2scalar,
+		comm.Ycurrencyname(db), comm.Ycommodityname(db),
+	)
+}
+
+// Ycurrencyname parse commodity as currency as simple token or as
+// double-quoted token.
+func (comm *Commodity) Ycurrencyname(db *Datastore) parsec.Parser {
+	return parsec.OrdChoice(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			switch v := nodes[0].(type) {
+			case string:
+				return &parsec.Terminal{Name: "CURRENCY", Value: v}
+			case *parsec.Terminal:
+				return v
+			}
+			panic("unreachable code")
+		},
+		parsec.String(), ytokCurrency,
+	)
+}
+
+// Ycommodityname parse commodity, non-currency name, as simple token or as
+// double-quoted token.
+func (comm *Commodity) Ycommodityname(db *Datastore) parsec.Parser {
+	return parsec.OrdChoice(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			switch v := nodes[0].(type) {
+			case string:
+				return &parsec.Terminal{Name: "COMMODITY", Value: v}
+			case *parsec.Terminal:
+				return v
+			}
+			panic("unreachable code")
+		},
+		parsec.String(), ytokCommodity,
+	)
 }
 
 // Ylotprice return a parser-combinator that can parse a commodity in lotprice

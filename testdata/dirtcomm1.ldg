@@ -11,3 +11,19 @@ commodity INR
 commodity KVB
     note  Shares
     format  1000 KVB
+
+commodity "Arcancia Équilibre 456"
+    note  Shares
+    format  "Arcancia Équilibre 456" 1000
+
+commodity "Arcancia Équilibre 455"
+    note  Shares
+    format  1000 "Arcancia Équilibre 455"
+
+1999/06/09 ! Achat
+    Actif:SG PEE STK         49.957 "Arcancia Équilibre 455"
+    Actif:SG PEE STK      $-234.90
+
+2000/12/08 ! Achat
+    Actif:SG PEE STK        "Arcancia Équilibre 456" 215.796
+    Actif:SG PEE STK         $-10742.54

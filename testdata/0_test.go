@@ -707,6 +707,10 @@ func TestMixedComm(t *testing.T) {
 			[]string{"-f", "mixedcomm2.ldg", "equity"},
 			"refdata/mixedcomm2.equity.ref",
 		},
+		[]interface{}{
+			[]string{"-f", "commname.ldg", "balance"},
+			"refdata/commname.balance.ref",
+		},
 	}
 	for _, testcase := range testcases {
 		ref := testdataFile(testcase[1].(string))
@@ -1235,12 +1239,12 @@ func TestOutfile(t *testing.T) {
 		[]interface{}{
 			[]string{"-f", "dirtcomm1.ldg", "-strict", "-o", outfile,
 				"list", "commodity"},
-			"refdata/dirtcomm1.list.ref",
+			"refdata/dirtcomm1.outlist.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "dirtcomm1.ldg", "-strict", "-v", "-o", outfile,
 				"list", "commodity"},
-			"refdata/dirtcomm1.vlist.ref",
+			"refdata/dirtcomm1.outvlist.ref",
 		},
 	}
 	for _, testcase := range testcases {
