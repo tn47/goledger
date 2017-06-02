@@ -1,13 +1,10 @@
-SUBDIRS := api dblentry testdata
+SUBDIRS := api dblentry testdata reports
 
 build: clean
 	go build
 
 install: clean
 	go install
-
-dev: build
-	./goledger -f examples/first.ldg balance
 
 test: clean build
 	@for dir in $(SUBDIRS); do \
@@ -16,6 +13,15 @@ test: clean build
 	done
 	go test -v -race -test.run=. -test.bench=. -test.benchmem=true
 
+coverage:
+	@for dir in $(SUBDIRS); do \
+		echo $$dir "..."; \
+		$(MAKE) -C $$dir coverage; \
+	done
+	go test -coverprofile=coverage.out
+	go tool cover -html=coverage.out
+	rm -rf coverage.out
 
 clean:
 	rm -rf ledger goledger
+
