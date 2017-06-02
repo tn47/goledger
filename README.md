@@ -4,8 +4,8 @@
 Inspired by [ledger-cli](http://ledger-cli), goledger is a re-write of command
 line ledger in golang, with the stated goals.
 
-* Keep the tool command line friendly, whether or not GUI / web
-interface are available.
+* Keeping it command line friendly, whether or not GUI / web interface
+are available.
 * Defaults to Locale en_IN, until the tool becomes smart enough
 to handle locale specific details automatically.
 * Targeted for personal, small and medium enterprises.
