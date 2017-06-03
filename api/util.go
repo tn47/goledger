@@ -73,6 +73,15 @@ func ValidateDate(tm time.Time, year, month, date, hour, min, sec int) bool {
 	return true
 }
 
+func HasString(xs []string, y string) bool {
+	for _, x := range xs {
+		if y == x {
+			return true
+		}
+	}
+	return false
+}
+
 var isoCrc64 *crc64.Table
 
 func Crc64(data []byte) uint64 {

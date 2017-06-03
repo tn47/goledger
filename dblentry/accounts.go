@@ -17,7 +17,7 @@ type Account struct {
 	notes   []string
 	aliases []string
 	payees  []string
-	atype   string
+	types   []string
 }
 
 // NewAccount create a new instance of Account{}.
@@ -25,7 +25,7 @@ func NewAccount(name string) *Account {
 	acc := &Account{
 		name:  name,
 		de:    NewDoubleEntry(name),
-		atype: "exchange", // default type
+		types: []string{"exchange"},
 	}
 	return acc
 }
@@ -222,6 +222,10 @@ func (acc *Account) Directive() string {
 	for _, payee := range acc.payees {
 		lines = append(lines, fmt.Sprintf("    payee  %v", payee))
 	}
+	if len(acc.types) > 0 { // only if account's type is defined.
+		line := fmt.Sprintf("    type  %v", strings.Join(acc.types, ","))
+		lines = append(lines, line)
+	}
 	return strings.Join(lines, "\n")
 }
 
@@ -339,16 +343,21 @@ func (acc *Account) addBalance(commodity *Commodity) error {
 }
 
 func (acc *Account) assert(comm, bal *Commodity) error {
-	switch acc.atype {
-	case "credit":
-		return acc.assertcredit(comm)
-	case "debit":
-		return acc.assertdebit(comm)
-	case "creditbalance":
-		return acc.assertcrb(bal)
-	case "debitbalance":
-		return acc.assertdrb(bal)
-	case "exchange":
+	for _, atype := range acc.types {
+		switch atype {
+		case "credit":
+			return acc.assertcredit(comm)
+		case "debit":
+			return acc.assertdebit(comm)
+		case "creditbalance":
+			return acc.assertcrb(bal)
+		case "debitbalance":
+			return acc.assertdrb(bal)
+		case "exchange", "income", "expense", "accrual":
+			// "income", implies "credit" shall be present in types.
+			// "expense", implies "debit" shall be present in types.
+			// "accrual" does not imply anything on amount or balance.
+		}
 	}
 	return nil
 }

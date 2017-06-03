@@ -5,5 +5,6 @@ account Expenses:Food
     alias  snacks
     payee  ^(KFC|Popeyes)$
     payee  ^(KFC|Popeyes)$
+    type  income,credit,accrual
 
 

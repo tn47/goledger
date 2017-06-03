@@ -5,8 +5,10 @@ account Expenses:Food
     check  commodity == "$"
     assert  commodity == "$"
     eval  print("Hello!")
+    type  credit
     default
 
 account Expenses:Food
     alias  snacks
     payee  ^(KFC|Popeyes)$
+    type  income,accrual

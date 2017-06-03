@@ -6,6 +6,7 @@ import "strconv"
 
 import "github.com/prataprc/goparsec"
 import "github.com/prataprc/golog"
+import "github.com/tn47/goledger/api"
 
 // Directive can handle all directives in ledger journal.
 type Directive struct {
@@ -19,7 +20,7 @@ type Directive struct {
 	acccheck    string   // account
 	accassert   string   // account
 	acceval     string   // account
-	acctype     string   // account
+	acctypes    []string // account
 	aliasname   string   // alias
 	expression  string   // assert, check
 	capture     string   // capture pattern
@@ -102,6 +103,7 @@ func (d *Directive) Yledgerblock(db *Datastore, block []string) (int, error) {
 			}
 			nodes := node.([]parsec.ParsecNode)
 			t := nodes[0].(*parsec.Terminal)
+			d.acctypes = []string{}
 			switch t.Name {
 			case "DRTV_NOTE":
 				d.note = trimstr(nodes[2])
@@ -116,7 +118,8 @@ func (d *Directive) Yledgerblock(db *Datastore, block []string) (int, error) {
 			case "DRTV_ACCOUNT_EVAL":
 				d.acceval = trimstr(nodes[2])
 			case "DRTV_ACCOUNT_TYPE":
-				d.acctype = trimstr(nodes[2])
+				acctypes := api.Parsecsv(trimstr(nodes[2]))
+				d.acctypes = d.addAccounttype(acctypes, d.acctypes)
 			case "DRTV_DEFAULT":
 				d.ndefault = true
 			}
@@ -459,4 +462,24 @@ func (d *Directive) Firstpass(db *Datastore) error {
 
 func (d *Directive) Secondpass(db *Datastore) error {
 	return nil
+}
+
+func (d *Directive) addAccounttype(typenames []string, acc []string) []string {
+	for _, typename := range typenames {
+		typename = strings.ToLower(typename)
+		if api.HasString(acc, typename) {
+			continue
+		}
+		switch typename {
+		case "income":
+			implies := []string{"credit"}
+			acc = d.addAccounttype(implies, append(acc, typename))
+		case "expense":
+			implies := []string{"debit"}
+			acc = d.addAccounttype(implies, append(acc, typename))
+		default:
+			acc = append(acc, typename)
+		}
+	}
+	return acc
 }

@@ -316,7 +316,7 @@ func (db *Datastore) declare(value interface{}) error {
 				return err
 			}
 			account := db.GetAccount(d.accname).(*Account)
-			account.atype = strings.ToLower(v.acctype)
+			account.types = d.acctypes
 			account.addNote(d.note)
 			account.addAlias(d.accalias)
 			account.addPayee(d.accpayee)
