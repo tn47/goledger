@@ -55,6 +55,20 @@ posting's account is called target account.
 * Posting with negative amount are treated as credit transaction, and the
 posting's account is called source account.
 
+Getting Started
+===============
+
+There are plans to package ledger for different platforms, like windows, ubuntu, mac,
+raspberry-pi, debian etc.. Until then, goledger can be obtained via
+golang-tools. If you are a mac user or linux user:
+
+```bash
+$ go get github.com/tn47/goledger
+$ cd tn47/goledger
+$ make test # sanity test.
+$ make install
+```
+
 Ledger-likes
 ============
 
@@ -75,3 +89,5 @@ the issue.
 global guidelines for writing go programs.
 * If the changeset is more than few lines, please generate a
 [report card](https://goreportcard.com/report/github.com/tn47/goledger).
+
+Happy Counting !!

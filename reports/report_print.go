@@ -31,6 +31,8 @@ func (report *ReportPrint) Transaction(
 		return nil
 	} else if dt = api.Options.Enddt; dt != nil && date.Before(*dt) {
 		report.transs = append(report.transs, trans)
+	} else {
+		report.transs = append(report.transs, trans)
 	}
 	return nil
 }
