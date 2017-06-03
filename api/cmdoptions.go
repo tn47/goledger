@@ -1,13 +1,14 @@
 package api
 
 import "os"
+import "time"
 
 var Options struct {
 	Dbname     string
 	Journals   []string
 	Currentdt  string
-	Begindt    string
-	Enddt      string
+	Begindt    *time.Time
+	Enddt      *time.Time
 	Finyear    int
 	Period     string
 	Nosubtotal bool

@@ -2,7 +2,6 @@ package main
 
 import "os"
 import "fmt"
-import "time"
 
 import "github.com/prataprc/golog"
 import "github.com/tn47/goledger/dblentry"
@@ -71,14 +70,8 @@ func phase2(args []string) (api.Reporter, api.Datastorer) {
 	db := dblentry.NewDatastore(api.Options.Dbname, reporter)
 
 	// apply command line arguments here.
-	if api.Options.Finyear > 0 {
-		till := time.Date(api.Options.Finyear, 4, 1, 0, 0, 0, 0, time.Local)
-		ok := api.ValidateDate(till, api.Options.Finyear, 4, 1, 0, 0, 0)
-		if ok == false {
-			log.Errorf("invalid finyear %v\n", api.Options.Finyear)
-			os.Exit(1)
-		}
-		db.Applytill(till)
+	if api.Options.Enddt != nil {
+		db.Applytill(*api.Options.Enddt)
 	}
 
 	for _, journal := range api.Options.Journals {

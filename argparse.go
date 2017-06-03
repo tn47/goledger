@@ -3,13 +3,14 @@ package main
 import "os"
 import "fmt"
 import "flag"
+import "time"
 import "strconv"
 
 import "github.com/prataprc/golog"
 import "github.com/tn47/goledger/api"
 
 func argparse() ([]string, error) {
-	var journals, outfile, finyear string
+	var journals, outfile, finyear, begindt, enddt string
 
 	f := flag.NewFlagSet("ledger", flag.ExitOnError)
 	f.Usage = func() {
@@ -26,9 +27,9 @@ func argparse() ([]string, error) {
 		"outfile to report")
 	f.StringVar(&api.Options.Currentdt, "current", "",
 		"Display only transactions on or before the current date.")
-	f.StringVar(&api.Options.Begindt, "begin", "",
+	f.StringVar(&begindt, "begin", "",
 		"Display only transactions on or before the current date.")
-	f.StringVar(&api.Options.Enddt, "end", "",
+	f.StringVar(&enddt, "end", "",
 		"Display only transactions on or before the current date.")
 	f.StringVar(&finyear, "fy", "",
 		"financial year.")
@@ -78,7 +79,25 @@ func argparse() ([]string, error) {
 
 	api.Options.Journals = gatherjournals(journals)
 	api.Options.Outfd = argOutfd(outfile)
-	api.Options.Finyear = argFinyear(finyear)
+	endyear := argFinyear(finyear)
+	if endyear > 0 {
+		till := time.Date(endyear, 4, 1, 0, 0, 0, 0, time.Local)
+		ok := api.ValidateDate(till, endyear, 4, 1, 0, 0, 0)
+		if ok == false {
+			err := fmt.Errorf("invalid finyear %v", endyear)
+			log.Errorf("%v\n", err)
+			return nil, err
+		}
+		from := time.Date(endyear-1, 4, 1, 0, 0, 0, 0, time.Local)
+		ok = api.ValidateDate(from, endyear-1, 4, 1, 0, 0, 0)
+		if ok == false {
+			err := fmt.Errorf("invalid begin year for finyear %v", endyear)
+			log.Errorf("%v\n", err)
+			return nil, err
+		}
+		// Begindt is inclusive, but not Tilldt
+		api.Options.Begindt, api.Options.Enddt = &from, &till
+	}
 	return f.Args(), nil
 }
 

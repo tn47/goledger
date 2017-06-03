@@ -26,7 +26,12 @@ func (report *ReportPrint) Firstpass(
 func (report *ReportPrint) Transaction(
 	_ api.Datastorer, trans api.Transactor) error {
 
-	report.transs = append(report.transs, trans)
+	date := trans.Date()
+	if dt := api.Options.Begindt; dt != nil && date.Before(*dt) {
+		return nil
+	} else if dt = api.Options.Enddt; dt != nil && date.Before(*dt) {
+		report.transs = append(report.transs, trans)
+	}
 	return nil
 }
 
