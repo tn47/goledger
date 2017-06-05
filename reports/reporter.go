@@ -152,9 +152,11 @@ func (reports *Reports) Render(args []string, db api.Datastorer) {
 		}
 
 		n_postings := reports.n_postings
-		startdate := reports.startdate.Format("2006/Jan/02")
-		enddate := reports.enddate.Format("2006/Jan/02")
-		fmt.Fprintf(outfd, "transactions from %q to %q\n", startdate, enddate)
+		if reports.startdate != nil {
+			startdt := reports.startdate.Format("2006/Jan/02")
+			enddt := reports.enddate.Format("2006/Jan/02")
+			fmt.Fprintf(outfd, "transactions from %q to %q\n", startdt, enddt)
+		}
 
 		fmsg := "%v postings in %v transactions\n"
 		fmt.Fprintf(outfd, fmsg, n_postings, len(reports.n_transactions))
