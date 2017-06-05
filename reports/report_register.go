@@ -60,6 +60,10 @@ func (report *ReportRegister) Firstpass(
 func (report *ReportRegister) Transaction(
 	db api.Datastorer, trans api.Transactor) error {
 
+	if api.FilterPeriod(trans.Date()) == false {
+		return nil
+	}
+
 	date, transpayee := trans.Date().Format("2006-Jan-02"), trans.Payee()
 	for _, p := range trans.GetPostings() {
 		accname := p.Account().Name()

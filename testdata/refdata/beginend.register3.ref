@@ -1,0 +1,10 @@
+
+  By-date      Payee               Account               Amount  Balance 
+                                                                         
+  2012-Mar-15  Departmental store  Expenses:Groceries   100.00   100.00  
+                                   Assets:Checking     -100.00     0.00  
+  2013-Mar-15  KFC                 Expenses:Dinning      75.00    75.00  
+                                   Assets:Checking      -75.00     0.00  
+  2014-Mar-15  Chats               Expenses:Dinning      75.00    75.00  
+                                   Assets:Checking      -75.00     0.00  
+

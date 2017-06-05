@@ -48,6 +48,7 @@ func TestCmdArgs(t *testing.T) {
 
 func TestBeginEnd(t *testing.T) {
 	testcases := [][]interface{}{
+		// balance
 		[]interface{}{
 			[]string{"-f", "beginend.ldg", "-begin", "2011/02/28", "-end",
 				"2012/03/15", "balance"},
@@ -65,6 +66,25 @@ func TestBeginEnd(t *testing.T) {
 		[]interface{}{
 			[]string{"-f", "beginend.ldg", "-end", "2012/03/15", "balance"},
 			"refdata/beginend.balance4.ref",
+		},
+		// register
+		[]interface{}{
+			[]string{"-f", "beginend.ldg", "-begin", "2011/02/28", "-end",
+				"2012/03/15", "register"},
+			"refdata/beginend.register1.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "beginend.ldg", "-begin", "2011/02/28", "-end",
+				"2012/03/16", "register"},
+			"refdata/beginend.register2.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "beginend.ldg", "-begin", "2012/03/15", "register"},
+			"refdata/beginend.register3.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "beginend.ldg", "-end", "2012/03/15", "register"},
+			"refdata/beginend.register4.ref",
 		},
 	}
 	for _, testcase := range testcases {
