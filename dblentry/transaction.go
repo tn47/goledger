@@ -237,7 +237,7 @@ func (trans *Transaction) Firstpass(db *Datastore) error {
 func (trans *Transaction) Secondpass(db *Datastore) error {
 	for _, posting := range trans.postings {
 		if err := posting.Secondpass(db, trans); err != nil {
-			return fmt.Errorf("lineno %v: %v", trans.lineno, err)
+			return fmt.Errorf("secondpass lineno %v: %v", trans.lineno, err)
 		}
 	}
 	return db.reporter.Transaction(db, trans)

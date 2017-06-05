@@ -40,7 +40,7 @@ func dofirstpass(
 	for len(block) > 0 {
 		lineno -= len(block)
 		if err != nil {
-			log.Errorf("lineno %v: %v\n", lineno, err)
+			log.Errorf("iterate lineno %v: %v\n", lineno, err)
 			return err
 		}
 
@@ -78,7 +78,7 @@ func dofirstpass(
 		}
 
 		if err != nil {
-			log.Errorf("lineno %v: %v\n", lineno, err)
+			log.Errorf("parsec lineno %v: %v\n", lineno, err)
 			return err
 		}
 		if err := db.Firstpass(node); err != nil {
