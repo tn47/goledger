@@ -16,6 +16,7 @@ type Commodity struct {
 	amount    float64
 	currency  bool
 	precision int
+	wspace    string
 	mark1k    bool
 	fixprice  bool
 	total     bool
@@ -105,6 +106,7 @@ func (comm *Commodity) makeSimilar(amount float64) *Commodity {
 		amount:    amount,
 		currency:  comm.currency,
 		precision: comm.precision,
+		wspace:    comm.wspace,
 		mark1k:    comm.mark1k,
 		fixprice:  comm.fixprice,
 		total:     comm.total,
@@ -122,7 +124,7 @@ func (comm *Commodity) String() string {
 		amountstr = fmt.Sprintf(fmsg, comm.amount)
 	}
 	if comm.currency {
-		return fmt.Sprintf("%v%v", comm.name, amountstr)
+		return fmt.Sprintf("%v%v%v", comm.name, comm.wspace, amountstr)
 	}
 	return fmt.Sprintf("%v %v", amountstr, comm.name)
 }
@@ -165,6 +167,9 @@ func (comm *Commodity) Yledger(db *Datastore) parsec.Parser {
 				case "CURRENCY":
 					comm.name, comm.currency = string(t.Value), true
 
+				case "WHITESPACE":
+					comm.wspace = t.Value
+
 				case "AMOUNT":
 					comm.mark1k = strings.Contains(string(t.Value), ",")
 					amount := strings.Replace(string(t.Value), ",", "", -1)
@@ -181,6 +186,7 @@ func (comm *Commodity) Yledger(db *Datastore) parsec.Parser {
 			return comm
 		},
 		parsec.Maybe(maybenode, comm.Ycurrencyname(db)),
+		parsec.Maybe(maybenode, ytokWhitespace),
 		ytokAmount,
 		parsec.Maybe(maybenode, comm.Ycommodityname(db)),
 	)

@@ -3,6 +3,7 @@ package dblentry
 import "github.com/prataprc/goparsec"
 
 var ytokHardSpace = parsec.TokenExact(` {2}|\t`, "HARDSPACE")
+var ytokWhitespace = parsec.TokenExact(`[ ]*`, "WHITESPACE")
 var ytokEqual = parsec.Atom("=", "EQUAL")
 var ytokCurrency = parsec.Token(`[^0-9 \t\r\n.,;:?!/@+*/^&|=<>(){}\[\]-]+`, "CURRENCY")
 var ytokAmount = parsec.Token(`[0-9,.-]+`, "AMOUNT")
@@ -51,6 +52,7 @@ var ytokCheck = parsec.Atom("check", "DRTV_ACCOUNT_CHECK")
 var ytokEval = parsec.Atom("eval", "DRTV_ACCOUNT_EVAL")
 var ytokType = parsec.Atom("type", "DRTV_ACCOUNT_TYPE")
 var ytokValue = parsec.Token(".*", "DRTV_VALUE")
+var ytokDirectivenote = parsec.Token(";.*", "DRTV_SHORTNOTE")
 
 var ytokApply = parsec.Atom("apply", "DRTV_APPLY")
 var ytokAliasname = parsec.Token("[^=]+", "DRTV_ALIASNAME")
