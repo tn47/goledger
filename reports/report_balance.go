@@ -63,6 +63,9 @@ func (report *ReportBalance) Posting(
 	if report.isfiltered() && report.fe.Match(acc.Name()) == false {
 		return nil
 	}
+	if api.FilterPeriod(trans.Date()) == false {
+		return nil
+	}
 
 	// final balance
 	report.de.AddBalance(p.Commodity().(*dblentry.Commodity))
@@ -75,6 +78,7 @@ func (report *ReportBalance) Posting(
 	} else {
 		balances = acc.FmtBalances(db, trans, p, acc)
 	}
+
 	if len(balances) > 0 {
 		report.balance[acc.Name()] = balances
 	} else {
@@ -90,6 +94,8 @@ func (report *ReportBalance) BubblePosting(
 	p api.Poster, account api.Accounter) error {
 
 	if api.Options.Nosubtotal || report.isfiltered() {
+		return nil
+	} else if api.FilterPeriod(trans.Date()) == false {
 		return nil
 	}
 	bbname := account.Name()

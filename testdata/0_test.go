@@ -46,6 +46,43 @@ func TestCmdArgs(t *testing.T) {
 	}
 }
 
+func TestBeginEnd(t *testing.T) {
+	testcases := [][]interface{}{
+		[]interface{}{
+			[]string{"-f", "beginend.ldg", "-begin", "2011/02/28", "-end",
+				"2012/03/15", "balance"},
+			"refdata/beginend.balance1.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "beginend.ldg", "-begin", "2011/02/28", "-end",
+				"2012/03/16", "balance"},
+			"refdata/beginend.balance2.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "beginend.ldg", "-begin", "2011/02/28", "balance"},
+			"refdata/beginend.balance3.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "beginend.ldg", "-end", "2012/03/15", "balance"},
+			"refdata/beginend.balance4.ref",
+		},
+	}
+	for _, testcase := range testcases {
+		ref := testdataFile(testcase[1].(string))
+		args := testcase[0].([]string)
+		cmd := exec.Command(LEDGEREXEC, args...)
+		out, _ := cmd.CombinedOutput()
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
+		if bytes.Compare(out, ref) != 0 {
+			t.Logf(strings.Join(args, " "))
+			t.Logf("expected %s", ref)
+			t.Errorf("got %s", out)
+		}
+	}
+}
+
 func TestErrors(t *testing.T) {
 	testcases := [][]interface{}{
 		[]interface{}{

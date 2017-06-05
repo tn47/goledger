@@ -1,7 +1,10 @@
 package api
 
 import "os"
+import "fmt"
 import "time"
+
+var _ = fmt.Sprintf("dummy")
 
 var Options struct {
 	Dbname     string
@@ -25,4 +28,16 @@ var Options struct {
 	Verbose    bool
 	Outfd      *os.File
 	Loglevel   string
+}
+
+func FilterPeriod(date time.Time) bool {
+	begin, end := Options.Begindt, Options.Enddt
+	if begin != nil && date.Before(*begin) {
+		return false
+	} else if end != nil && date.Before(*end) {
+		return true
+	} else if end == nil {
+		return true
+	}
+	return false
 }

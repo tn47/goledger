@@ -6,8 +6,10 @@ import "flag"
 import "time"
 import "strconv"
 
+import "github.com/prataprc/goparsec"
 import "github.com/prataprc/golog"
 import "github.com/tn47/goledger/api"
+import "github.com/tn47/goledger/dblentry"
 
 func argparse() ([]string, error) {
 	var journals, outfile, finyear, begindt, enddt string
@@ -79,6 +81,7 @@ func argparse() ([]string, error) {
 
 	api.Options.Journals = gatherjournals(journals)
 	api.Options.Outfd = argOutfd(outfile)
+
 	endyear := argFinyear(finyear)
 	if endyear > 0 {
 		till := time.Date(endyear, 4, 1, 0, 0, 0, 0, time.Local)
@@ -97,6 +100,30 @@ func argparse() ([]string, error) {
 		}
 		// Begindt is inclusive, but not Tilldt
 		api.Options.Begindt, api.Options.Enddt = &from, &till
+	}
+
+	if begindt != "" {
+		scanner := parsec.NewScanner([]byte(begindt))
+		node, _ := dblentry.Ydate(time.Now().Year())(scanner)
+		tm, ok := node.(time.Time)
+		if ok == false {
+			err := fmt.Errorf("invalid date %q: %v\n", begindt, node)
+			log.Errorf("%v\n", err)
+			return nil, err
+		}
+		api.Options.Begindt = &tm
+	}
+
+	if enddt != "" {
+		scanner := parsec.NewScanner([]byte(enddt))
+		node, _ := dblentry.Ydate(time.Now().Year())(scanner)
+		tm, ok := node.(time.Time)
+		if ok == false {
+			err := fmt.Errorf("invalid date %q: %v\n", enddt, node)
+			log.Errorf("%v\n", err)
+			return nil, err
+		}
+		api.Options.Enddt = &tm
 	}
 	return f.Args(), nil
 }

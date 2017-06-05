@@ -54,6 +54,8 @@ func NewReporter(args []string) (reporter api.Reporter, err error) {
 	case "passbook", "pb", "pbook":
 		reporter, err = NewReportPassbook(args)
 		reports.reporters = append(reports.reporters, reporter)
+	default:
+		log.Errorf("invalid command %q\n", args[0])
 	}
 	return reports, err
 }
