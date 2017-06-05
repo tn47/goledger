@@ -200,7 +200,8 @@ func (trans *Transaction) Yledgerblock(
 		// skip trailing whitespace.
 		_, scanner = parsec.Token(`[ \t]*`, "WS")(scanner)
 		if scanner.Endof() == false {
-			return index, fmt.Errorf("unable to parse posting")
+			cursor := scanner.GetCursor()
+			return index, fmt.Errorf("unable to parse posting: %v", cursor)
 		}
 	}
 	return index, nil

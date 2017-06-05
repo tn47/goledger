@@ -171,7 +171,7 @@ func (comm *Commodity) Yledger(db *Datastore) parsec.Parser {
 					comm.precision = parseprecision(amount)
 					comm.amount, err = strconv.ParseFloat(amount, 64)
 					if err != nil {
-						panic(err)
+						return err
 					}
 
 				case "COMMODITY":

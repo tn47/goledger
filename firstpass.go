@@ -2,6 +2,7 @@ package main
 
 import "fmt"
 import "strings"
+import "runtime/debug"
 import "path/filepath"
 
 import "github.com/prataprc/goparsec"
@@ -10,7 +11,20 @@ import "github.com/tn47/goledger/dblentry"
 import "github.com/tn47/goledger/api"
 
 func dofirstpass(
-	reporter api.Reporter, db *dblentry.Datastore, journalfile string) error {
+	reporter api.Reporter,
+	db *dblentry.Datastore, journalfile string) (err error) {
+
+	var lineno int
+	var block []string
+	var eof bool
+
+	defer func() {
+		if r := recover(); r != nil {
+			log.Errorf("panic at lineno: %v\n", lineno)
+			log.Errorf("\n%s", api.GetStacktrace(2, debug.Stack()))
+			err = fmt.Errorf("%s", r)
+		}
+	}()
 
 	log.Debugf("firstpass %v\n", journalfile)
 	var node parsec.ParsecNode
@@ -22,7 +36,7 @@ func dofirstpass(
 	}
 
 	iterate := blockiterate(lines)
-	lineno, block, eof, err := iterate()
+	lineno, block, eof, err = iterate()
 	for len(block) > 0 {
 		lineno -= len(block)
 		if err != nil {
