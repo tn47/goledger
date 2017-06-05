@@ -1,12 +1,12 @@
 
 commodity $
     note  Oil currency
-    format $1000.00
+    format $ 1000.00
     nomarket
 
 commodity INR
     note  Indian rupees
-    format INR1000.00
+    format INR 1000.00
     nomarket
 
 commodity KVB

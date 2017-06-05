@@ -1,1 +1,1 @@
-Error: lineno 3: balance-commodity(Gold) != posting-commodity($)
+Error: parsec lineno 3: balance-commodity(Gold) != posting-commodity($)

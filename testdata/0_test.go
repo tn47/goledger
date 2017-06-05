@@ -13,6 +13,8 @@ import "path/filepath"
 var _ = fmt.Sprintf("dummy")
 var LEDGEREXEC = "../goledger"
 
+var updateref = false
+
 func TestCmdArgs(t *testing.T) {
 	testcases := [][]interface{}{
 		[]interface{}{
@@ -33,7 +35,9 @@ func TestCmdArgs(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -74,7 +78,9 @@ func TestErrors(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -83,6 +89,28 @@ func TestErrors(t *testing.T) {
 	}
 }
 
+func TestZeroSource(t *testing.T) {
+	testcases := [][]interface{}{
+		[]interface{}{
+			[]string{"-f", "zerosource.ldg", "balance"},
+			"refdata/zerosource.balance.ref",
+		},
+	}
+	for _, testcase := range testcases {
+		ref := testdataFile(testcase[1].(string))
+		args := testcase[0].([]string)
+		cmd := exec.Command(LEDGEREXEC, args...)
+		out, _ := cmd.CombinedOutput()
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
+		if bytes.Compare(out, ref) != 0 {
+			t.Logf(strings.Join(args, " "))
+			t.Logf("expected %s", ref)
+			t.Errorf("got %s", out)
+		}
+	}
+}
 func TestAccountType(t *testing.T) {
 	testcases := [][]interface{}{
 		[]interface{}{
@@ -103,7 +131,9 @@ func TestAccountType(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -144,7 +174,9 @@ func TestBasic(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -189,7 +221,9 @@ func TestPassbook(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -230,7 +264,9 @@ func TestElidingAmount(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -259,7 +295,9 @@ func TestAuxdate(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -288,7 +326,9 @@ func TestTranscode(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -313,7 +353,9 @@ func TestBalanceErr(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -342,7 +384,9 @@ func TestBalanceAssert(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -375,7 +419,9 @@ func TestExplicitCost(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -404,7 +450,9 @@ func TestTotalCost(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -449,7 +497,9 @@ func TestDates(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -474,7 +524,9 @@ func TestDate7(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -584,7 +636,9 @@ func TestFirst(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -617,7 +671,9 @@ func TestReimburse(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -668,7 +724,9 @@ func TestSecond(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -717,7 +775,9 @@ func TestMixedComm(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -758,7 +818,9 @@ func TestUnbalanced(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -791,7 +853,9 @@ func TestTrip(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -816,7 +880,9 @@ func TestPostingErr(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -849,7 +915,9 @@ func TestLotPrice(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -886,7 +954,9 @@ func TestAcctree(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -915,7 +985,9 @@ func TestShare(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -966,7 +1038,9 @@ func TestDirtAccount(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -999,7 +1073,9 @@ func TestMatchingPayee(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -1024,7 +1100,9 @@ func TestDirectiveBucket(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -1049,7 +1127,9 @@ func TestDirectiveCapture(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -1104,7 +1184,9 @@ func TestDirtCommodity(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -1133,7 +1215,9 @@ func TestDirtAlias(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -1158,7 +1242,9 @@ func TestDirtInclude(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -1201,7 +1287,9 @@ func TestVersion(t *testing.T) {
 		args := testcase[0].([]string)
 		cmd := exec.Command(LEDGEREXEC, args...)
 		out, _ := cmd.CombinedOutput()
-		//ioutil.WriteFile(testcase[1].(string), out, 0660)
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
 		if bytes.Compare(out, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)
@@ -1256,7 +1344,9 @@ func TestOutfile(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		//ioutil.WriteFile(testcase[1].(string), data, 0660)
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), data, 0660)
+		}
 		if bytes.Compare(data, ref) != 0 {
 			t.Logf(strings.Join(args, " "))
 			t.Logf("expected %s", ref)

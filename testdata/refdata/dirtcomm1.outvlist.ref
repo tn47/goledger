@@ -5,15 +5,15 @@ commodity "Arcancia Équilibre 455"
 
 commodity "Arcancia Équilibre 456"
     note  Shares
-    format "Arcancia Équilibre 456"1000
+    format "Arcancia Équilibre 456" 1000
 
 commodity $
     note  American dollars
-    format $1000.00
+    format $ 1000.00
 
 commodity INR
     note  Indian rupees
-    format INR1000.00
+    format INR 1000.00
     nomarket
 
 commodity KVB

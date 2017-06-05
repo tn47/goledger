@@ -8,5 +8,6 @@ account Expenses:Food
     payee  ^(KFC|Popeyes)$
     payee  ^(cake|momos)$
     payee  ^(KFC|Popeyes)$
+    type  exchange
 
 

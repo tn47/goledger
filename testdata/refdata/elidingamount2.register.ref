@@ -1,15 +1,15 @@
 
-  By-date      Payee  Account                Amount    Balance 
-                                                               
-  2012-Mar-10  KFC    Expenses:Food          $20.00     $20.00 
-                      Expenses:Tips           $2.00     $22.00 
-                      Assets:Cash         EUR-10.00     $22.00 
-                                                     EUR-10.00 
-                      Assets:Cash         GBP-10.00     $22.00 
-                                                     EUR-10.00 
-                                                     GBP-10.00 
-                      Liabilities:Credit    $-22.00  EUR-10.00 
-                                                     GBP-10.00 
-                      Liabilities:Credit   EUR10.00  GBP-10.00 
-                      Liabilities:Credit   GBP10.00    GBP0.00 
+  By-date      Payee  Account                 Amount     Balance 
+                                                                 
+  2012-Mar-10  KFC    Expenses:Food           $20.00      $20.00 
+                      Expenses:Tips            $2.00      $22.00 
+                      Assets:Cash         EUR -10.00      $22.00 
+                                                      EUR -10.00 
+                      Assets:Cash         GBP -10.00      $22.00 
+                                                      EUR -10.00 
+                                                      GBP -10.00 
+                      Liabilities:Credit     $-22.00  EUR -10.00 
+                                                      GBP -10.00 
+                      Liabilities:Credit   EUR 10.00  GBP -10.00 
+                      Liabilities:Credit   GBP 10.00    GBP 0.00 
 

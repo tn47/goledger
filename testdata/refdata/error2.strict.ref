@@ -7,4 +7,4 @@ Warng: commodity "$" is not pre-declared
 Warng: commodity "XYZ" not pre-declared
 Warng: account "Income:Salary" not pre-declared
 Warng: payee "My Employer" not pre-declared
-Error: lineno 3: mismatch in balancing commodity "$" != "XYZ"
+Error: secondpass lineno 3: mismatch in balancing commodity "$" != "XYZ"

@@ -2,7 +2,7 @@ account Expenses:CarLease
     default
 
 2011/01/25 Tom's Used Cars
-    Assets:Checking                    $ -5,500.00
+    Assets:Checking                    $-5,500.00
 
 bucket Assets:Checking
 2011/01/27 Book Store

@@ -1,8 +1,8 @@
 
-  By-date      Payee               Account                 Amount    Balance 
-                                                                             
-  2011-Feb-28  My Employer         Assets:Checking      INR500.00  INR500.00 
-                                   Income:Salary       INR-500.00    INR0.00 
-  2011-Mar-15  Departmental store  Expenses:Groceries   INR100.00  INR100.00 
-                                   Assets:Checking     INR-100.00    INR0.00 
+  By-date      Payee               Account                  Amount     Balance 
+                                                                               
+  2011-Feb-28  My Employer         Assets:Checking      INR 500.00  INR 500.00 
+                                   Income:Salary       INR -500.00    INR 0.00 
+  2011-Mar-15  Departmental store  Expenses:Groceries   INR 100.00  INR 100.00 
+                                   Assets:Checking     INR -100.00    INR 0.00 
 

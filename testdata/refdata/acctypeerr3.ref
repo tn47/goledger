@@ -1,1 +1,1 @@
-Error: lineno 6: account "Asset:FixedDeposit" cannot have credit balance
+Error: secondpass lineno 6: account "Asset:FixedDeposit" cannot have credit balance
