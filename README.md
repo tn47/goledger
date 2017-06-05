@@ -69,6 +69,13 @@ $ make test # sanity test.
 $ make install
 ```
 
+Gotchas
+=======
+
+* Account name should start with atleast 2 character
+* Hardspaces (2 or more consecutive spaces or a single tab-space) have
+special meaning in ledger format. So avoid them in account names.
+
 Ledger-likes
 ============
 
