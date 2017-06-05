@@ -83,14 +83,14 @@ func (comm *Commodity) BalanceEqual(other api.Commoditiser) (bool, error) {
 }
 
 func (comm *Commodity) IsCredit() bool {
-	if comm.amount < 0 {
+	if comm.amount <= 0 {
 		return true
 	}
 	return false
 }
 
 func (comm *Commodity) IsDebit() bool {
-	if comm.amount > 0 {
+	if comm.amount >= 0 {
 		return true
 	}
 	return false
