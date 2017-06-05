@@ -318,10 +318,13 @@ func (db *Datastore) declare(value interface{}) error {
 				return err
 			}
 			account := db.GetAccount(d.accname).(*Account)
-			account.types = d.acctypes
+			if len(d.acctypes) > 0 {
+				account.types = append(account.types, d.acctypes...)
+			}
 			account.addNote(d.note)
 			account.addAlias(d.accalias)
 			account.addPayee(d.accpayee)
+			account.addComments(d.comments...)
 			if d.ndefault {
 				db.setBalancingaccount(account.name)
 			}

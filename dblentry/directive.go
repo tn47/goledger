@@ -13,6 +13,7 @@ type Directive struct {
 	dtype       string
 	year        int      // year
 	note        string   // account, commodity
+	comments    []string // account, commodity
 	ndefault    bool     // account, commodity
 	accname     string   // account, alias, apply
 	accalias    string   // account
@@ -32,7 +33,6 @@ type Directive struct {
 	dpayeealias []string // payee
 	dpayeeuuid  []string // payee
 	endargs     []string // end
-	comments    []string
 }
 
 // NewDirective create a new Directive instance, one instance to be created
@@ -103,10 +103,11 @@ func (d *Directive) Yledgerblock(db *Datastore, block []string) (int, error) {
 			}
 			nodes := node.([]parsec.ParsecNode)
 			t := nodes[0].(*parsec.Terminal)
-			d.acctypes = []string{}
 			switch t.Name {
 			case "DRTV_NOTE":
 				d.note = trimstr(nodes[2])
+			case "DRTV_SHORTNOTE":
+				d.addBlockComment(trimstr(nodes[0]))
 			case "DRTV_ACCOUNT_ALIAS":
 				d.accalias = trimstr(nodes[2])
 			case "DRTV_ACCOUNT_PAYEE":
@@ -142,6 +143,8 @@ func (d *Directive) Yledgerblock(db *Datastore, block []string) (int, error) {
 			switch t.Name {
 			case "DRTV_NOTE":
 				d.note = nodes[2].(*parsec.Terminal).Value
+			case "DRTV_SHORTNOTE":
+				d.addBlockComment(trimstr(nodes[0]))
 			case "DRTV_COMMODITY_FORMAT":
 				d.commdfmt = nodes[2].(*parsec.Terminal).Value
 			case "DRTV_COMMODITY_NOMARKET":
@@ -168,6 +171,8 @@ func (d *Directive) Yledgerblock(db *Datastore, block []string) (int, error) {
 			nodes := node.([]parsec.ParsecNode)
 			t := nodes[0].(*parsec.Terminal)
 			switch t.Name {
+			case "DRTV_SHORTNOTE":
+				d.addBlockComment(trimstr(nodes[0]))
 			case "DRTV_PAYEE_ALIAS":
 				aliasv := nodes[2].(*parsec.Terminal).Value
 				d.dpayeealias = append(d.dpayeealias, aliasv)
@@ -377,9 +382,11 @@ func (d *Directive) yaccountdirectives(db *Datastore) parsec.Parser {
 	yeval := parsec.And(nil, ytokEval, ytokHardSpace, ytokValue)
 	ytype := parsec.And(nil, ytokType, ytokHardSpace, ytokValue)
 	ydefault := parsec.And(nil, ytokDefault)
+	yshortnote := parsec.And(nil, ytokDirectivenote)
 	y := parsec.OrdChoice(
 		Vector2scalar,
 		ynote, yalias, ypayee, ycheck, yassert, yeval, ytype, ydefault,
+		yshortnote,
 	)
 	return y
 }
@@ -465,6 +472,9 @@ func (d *Directive) Secondpass(db *Datastore) error {
 }
 
 func (d *Directive) addAccounttype(typenames []string, acc []string) []string {
+	if acc == nil {
+		acc = []string{}
+	}
 	for _, typename := range typenames {
 		typename = strings.ToLower(typename)
 		if api.HasString(acc, typename) {
@@ -482,4 +492,11 @@ func (d *Directive) addAccounttype(typenames []string, acc []string) []string {
 		}
 	}
 	return acc
+}
+
+func (d *Directive) addBlockComment(comment string) {
+	if d.comments == nil {
+		d.comments = make([]string, 0)
+	}
+	d.comments = append(d.comments, comment)
 }

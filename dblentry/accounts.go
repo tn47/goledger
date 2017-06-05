@@ -14,10 +14,11 @@ type Account struct {
 	hasposting bool
 	de         *DoubleEntry
 	// from account directive
-	notes   []string
-	aliases []string
-	payees  []string
-	types   []string
+	notes    []string
+	aliases  []string
+	payees   []string
+	types    []string
+	comments []string
 }
 
 // NewAccount create a new instance of Account{}.
@@ -57,6 +58,13 @@ func (acc *Account) addAlias(alias string) *Account {
 func (acc *Account) addPayee(payee string) *Account {
 	if payee != "" {
 		acc.payees = append(acc.payees, payee)
+	}
+	return acc
+}
+
+func (acc *Account) addComments(comments ...string) *Account {
+	if comments != nil {
+		acc.comments = append(acc.comments, comments...)
 	}
 	return acc
 }
@@ -225,6 +233,9 @@ func (acc *Account) Directive() string {
 	if len(acc.types) > 0 { // only if account's type is defined.
 		line := fmt.Sprintf("    type  %v", strings.Join(acc.types, ","))
 		lines = append(lines, line)
+	}
+	for _, comment := range acc.comments {
+		lines = append(lines, fmt.Sprintf("    %v", comment))
 	}
 	return strings.Join(lines, "\n")
 }
