@@ -31,7 +31,7 @@ func NewReportBalance(args []string) (*ReportBalance, error) {
 	}
 	if len(args) > 1 {
 		filterarg := api.MakeFilterexpr(args[1:])
-		node, _ := api.YExpr(parsec.NewScanner([]byte(filterarg)))
+		node, _ := api.YFilterExpr(parsec.NewScanner([]byte(filterarg)))
 		if err, ok := node.(error); ok {
 			return nil, err
 		}

@@ -40,19 +40,19 @@ func MakeFilterexpr(args []string) string {
 
 // Grammar
 //
-// YRegex     -> String+
-// YParanExpr -> "(" YExpr ")"
-// YValue     -> YRegex | YParanExpr | YNot
-// YNot		  -> not YExpr
-// YOrkleene  -> (or YAnd)*
-// YOr		  -> YAnd YOrkleene
-// YAndkleene -> (and YValue)*
-// YAnd       -> YValue YAndkleene
-// YExpr	  -> YOr
+// YRegex       -> String+
+// YParanExpr   -> "(" YFilterExpr ")"
+// yfvalue      -> YRegex | YParanExpr | YNot
+// YNot			-> not YFilterExpr
+// YOrkleene    -> (or yfand)*
+// YOr			-> yfand YOrkleene
+// YAndkleene   -> (and yfvalue)*
+// yfand        -> yfvalue YAndkleene
+// YFilterExpr	-> YOr
 
-var YExpr parsec.Parser
-var YAnd parsec.Parser
-var YValue parsec.Parser
+var YFilterExpr parsec.Parser
+var yfand parsec.Parser
+var yfvalue parsec.Parser
 
 func init() {
 	// YRegex
@@ -78,7 +78,7 @@ func init() {
 		},
 		parsec.String(), nil,
 	)
-	// YParanExpr -> "(" YExpr ")"
+	// YParanExpr -> "(" YFilterExpr ")"
 	YParanExpr := parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			//fmt.Println("YParanExpr", nodes)
@@ -87,9 +87,11 @@ func init() {
 			}
 			return nodes[1].(error)
 		},
-		parsec.Atom("(", "OPENPARAN"), &YExpr, parsec.Atom(")", "CLOSEPARAN"),
+		parsec.Atom("(", "OPENPARAN"),
+		&YFilterExpr,
+		parsec.Atom(")", "CLOSEPARAN"),
 	)
-	// YNot -> not YExpr
+	// YNot -> not YFilterExpr
 	YNot := parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			//fmt.Println("YNot", nodes)
@@ -100,22 +102,22 @@ func init() {
 			fe := newFilterexpr("not", []*Filterexpr{op1})
 			return fe
 		},
-		parsec.Atom("not", "NOT"), &YExpr,
+		parsec.Atom("not", "NOT"), &YFilterExpr,
 	)
-	// YValue -> YRegex | "(" YExpr ")"
-	YValue = parsec.OrdChoice(
+	// yfvalue -> YRegex | "(" YFilterExpr ")"
+	yfvalue = parsec.OrdChoice(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
-			//fmt.Println("YValue", nodes)
+			//fmt.Println("yfvalue", nodes)
 			return nodes[0]
 		},
 		YRegex, YParanExpr, YNot,
 	)
 
-	// (or YAnd)*
+	// (or yfand)*
 	YOrkleene := parsec.Kleene(
-		nil, parsec.And(nil, parsec.Atom("or", "OR"), &YAnd), nil,
+		nil, parsec.And(nil, parsec.Atom("or", "OR"), &yfand), nil,
 	)
-	// YOr -> YAnd (or YAnd)*
+	// YOr -> yfand (or yfand)*
 	foldor := func(nds []parsec.ParsecNode, op1 *Filterexpr) parsec.ParsecNode {
 		for _, nd := range nds {
 			ns := nd.([]parsec.ParsecNode)
@@ -138,14 +140,14 @@ func init() {
 			}
 			return op1
 		},
-		&YAnd, YOrkleene,
+		&yfand, YOrkleene,
 	)
 
-	// (and YValue)*
+	// (and yfvalue)*
 	YAndkleene := parsec.Kleene(
-		nil, parsec.And(nil, parsec.Atom("and", "AND"), &YValue), nil,
+		nil, parsec.And(nil, parsec.Atom("and", "AND"), &yfvalue), nil,
 	)
-	// YAnd -> value (and value)*
+	// yfand -> value (and value)*
 	foldand := func(nds []parsec.ParsecNode, op1 *Filterexpr) parsec.ParsecNode {
 		for _, nd := range nds {
 			ns := nd.([]parsec.ParsecNode)
@@ -157,9 +159,9 @@ func init() {
 		}
 		return op1
 	}
-	YAnd = parsec.And(
+	yfand = parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
-			//fmt.Println("YAnd", nodes)
+			//fmt.Println("yfand", nodes)
 			op1, ok := nodes[0].(*Filterexpr)
 			if ok == false {
 				return nodes[0].(error)
@@ -168,12 +170,12 @@ func init() {
 			}
 			return op1
 		},
-		&YValue, YAndkleene,
+		&yfvalue, YAndkleene,
 	)
 
-	YExpr = parsec.OrdChoice(
+	YFilterExpr = parsec.OrdChoice(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
-			//fmt.Println("YExpr", nodes)
+			//fmt.Println("YFilterExpr", nodes)
 			return nodes[0]
 		},
 		YOr,

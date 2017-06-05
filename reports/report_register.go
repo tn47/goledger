@@ -29,7 +29,7 @@ func NewReportRegister(args []string) (*ReportRegister, error) {
 	for i, arg := range args[1:] {
 		if arg == "@" || arg == "payee" && len(args[i:]) > 1 {
 			filterarg := api.MakeFilterexpr(args[i+1:])
-			node, _ := api.YExpr(parsec.NewScanner([]byte(filterarg)))
+			node, _ := api.YFilterExpr(parsec.NewScanner([]byte(filterarg)))
 			if err, ok := node.(error); ok {
 				return nil, err
 			}
@@ -40,7 +40,7 @@ func NewReportRegister(args []string) (*ReportRegister, error) {
 	}
 	if len(filteraccounts) > 0 {
 		filterarg := api.MakeFilterexpr(filteraccounts)
-		node, _ := api.YExpr(parsec.NewScanner([]byte(filterarg)))
+		node, _ := api.YFilterExpr(parsec.NewScanner([]byte(filterarg)))
 		if err, ok := node.(error); ok {
 			return nil, err
 		}

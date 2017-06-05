@@ -112,7 +112,7 @@ func TestFilterExpr(t *testing.T) {
 		args := tcase[0].([]string)
 		arg := MakeFilterexpr(args)
 		scanner := parsec.NewScanner([]byte(arg))
-		node, _ := YExpr(scanner)
+		node, _ := YFilterExpr(scanner)
 		if err, ok := node.(error); ok {
 			t.Error(err)
 		}
