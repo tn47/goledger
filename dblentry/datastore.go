@@ -319,7 +319,7 @@ func (db *Datastore) declare(value interface{}) error {
 			}
 			account := db.GetAccount(d.accname).(*Account)
 			if len(d.acctypes) > 0 {
-				account.types = append(account.types, d.acctypes...)
+				account.types = d.addAccounttype(d.acctypes, account.types)
 			}
 			account.addNote(d.note)
 			account.addAlias(d.accalias)
