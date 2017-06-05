@@ -3,6 +3,8 @@ package dblentry
 import "time"
 import "fmt"
 
+import "github.com/tn47/goledger/api"
+
 var _ = fmt.Sprintf("dummy")
 
 // DB impelements array based sorted key-value entries.
@@ -37,7 +39,10 @@ func (db *DB) Insert(k time.Time, v interface{}) error {
 }
 
 // Range over DB entries, from low to high with specified include option.
-func (db *DB) Range(low, high *time.Time, incl string, entries []KV) []KV {
+func (db *DB) Range(
+	low, high *time.Time, incl string,
+	entries []api.TimeEntry) []api.TimeEntry {
+
 	var entry KV
 
 	index := 0
@@ -82,6 +87,14 @@ endloop:
 		entries = append(entries, entry)
 	}
 	return entries
+}
+
+func (db *DB) Clone() *DB {
+	ndb := NewDB(db.name)
+	for _, entry := range db.entries {
+		ndb.entries = append(ndb.entries, entry)
+	}
+	return ndb
 }
 
 //---- sort.Interface{} methods.

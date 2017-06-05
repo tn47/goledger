@@ -220,6 +220,9 @@ type Store interface {
 	// Range over {key,value} pairs, entries can be used for returning the
 	// results.
 	Range(low, high *time.Time, incl string, entries []TimeEntry) []TimeEntry
+
+	// Make an immutable copy of store.
+	Clone()
 }
 
 // TimeEntry captures a single key,value pair, key being time.Time and value

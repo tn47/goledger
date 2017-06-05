@@ -255,10 +255,10 @@ func (db *Datastore) Firstpass(obj interface{}) (err error) {
 }
 
 func (db *Datastore) Secondpass() error {
-	var kvfull []KV
+	entries := []api.TimeEntry{}
 
-	for _, kv := range db.transdb.Range(nil, nil, "both", kvfull) {
-		trans := kv.Value().(*Transaction)
+	for _, entry := range db.transdb.Range(nil, nil, "both", entries) {
+		trans := entry.Value().(*Transaction)
 		if db.periodtill == nil || trans.Date().Before(*db.periodtill) {
 			if err := trans.Secondpass(db); err != nil {
 				return err
@@ -285,14 +285,16 @@ func (db *Datastore) Clone(nreporter api.Reporter) api.Datastorer {
 	ndb.de = db.de.Clone()
 
 	ndb.transdb = NewDB(fmt.Sprintf("%v-transactions", ndb.name))
-	for _, kv := range db.transdb.Range(nil, nil, "both", []KV{}) {
-		k, ntrans := kv.Key(), kv.Value().(*Transaction).Clone(&ndb)
+	entries := []api.TimeEntry{}
+	for _, entry := range db.transdb.Range(nil, nil, "both", entries) {
+		k, ntrans := entry.Key(), entry.Value().(*Transaction).Clone(&ndb)
 		ndb.transdb.Insert(k, ntrans)
 	}
 
 	ndb.pricedb = NewDB(fmt.Sprintf("%v-pricedb", ndb.name))
-	for _, kv := range db.pricedb.Range(nil, nil, "both", []KV{}) {
-		k, nprice := kv.Key(), kv.Value().(*Price).Clone(&ndb)
+	entries = []api.TimeEntry{}
+	for _, entry := range db.pricedb.Range(nil, nil, "both", entries) {
+		k, nprice := entry.Key(), entry.Value().(*Price).Clone(&ndb)
 		ndb.pricedb.Insert(k, nprice)
 	}
 	return &ndb

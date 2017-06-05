@@ -3,15 +3,16 @@ package reports
 import "fmt"
 
 import "github.com/tn47/goledger/api"
+import "github.com/tn47/goledger/dblentry"
 
 // ReportPrint for balance reporting.
 type ReportPrint struct {
-	transs []api.Transactor
+	transdb *dblentry.DB
 }
 
 // NewReportList creates an instance for balance reporting
 func NewReportPrint(args []string) *ReportPrint {
-	report := &ReportPrint{transs: make([]api.Transactor, 0)}
+	report := &ReportPrint{transdb: dblentry.NewDB("report_print")}
 	return report
 }
 
@@ -30,9 +31,9 @@ func (report *ReportPrint) Transaction(
 	if dt := api.Options.Begindt; dt != nil && date.Before(*dt) {
 		return nil
 	} else if dt = api.Options.Enddt; dt != nil && date.Before(*dt) {
-		report.transs = append(report.transs, trans)
+		report.transdb.Insert(date, trans)
 	} else {
-		report.transs = append(report.transs, trans)
+		report.transdb.Insert(date, trans)
 	}
 	return nil
 }
@@ -51,7 +52,9 @@ func (report *ReportPrint) BubblePosting(
 
 func (report *ReportPrint) Render(args []string, ndb api.Datastorer) {
 	outfd := api.Options.Outfd
-	for _, trans := range report.transs {
+	entries := []api.TimeEntry{}
+	for _, entry := range report.transdb.Range(nil, nil, "both", entries) {
+		trans := entry.Value().(api.Transactor)
 		for _, line := range trans.Printlines() {
 			fmt.Fprintln(outfd, line)
 		}
@@ -61,10 +64,7 @@ func (report *ReportPrint) Render(args []string, ndb api.Datastorer) {
 
 func (report *ReportPrint) Clone() api.Reporter {
 	nreport := *report
-	nreport.transs = make([]api.Transactor, 0, len(report.transs))
-	for _, trans := range report.transs {
-		nreport.transs = append(nreport.transs, trans)
-	}
+	nreport.transdb = report.transdb.Clone()
 	return &nreport
 }
 

@@ -7,6 +7,8 @@ import "sort"
 import "math/rand"
 import "reflect"
 
+import "github.com/tn47/goledger/api"
+
 func TestDBInsert(t *testing.T) {
 	for n := 0; n < 10; n++ {
 		t.Logf("case %v", n)
@@ -32,9 +34,10 @@ func TestDBInsert(t *testing.T) {
 		sort.Strings(ref)
 
 		results := []string{}
-		entries := db.Range(nil, nil, "both", make([]KV, 0))
+		entries := db.Range(nil, nil, "both", make([]api.TimeEntry, 0))
 		for _, entry := range entries {
-			results = append(results, fmt.Sprintf("%v:%v", entry.k, entry.v))
+			k, v := entry.Key(), entry.Value()
+			results = append(results, fmt.Sprintf("%v:%v", k, v))
 		}
 
 		sort.Strings(results)
@@ -46,14 +49,14 @@ func TestDBInsert(t *testing.T) {
 }
 
 func TestDBRange(t *testing.T) {
-	verify := func(reftimes []time.Time, entries []KV) {
+	verify := func(reftimes []time.Time, entries []api.TimeEntry) {
 		refs := []string{}
 		for _, tm := range reftimes {
 			refs = append(refs, fmt.Sprintf("%v", tm))
 		}
 		results := []string{}
 		for _, entry := range entries {
-			results = append(results, fmt.Sprintf("%v", entry.k))
+			results = append(results, fmt.Sprintf("%v", entry.Key()))
 		}
 		if reflect.DeepEqual(results, refs) == false {
 			t.Fatalf("expected %v, got %v", refs, results)
@@ -76,16 +79,17 @@ func TestDBRange(t *testing.T) {
 			for j := i; j < len(times)-1; j++ {
 				low, high := times[i], times[j]
 				t.Logf("%v:%v %v:%v", i, low, j, high)
+				entries := []api.TimeEntry{}
 				if i+1 <= j-1 {
-					entries := db.Range(&low, &high, "none", make([]KV, 0))
-					verify(times[i+1:j], entries)
-					entries = db.Range(&low, &high, "low", make([]KV, 0))
-					verify(times[i:j], entries)
-					entries = db.Range(&low, &high, "high", make([]KV, 0))
-					verify(times[i+1:j+1], entries)
+					kvs := db.Range(&low, &high, "none", entries)
+					verify(times[i+1:j], kvs)
+					kvs = db.Range(&low, &high, "low", entries)
+					verify(times[i:j], kvs)
+					kvs = db.Range(&low, &high, "high", entries)
+					verify(times[i+1:j+1], kvs)
 				}
-				entries := db.Range(&low, &high, "both", make([]KV, 0))
-				verify(times[i:j+1], entries)
+				kvs := db.Range(&low, &high, "both", entries)
+				verify(times[i:j+1], kvs)
 			}
 		}
 	}
