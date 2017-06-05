@@ -58,7 +58,7 @@ func (report *ReportEquity) Posting(
 	if report.isfiltered() && report.fe.Match(acc.Name()) == false {
 		return nil
 	}
-	if api.FilterPeriod(trans.Date()) == false {
+	if api.FilterPeriod(trans.Date(), true /*nobegin*/) == false {
 		return nil
 	}
 

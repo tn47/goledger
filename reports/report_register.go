@@ -60,7 +60,7 @@ func (report *ReportRegister) Firstpass(
 func (report *ReportRegister) Transaction(
 	db api.Datastorer, trans api.Transactor) error {
 
-	if api.FilterPeriod(trans.Date()) == false {
+	if api.FilterPeriod(trans.Date(), false /*nobegin*/) == false {
 		return nil
 	}
 

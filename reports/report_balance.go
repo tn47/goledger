@@ -63,7 +63,7 @@ func (report *ReportBalance) Posting(
 	if report.isfiltered() && report.fe.Match(acc.Name()) == false {
 		return nil
 	}
-	if api.FilterPeriod(trans.Date()) == false {
+	if api.FilterPeriod(trans.Date(), true /*nobegin*/) == false {
 		return nil
 	}
 
@@ -95,7 +95,7 @@ func (report *ReportBalance) BubblePosting(
 
 	if api.Options.Nosubtotal || report.isfiltered() {
 		return nil
-	} else if api.FilterPeriod(trans.Date()) == false {
+	} else if api.FilterPeriod(trans.Date(), true /*nobegin*/) == false {
 		return nil
 	}
 	bbname := account.Name()

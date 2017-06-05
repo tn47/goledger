@@ -30,9 +30,9 @@ var Options struct {
 	Loglevel   string
 }
 
-func FilterPeriod(date time.Time) bool {
+func FilterPeriod(date time.Time, nobegin bool) bool {
 	begin, end := Options.Begindt, Options.Enddt
-	if begin != nil && date.Before(*begin) {
+	if nobegin == false && begin != nil && date.Before(*begin) {
 		return false
 	} else if end != nil && date.Before(*end) {
 		return true
