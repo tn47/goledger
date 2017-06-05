@@ -3,6 +3,7 @@ package api
 import "strings"
 import "time"
 import "fmt"
+import "bytes"
 import "hash/crc64"
 
 var _ = fmt.Sprintf("dummy")
@@ -80,6 +81,15 @@ func HasString(xs []string, y string) bool {
 		}
 	}
 	return false
+}
+
+func GetStacktrace(skip int, stack []byte) string {
+	var buf bytes.Buffer
+	lines := strings.Split(string(stack), "\n")
+	for _, call := range lines[skip*2:] {
+		buf.WriteString(fmt.Sprintf("%s\n", call))
+	}
+	return buf.String()
 }
 
 var isoCrc64 *crc64.Table
