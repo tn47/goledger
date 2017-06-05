@@ -2,6 +2,7 @@ package reports
 
 import "fmt"
 
+import "github.com/prataprc/goparsec"
 import "github.com/prataprc/golog"
 import "github.com/tn47/goledger/api"
 
@@ -80,8 +81,19 @@ func (report *ReportList) listAccounts(args []string, ndb api.Datastorer) {
 		return
 	}
 
+	filterarg := api.MakeFilterexpr(args)
+	node, _ := api.YFilterExpr(parsec.NewScanner([]byte(filterarg)))
+	if err, ok := node.(error); ok {
+		log.Errorf("filter %q expression failed: %v", filterarg, err)
+		return
+	}
+	fe, _ := node.(*api.Filterexpr)
+
 	rcf := report.rcf
 	for _, accname := range ndb.Accountnames() {
+		if fe != nil && fe.Match(accname) == false {
+			continue
+		}
 		account := ndb.GetAccount(accname)
 		notes := account.Notes()
 		switch len(notes) {
@@ -114,9 +126,20 @@ func (report *ReportList) listAccountsV(args []string, ndb api.Datastorer) {
 		return
 	}
 
+	filterarg := api.MakeFilterexpr(args)
+	node, _ := api.YFilterExpr(parsec.NewScanner([]byte(filterarg)))
+	if err, ok := node.(error); ok {
+		log.Errorf("filter %q expression failed: %v", filterarg, err)
+		return
+	}
+	fe, _ := node.(*api.Filterexpr)
+
 	outfd := api.Options.Outfd
 	fmt.Fprintln(outfd)
 	for _, accname := range ndb.Accountnames() {
+		if fe != nil && fe.Match(accname) == false {
+			continue
+		}
 		account := ndb.GetAccount(accname)
 		fmt.Fprintln(outfd, account.Directive())
 		fmt.Fprintln(outfd)
@@ -129,8 +152,19 @@ func (report *ReportList) listCommodities(args []string, ndb api.Datastorer) {
 		return
 	}
 
+	filterarg := api.MakeFilterexpr(args)
+	node, _ := api.YFilterExpr(parsec.NewScanner([]byte(filterarg)))
+	if err, ok := node.(error); ok {
+		log.Errorf("filter %q expression failed: %v", filterarg, err)
+		return
+	}
+	fe, _ := node.(*api.Filterexpr)
+
 	rcf := report.rcf
 	for _, commdname := range ndb.Commoditynames() {
+		if fe != nil && fe.Match(commdname) == false {
+			continue
+		}
 		commodity := ndb.GetCommodity(commdname)
 		notes := commodity.Notes()
 		switch len(notes) {
@@ -163,9 +197,20 @@ func (report *ReportList) listCommoditiesV(args []string, ndb api.Datastorer) {
 		return
 	}
 
+	filterarg := api.MakeFilterexpr(args)
+	node, _ := api.YFilterExpr(parsec.NewScanner([]byte(filterarg)))
+	if err, ok := node.(error); ok {
+		log.Errorf("filter %q expression failed: %v", filterarg, err)
+		return
+	}
+
+	fe, _ := node.(*api.Filterexpr)
 	outfd := api.Options.Outfd
 	fmt.Fprintln(outfd)
 	for _, commdname := range ndb.Commoditynames() {
+		if fe != nil && fe.Match(commdname) == false {
+			continue
+		}
 		commodity := ndb.GetCommodity(commdname)
 		fmt.Fprintln(outfd, commodity.Directive())
 		fmt.Fprintln(outfd)
