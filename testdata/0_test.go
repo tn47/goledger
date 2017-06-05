@@ -86,6 +86,25 @@ func TestBeginEnd(t *testing.T) {
 			[]string{"-f", "beginend.ldg", "-end", "2012/03/15", "register"},
 			"refdata/beginend.register4.ref",
 		},
+		// equity
+		[]interface{}{
+			[]string{"-f", "beginend.ldg", "-begin", "2011/02/28", "-end",
+				"2012/03/15", "equity"},
+			"refdata/beginend.equity1.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "beginend.ldg", "-begin", "2011/02/28", "-end",
+				"2012/03/16", "equity"},
+			"refdata/beginend.equity2.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "beginend.ldg", "-begin", "2012/03/15", "equity"},
+			"refdata/beginend.equity3.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "beginend.ldg", "-end", "2012/03/15", "equity"},
+			"refdata/beginend.equity4.ref",
+		},
 	}
 	for _, testcase := range testcases {
 		ref := testdataFile(testcase[1].(string))
