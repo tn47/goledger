@@ -44,6 +44,10 @@ func (report *ReportPassbook) Transaction(
 func (report *ReportPassbook) Posting(
 	db api.Datastorer, trans api.Transactor, p api.Poster) error {
 
+	if api.FilterPeriod(trans.Date(), false /*nobegin*/) == false {
+		return nil
+	}
+
 	acc := p.Account()
 	if acc.Name() == report.accname {
 		rows := acc.FmtPassbook(db, trans, p, acc)
