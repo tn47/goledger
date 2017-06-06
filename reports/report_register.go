@@ -4,6 +4,8 @@ import "fmt"
 import "sort"
 
 import "github.com/prataprc/goparsec"
+
+//import "github.com/prataprc/golog"
 import "github.com/tn47/goledger/api"
 import "github.com/tn47/goledger/dblentry"
 
@@ -34,6 +36,7 @@ func NewReportRegister(args []string) (*ReportRegister, error) {
 				return nil, err
 			}
 			report.pfe = node.(*api.Filterexpr)
+			//log.Consolef("filter expr: %v\n", report.pfe)
 			break
 		}
 		filteraccounts = append(filteraccounts, arg)
@@ -45,6 +48,7 @@ func NewReportRegister(args []string) (*ReportRegister, error) {
 			return nil, err
 		}
 		report.fe = node.(*api.Filterexpr)
+		//log.Consolef("filter expr: %v\n", report.fe)
 	}
 	return report, nil
 }

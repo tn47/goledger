@@ -81,13 +81,17 @@ func (report *ReportList) listAccounts(args []string, ndb api.Datastorer) {
 		return
 	}
 
-	filterarg := api.MakeFilterexpr(args)
-	node, _ := api.YFilterExpr(parsec.NewScanner([]byte(filterarg)))
-	if err, ok := node.(error); ok {
-		log.Errorf("filter %q expression failed: %v", filterarg, err)
-		return
+	var fe *api.Filterexpr
+	if len(args) > 0 {
+		filterarg := api.MakeFilterexpr(args)
+		node, _ := api.YFilterExpr(parsec.NewScanner([]byte(filterarg)))
+		if err, ok := node.(error); ok {
+			log.Errorf("filter %q expression failed: %v", filterarg, err)
+			return
+		}
+		fe, _ = node.(*api.Filterexpr)
+		log.Consolef("filter expr: %v\n", fe)
 	}
-	fe, _ := node.(*api.Filterexpr)
 
 	rcf := report.rcf
 	for _, accname := range ndb.Accountnames() {
@@ -126,13 +130,17 @@ func (report *ReportList) listAccountsV(args []string, ndb api.Datastorer) {
 		return
 	}
 
-	filterarg := api.MakeFilterexpr(args)
-	node, _ := api.YFilterExpr(parsec.NewScanner([]byte(filterarg)))
-	if err, ok := node.(error); ok {
-		log.Errorf("filter %q expression failed: %v", filterarg, err)
-		return
+	var fe *api.Filterexpr
+	if len(args) > 0 {
+		filterarg := api.MakeFilterexpr(args)
+		node, _ := api.YFilterExpr(parsec.NewScanner([]byte(filterarg)))
+		if err, ok := node.(error); ok {
+			log.Errorf("filter %q expression failed: %v", filterarg, err)
+			return
+		}
+		fe, _ = node.(*api.Filterexpr)
+		//log.Consolef("filter expr: %v\n", fe)
 	}
-	fe, _ := node.(*api.Filterexpr)
 
 	outfd := api.Options.Outfd
 	fmt.Fprintln(outfd)
@@ -152,13 +160,17 @@ func (report *ReportList) listCommodities(args []string, ndb api.Datastorer) {
 		return
 	}
 
-	filterarg := api.MakeFilterexpr(args)
-	node, _ := api.YFilterExpr(parsec.NewScanner([]byte(filterarg)))
-	if err, ok := node.(error); ok {
-		log.Errorf("filter %q expression failed: %v", filterarg, err)
-		return
+	var fe *api.Filterexpr
+	if len(args) > 0 {
+		filterarg := api.MakeFilterexpr(args)
+		node, _ := api.YFilterExpr(parsec.NewScanner([]byte(filterarg)))
+		if err, ok := node.(error); ok {
+			log.Errorf("filter %q expression failed: %v", filterarg, err)
+			return
+		}
+		fe, _ = node.(*api.Filterexpr)
+		//log.Consolef("filter expr: %v\n", fe)
 	}
-	fe, _ := node.(*api.Filterexpr)
 
 	rcf := report.rcf
 	for _, commdname := range ndb.Commoditynames() {
@@ -197,14 +209,18 @@ func (report *ReportList) listCommoditiesV(args []string, ndb api.Datastorer) {
 		return
 	}
 
-	filterarg := api.MakeFilterexpr(args)
-	node, _ := api.YFilterExpr(parsec.NewScanner([]byte(filterarg)))
-	if err, ok := node.(error); ok {
-		log.Errorf("filter %q expression failed: %v", filterarg, err)
-		return
+	var fe *api.Filterexpr
+	if len(args) > 0 {
+		filterarg := api.MakeFilterexpr(args)
+		node, _ := api.YFilterExpr(parsec.NewScanner([]byte(filterarg)))
+		if err, ok := node.(error); ok {
+			log.Errorf("filter %q expression failed: %v", filterarg, err)
+			return
+		}
+		fe, _ = node.(*api.Filterexpr)
+		//log.Consolef("filter expr: %v\n", fe)
 	}
 
-	fe, _ := node.(*api.Filterexpr)
 	outfd := api.Options.Outfd
 	fmt.Fprintln(outfd)
 	for _, commdname := range ndb.Commoditynames() {

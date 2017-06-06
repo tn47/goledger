@@ -6,6 +6,8 @@ import "time"
 import "fmt"
 
 import "github.com/prataprc/goparsec"
+
+//import "github.com/prataprc/golog"
 import "github.com/tn47/goledger/api"
 import "github.com/tn47/goledger/dblentry"
 
@@ -36,6 +38,7 @@ func NewReportBalance(args []string) (*ReportBalance, error) {
 			return nil, err
 		}
 		report.fe = node.(*api.Filterexpr)
+		//log.Consolef("filter expr: %v\n", report.fe)
 	}
 	return report, nil
 }

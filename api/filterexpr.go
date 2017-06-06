@@ -7,42 +7,47 @@ import "fmt"
 import "github.com/prataprc/goparsec"
 
 func MakeFilterexpr(args []string) string {
-	nargs := make([]string, 0, len(args))
-	for _, arg := range args {
-		arg = strings.Trim(arg, " \t")
-		if len(arg) == 0 {
-			continue
-		}
+	s := strings.Join(args, " ")
+	fmt.Printf("%q\n", s)
+	return s
+	// TODO: Clean up the commented lines once the current logic proves
+	// itself.
+	//nargs := make([]string, 0, len(args))
+	//for _, arg := range args {
+	//	arg = strings.Trim(arg, " \t")
+	//	if len(arg) == 0 {
+	//		continue
+	//	}
 
-		var prefix, suffix string
-		if arg[0] == '(' && arg[len(arg)-1] == ')' {
-			prefix, suffix, arg = "(", ")", arg[1:len(arg)-1]
-		} else if arg[0] == '(' {
-			prefix, suffix, arg = "(", "", arg[1:]
-		} else if arg[len(arg)-1] == ')' {
-			prefix, suffix, arg = "", ")", arg[:len(arg)-1]
-		} else {
-			prefix, suffix, arg = "", "", arg
-		}
-		switch strings.ToLower(arg) {
-		case "and", "or", "not":
-			nargs = append(nargs, prefix+arg+suffix)
-		default:
-			if arg[0] == '"' {
-				nargs = append(nargs, prefix+arg+suffix)
-			} else {
-				nargs = append(nargs, prefix+`"`+arg+`"`+suffix)
-			}
-		}
-	}
-	return strings.Join(nargs, " ")
+	//	var prefix, suffix string
+	//	if arg[0] == '(' && arg[len(arg)-1] == ')' {
+	//		prefix, suffix, arg = "(", ")", arg[1:len(arg)-1]
+	//	} else if arg[0] == '(' {
+	//		prefix, suffix, arg = "(", "", arg[1:]
+	//	} else if arg[len(arg)-1] == ')' {
+	//		prefix, suffix, arg = "", ")", arg[:len(arg)-1]
+	//	} else {
+	//		prefix, suffix, arg = "", "", arg
+	//	}
+	//	switch strings.ToLower(arg) {
+	//	case "and", "or", "not":
+	//		nargs = append(nargs, prefix+arg+suffix)
+	//	default:
+	//		if arg[0] == '"' {
+	//			nargs = append(nargs, prefix+arg+suffix)
+	//		} else {
+	//			nargs = append(nargs, prefix+`"`+arg+`"`+suffix)
+	//		}
+	//	}
+	//}
+	//return strings.Join(nargs, " ")
 }
 
 // Grammar
 //
-// yregex       -> String+
+// yregex       -> yterm+
 // yparanexpr   -> "(" YFilterExpr ")"
-// yfvalue      -> yregex | yparanexpr | ynot
+// yfvalue      -> ynot | yparanexpr | yregex
 // ynot			-> not YFilterExpr
 // yorkleene    -> (or yfand)*
 // yor			-> yfand yorkleene
@@ -55,19 +60,35 @@ var yfand parsec.Parser
 var yfvalue parsec.Parser
 
 func init() {
+	// yterm
+	yterm := parsec.OrdChoice(
+		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
+			switch v := nodes[0].(type) {
+			case string:
+				return v[1 : len(v)-1]
+			case *parsec.Terminal:
+				switch v.Value {
+				case "and", "or", "not":
+					return nil
+				}
+				return v.Value
+			}
+			panic("unreachable code")
+		},
+		parsec.String(), parsec.Token(`[^ \)\(][^ \)\(]*`, "REGEX"),
+	)
+
 	// yregex
 	yregex := parsec.Many(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
 			//fmt.Println("yregex", nodes)
-			s := nodes[0].(string)
-			op1, err := newMatchexpr(s[1 : len(s)-1])
+			op1, err := newMatchexpr(nodes[0].(string))
 			if err != nil {
 				return err
 			}
 			if len(nodes) > 1 {
 				for _, node := range nodes[1:] {
-					s := node.(string)
-					op2, err := newMatchexpr(s[1 : len(s)-1])
+					op2, err := newMatchexpr(node.(string))
 					if err != nil {
 						return err
 					}
@@ -76,7 +97,7 @@ func init() {
 			}
 			return op1
 		},
-		parsec.String(), nil,
+		yterm, nil,
 	)
 	// yparanexpr -> "(" YFilterExpr ")"
 	yparanexpr := parsec.And(
@@ -107,10 +128,9 @@ func init() {
 	// yfvalue -> yregex | "(" YFilterExpr ")"
 	yfvalue = parsec.OrdChoice(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
-			//fmt.Println("yfvalue", nodes)
 			return nodes[0]
 		},
-		yregex, yparanexpr, ynot,
+		ynot, yparanexpr, yregex,
 	)
 
 	// (or yfand)*
