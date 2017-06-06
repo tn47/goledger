@@ -15,32 +15,32 @@ func TestFilterExpr(t *testing.T) {
 		"Liability", "Liability:Loan",
 	}
 	testcases := [][]interface{}{
-		//[]interface{}{
-		//	[]string{"Expenses"},
-		//	[]string{"Expenses", "Expenses:Chats", "Expenses:Dinning"},
-		//},
-		//[]interface{}{
-		//	[]string{"Expenses", "Asset"},
-		//	[]string{"Expenses", "Expenses:Chats",
-		//		"Expenses:Dinning", "Asset", "Asset:FD"},
-		//},
-		//[]interface{}{
-		//	[]string{"Expenses", "Assets"},
-		//	[]string{"Expenses", "Expenses:Chats", "Expenses:Dinning"},
-		//},
-		//[]interface{}{
-		//	[]string{"Expenses", "or", "Asset"},
-		//	[]string{"Expenses", "Expenses:Chats",
-		//		"Expenses:Dinning", "Asset", "Asset:FD"},
-		//},
-		//[]interface{}{
-		//	[]string{"Expenses", "and", "Dinning"},
-		//	[]string{"Expenses:Dinning"},
-		//},
-		//[]interface{}{
-		//	[]string{"Expenses", "and", "Chat", "or", "Travel"},
-		//	[]string{"Expenses:Chats", "Income:Travel"},
-		//},
+		[]interface{}{
+			[]string{"Expenses"},
+			[]string{"Expenses", "Expenses:Chats", "Expenses:Dinning"},
+		},
+		[]interface{}{
+			[]string{"Expenses", "Asset"},
+			[]string{"Expenses", "Expenses:Chats",
+				"Expenses:Dinning", "Asset", "Asset:FD"},
+		},
+		[]interface{}{
+			[]string{"Expenses", "Assets"},
+			[]string{"Expenses", "Expenses:Chats", "Expenses:Dinning"},
+		},
+		[]interface{}{
+			[]string{"Expenses", "or", "Asset"},
+			[]string{"Expenses", "Expenses:Chats",
+				"Expenses:Dinning", "Asset", "Asset:FD"},
+		},
+		[]interface{}{
+			[]string{"Expenses", "and", "Dinning"},
+			[]string{"Expenses:Dinning"},
+		},
+		[]interface{}{
+			[]string{"Expenses", "and", "Chat", "or", "Travel"},
+			[]string{"Expenses:Chats", "Income:Travel"},
+		},
 		[]interface{}{
 			[]string{"Expenses", "and", "(Chat", "or", "Travel)"},
 			[]string{"Expenses:Chats"},

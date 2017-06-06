@@ -8,7 +8,6 @@ import "github.com/prataprc/goparsec"
 
 func MakeFilterexpr(args []string) string {
 	s := strings.Join(args, " ")
-	fmt.Printf("%q\n", s)
 	return s
 	// TODO: Clean up the commented lines once the current logic proves
 	// itself.
