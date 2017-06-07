@@ -20,7 +20,7 @@ type ReportEquity struct {
 	fe         *api.Filterexpr
 	latestdate time.Time
 	equity     map[string][][]string
-	pandl      map[string]api.Commoditiser // should balance out
+	pandl      *dblentry.DoubleEntry // should balance out
 }
 
 // NewReportEquity create a new instance for equity reporting.
@@ -28,7 +28,7 @@ func NewReportEquity(args []string) (*ReportEquity, error) {
 	report := &ReportEquity{
 		rcf:    NewRCformat(),
 		equity: make(map[string][][]string),
-		pandl:  make(map[string]api.Commoditiser),
+		pandl:  dblentry.NewDoubleEntry("pandl"),
 	}
 	api.Options.Nosubtotal = true
 	if len(args) > 1 {
@@ -70,15 +70,7 @@ func (report *ReportEquity) Posting(
 		return nil
 	}
 	if acc.IsIncome() || acc.IsExpense() {
-		comm := p.Commodity()
-		if _, ok := report.pandl[comm.Name()]; ok == false {
-			report.pandl[comm.Name()] = comm.Clone(db)
-		} else {
-			err := report.pandl[comm.Name()].ApplyAmount(comm)
-			if err != nil {
-				return err
-			}
-		}
+		report.pandl.AddBalance(p.Commodity().(*dblentry.Commodity))
 
 	} else {
 		report.latestdate = trans.Date()
@@ -173,15 +165,12 @@ func (report *ReportEquity) isfiltered() bool {
 	return report.fe != nil
 }
 
-func (report *ReportEquity) pandlbalance() (err error) {
-	for name, balance := range report.pandl {
-		if amnt := balance.Amount(); amnt < -0.01 || amnt > 0.01 {
-			e := fmt.Errorf("pandl balance %v is not ZERO: %v", name, amnt)
-			log.Errorf("%v\n", e)
-			if err == nil {
-				err = e
-			}
-		}
+func (report *ReportEquity) pandlbalance() error {
+	if report.pandl.IsBalanced() == false {
+		fmsg := "pandl balance is not ZERO: %v"
+		err := fmt.Errorf(fmsg, report.pandl.Balances())
+		log.Errorf("%v\n", err)
+		return err
 	}
-	return
+	return nil
 }

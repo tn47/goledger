@@ -91,8 +91,14 @@ func (de *DoubleEntry) Credits() []api.Commoditiser {
 }
 
 func (de *DoubleEntry) AddBalance(comm *Commodity) error {
+	if comm == nil {
+		return nil
+	}
+
 	if balance, ok := de.balances[comm.name]; ok {
-		balance.amount += comm.amount
+		if err := balance.ApplyAmount(comm); err != nil {
+			return err
+		}
 		de.balances[comm.name] = balance
 	} else {
 		de.balances[comm.name] = comm.makeSimilar(comm.amount)
@@ -100,14 +106,19 @@ func (de *DoubleEntry) AddBalance(comm *Commodity) error {
 	// maintain credits and debits.
 	if comm.IsDebit() {
 		if debit, ok := de.debits[comm.name]; ok {
-			debit.amount += comm.amount
+			if err := debit.ApplyAmount(comm); err != nil {
+				return err
+			}
 			de.debits[comm.name] = debit
 		} else {
 			de.debits[comm.name] = comm.makeSimilar(comm.amount)
 		}
 	} else {
 		if credit, ok := de.credits[comm.name]; ok {
-			credit.amount += -comm.amount // negated
+			err := credit.ApplyAmount(comm.MakeSimilar(-comm.amount))
+			if err != nil {
+				return err
+			}
 			de.credits[comm.name] = credit
 		} else {
 			de.credits[comm.name] = comm.makeSimilar(-comm.amount) // negated
@@ -128,4 +139,13 @@ func (de *DoubleEntry) Clone() *DoubleEntry {
 		nde.debits[k] = v
 	}
 	return nde
+}
+
+func (de *DoubleEntry) IsBalanced() bool {
+	for _, balance := range de.Balances() {
+		if amnt := balance.Amount(); amnt < -0.01 || amnt > 0.01 {
+			return false
+		}
+	}
+	return true
 }
