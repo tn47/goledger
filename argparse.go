@@ -61,6 +61,8 @@ func argparse() ([]string, error) {
 			"will cause errors.")
 	f.BoolVar(&api.Options.Checkpayee, "checkpayee", false,
 		"Payee not previously declared will cause error.")
+	f.BoolVar(&api.Options.Stitch, "stitch", false,
+		"Skip payees with `Opening Balance`")
 	f.BoolVar(&api.Options.Verbose, "v", false,
 		"verbose reporting / listing")
 

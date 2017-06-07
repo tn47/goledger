@@ -10,6 +10,7 @@ import "github.com/prataprc/goparsec"
 import "github.com/prataprc/golog"
 import "github.com/tn47/goledger/dblentry"
 import "github.com/tn47/goledger/api"
+import "github.com/tn47/goledger/reports"
 
 func dofirstpass(
 	reporter api.Reporter,
@@ -40,7 +41,6 @@ func dofirstpass(
 
 	log.Debugf("firstpass %v\n", journalfile)
 	var node parsec.ParsecNode
-	var index int
 
 	lines, err := readlines(journalfile)
 	if err != nil {
@@ -55,52 +55,21 @@ func dofirstpass(
 			log.Errorf("iterate at %q:%v : %v\n", journalfile, lineno, err)
 			return err
 		}
-
 		log.Debugf("parsing block: %v\n", block[0])
-		scanner := parsec.NewScanner([]byte(block[0]))
-		ytrans := dblentry.NewTransaction(journalfile).Yledger(db)
-		yprice := dblentry.NewPrice().Yledger(db)
-		ydirective := dblentry.NewDirective().Yledger(db)
-		ycomment := dblentry.NewComment().Yledger(db)
-		y := parsec.OrdChoice(
-			dblentry.Vector2scalar,
-			ytrans, yprice, ydirective, ycomment,
-		)
 
-		node, _ = y(scanner)
-
-		switch obj := node.(type) {
-		case *dblentry.Transaction:
-			obj.Addlines(block[0])
-
-			index, err = obj.Yledgerblock(db, block[1:])
-			lineno += 1 + index
-			obj.SetLineno(lineno)
-
-			obj.Addlines(block[1:]...)
-
-		case *dblentry.Directive:
-			index, err = obj.Yledgerblock(db, block[1:])
-			lineno += 1 + index
-
-		case error:
-			err = obj
-
-		case *dblentry.Comment, *dblentry.Price:
-		}
-
+		node, lineno, err = parseentry(lineno, block, journalfile, db)
 		if err != nil {
 			log.Errorf("parsec at %q:%v : %v\n", journalfile, lineno, err)
 			return err
-		}
-		if err := db.Firstpass(node); err != nil {
-			fmsg := "%T at %q:%v : %v\n"
-			log.Errorf(fmsg, node, journalfile, lineno-len(block)+1, err)
-			return err
+		} else if node != nil {
+			if err := db.Firstpass(node); err != nil {
+				fmsg := "%T at %q:%v : %v\n"
+				log.Errorf(fmsg, node, journalfile, lineno-len(block)+1, err)
+				return err
+			}
 		}
 
 		tryinclude(reporter, db, node, journalfile)
-
 		lineno, block, eof, err = iterate()
 	}
 	if err != nil {
@@ -111,9 +80,56 @@ func dofirstpass(
 	return nil
 }
 
+func parseentry(
+	lineno int,
+	block []string,
+	journalfile string,
+	db *dblentry.Datastore) (parsec.ParsecNode, int, error) {
+
+	var err error
+	var index int
+
+	scanner := parsec.NewScanner([]byte(block[0]))
+	ytrans := dblentry.NewTransaction(journalfile).Yledger(db)
+	yprice := dblentry.NewPrice().Yledger(db)
+	ydirective := dblentry.NewDirective().Yledger(db)
+	ycomment := dblentry.NewComment().Yledger(db)
+	y := parsec.OrdChoice(
+		dblentry.Vector2scalar,
+		ytrans, yprice, ydirective, ycomment,
+	)
+	node, _ := y(scanner)
+	switch obj := node.(type) {
+	case *dblentry.Transaction:
+		obj.Addlines(block[0])
+		payee := strings.Trim(obj.Payee(), " \t")
+		if api.Options.Stitch && payee == reports.PayeeOpeningBalance {
+			return nil, lineno, nil
+		}
+		index, err = obj.Yledgerblock(db, block[1:])
+		lineno += 1 + index
+		obj.SetLineno(lineno)
+		obj.Addlines(block[1:]...)
+
+	case *dblentry.Directive:
+		index, err = obj.Yledgerblock(db, block[1:])
+		lineno += 1 + index
+
+	case error:
+		err = obj
+
+	case *dblentry.Comment, *dblentry.Price:
+	}
+	return node, lineno, err
+}
+
 func tryinclude(
 	reporter api.Reporter, db *dblentry.Datastore, node parsec.ParsecNode,
 	includedby string) bool {
+
+	if node == nil {
+		return false
+	}
 
 	d, ok := node.(*dblentry.Directive)
 	if ok && d.Type() == "include" {
