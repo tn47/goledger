@@ -316,7 +316,7 @@ func (comm *Commodity) Secondpass(
 	return nil
 }
 
-func (comm *Commodity) Clone(ndb *Datastore) *Commodity {
+func (comm *Commodity) Clone(ndb api.Datastorer) api.Commoditiser {
 	ncomm := *comm
 	return &ncomm
 }

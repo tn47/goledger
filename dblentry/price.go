@@ -53,7 +53,7 @@ func (price *Price) Secondpass(db *Datastore) error {
 
 func (price *Price) Clone(ndb *Datastore) *Price {
 	nprice := *price
-	nprice.this = price.this.Clone(ndb)
-	nprice.other = price.other.Clone(ndb)
+	nprice.this = price.this.Clone(ndb).(*Commodity)
+	nprice.other = price.other.Clone(ndb).(*Commodity)
 	return &nprice
 }

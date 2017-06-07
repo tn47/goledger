@@ -274,7 +274,7 @@ func (db *Datastore) Clone(nreporter api.Reporter) api.Datastorer {
 
 	ndb.commodities = map[string]*Commodity{}
 	for name, commodity := range db.commodities {
-		ndb.commodities[name] = commodity.Clone(&ndb)
+		ndb.commodities[name] = commodity.Clone(&ndb).(*Commodity)
 	}
 
 	ndb.accntdb = map[string]*Account{}

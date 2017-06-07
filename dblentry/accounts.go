@@ -118,6 +118,14 @@ func (acc *Account) HasPosting() bool {
 	return acc.hasposting
 }
 
+func (acc *Account) IsIncome() bool {
+	return api.HasString(acc.types, "income")
+}
+
+func (acc *Account) IsExpense() bool {
+	return api.HasString(acc.types, "expense")
+}
+
 func (acc *Account) String() string {
 	return fmt.Sprintf("%v", acc.name)
 }
@@ -354,49 +362,57 @@ func (acc *Account) addBalance(commodity *Commodity) error {
 }
 
 func (acc *Account) assert(comm, bal *Commodity) error {
-	for _, atype := range acc.types {
-		switch atype {
-		case "credit":
-			return acc.assertcredit(comm)
-		case "debit":
-			return acc.assertdebit(comm)
-		case "creditbalance":
-			return acc.assertcrb(bal)
-		case "debitbalance":
-			return acc.assertdrb(bal)
-		case "exchange", "income", "expense", "accrual":
-			// "income", implies "credit" shall be present in types.
-			// "expense", implies "debit" shall be present in types.
-			// "accrual" does not imply anything on amount or balance.
+	if comm.IsCredit() {
+		if err := acc.assertcredit(); err != nil {
+			return err
+		}
+	}
+	if comm.IsDebit() {
+		if err := acc.assertdebit(); err != nil {
+			return err
+		}
+	}
+	if bal.IsCredit() {
+		if err := acc.assertcrb(); err != nil {
+			return err
+		}
+	}
+	if bal.IsDebit() {
+		if err := acc.assertdrb(); err != nil {
+			return err
 		}
 	}
 	return nil
 }
 
-func (acc *Account) assertcredit(comm *Commodity) error {
-	if comm != nil && comm.IsCredit() == false {
-		return fmt.Errorf("account %q cannot be target", acc.name)
-	}
-	return nil
-}
-
-func (acc *Account) assertdebit(comm *Commodity) error {
-	if comm != nil && comm.IsDebit() == false {
+func (acc *Account) assertcredit() error {
+	if api.HasString(acc.types, "debit") {
 		return fmt.Errorf("account %q cannot be source", acc.name)
 	}
 	return nil
 }
 
-func (acc *Account) assertcrb(bal *Commodity) error {
-	if bal != nil && bal.IsCredit() == false {
-		return fmt.Errorf("account %q cannot have debit balance", acc.name)
+func (acc *Account) assertdebit() error {
+	if api.HasString(acc.types, "credit") {
+		return fmt.Errorf("account %q cannot be target", acc.name)
 	}
 	return nil
 }
 
-func (acc *Account) assertdrb(bal *Commodity) error {
-	if bal != nil && bal.IsDebit() == false {
+func (acc *Account) assertcrb() error {
+	ok := api.HasString(acc.types, "debit")
+	ok = ok || api.HasString(acc.types, "debitbalance")
+	if ok {
 		return fmt.Errorf("account %q cannot have credit balance", acc.name)
+	}
+	return nil
+}
+
+func (acc *Account) assertdrb() error {
+	ok := api.HasString(acc.types, "credit")
+	ok = ok || api.HasString(acc.types, "creditbalance")
+	if ok {
+		return fmt.Errorf("account %q cannot have debit balance", acc.name)
 	}
 	return nil
 }

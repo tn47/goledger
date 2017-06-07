@@ -6,8 +6,7 @@ import "sort"
 import "strings"
 
 import "github.com/prataprc/goparsec"
-
-//import "github.com/prataprc/golog"
+import "github.com/prataprc/golog"
 import "github.com/tn47/goledger/api"
 import "github.com/tn47/goledger/dblentry"
 
@@ -17,6 +16,7 @@ type ReportEquity struct {
 	fe         *api.Filterexpr
 	latestdate time.Time
 	equity     map[string][][]string
+	pandl      map[string]api.Commoditiser // should balance out
 }
 
 // NewReportEquity create a new instance for equity reporting.
@@ -24,6 +24,7 @@ func NewReportEquity(args []string) (*ReportEquity, error) {
 	report := &ReportEquity{
 		rcf:    NewRCformat(),
 		equity: make(map[string][][]string),
+		pandl:  make(map[string]api.Commoditiser),
 	}
 	api.Options.Nosubtotal = true
 	if len(args) > 1 {
@@ -64,13 +65,25 @@ func (report *ReportEquity) Posting(
 	if api.FilterPeriod(trans.Date(), true /*nobegin*/) == false {
 		return nil
 	}
+	if acc.IsIncome() || acc.IsExpense() {
+		comm := p.Commodity()
+		if _, ok := report.pandl[comm.Name()]; ok == false {
+			report.pandl[comm.Name()] = comm.Clone(db)
+		} else {
+			err := report.pandl[comm.Name()].ApplyAmount(comm)
+			if err != nil {
+				return err
+			}
+		}
 
-	report.latestdate = trans.Date()
-	// format account balance
-	if balances := acc.FmtEquity(db, trans, p, acc); len(balances) > 0 {
-		report.equity[acc.Name()] = balances
 	} else {
-		delete(report.equity, acc.Name())
+		report.latestdate = trans.Date()
+		// format account balance
+		if balances := acc.FmtEquity(db, trans, p, acc); len(balances) > 0 {
+			report.equity[acc.Name()] = balances
+		} else {
+			delete(report.equity, acc.Name())
+		}
 	}
 
 	return nil
@@ -85,6 +98,10 @@ func (report *ReportEquity) BubblePosting(
 
 func (report *ReportEquity) Render(args []string, db api.Datastorer) {
 	rcf := report.rcf
+
+	if err := report.pandlbalance(); err != nil {
+		return
+	}
 
 	// sort
 	keys := []string{}
@@ -150,4 +167,17 @@ func (report *ReportEquity) Startjournal(fname string, included bool) {
 
 func (report *ReportEquity) isfiltered() bool {
 	return report.fe != nil
+}
+
+func (report *ReportEquity) pandlbalance() (err error) {
+	for name, balance := range report.pandl {
+		if amnt := balance.Amount(); amnt < -0.01 || amnt > 0.01 {
+			e := fmt.Errorf("pandl balance %v is not ZERO: %v", name, amnt)
+			log.Errorf("%v\n", e)
+			if err == nil {
+				err = e
+			}
+		}
+	}
+	return
 }

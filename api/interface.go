@@ -142,6 +142,8 @@ type Commoditiser interface {
 	// Directive return the commodity details as directive declaration.
 	Directive() string
 
+	Clone(db Datastorer) Commoditiser
+
 	String() string
 }
 
@@ -167,6 +169,12 @@ type Accounter interface {
 	// HasPosting return true if this account has ever participated in a
 	// transaction posting.
 	HasPosting() bool
+
+	// IsIncome return true of account is declared as income account
+	IsIncome() bool
+
+	// IsExpense return true if account is declared as expense account
+	IsExpense() bool
 
 	// Directive return the account details as directive declaration.
 	Directive() string

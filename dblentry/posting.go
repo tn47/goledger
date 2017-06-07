@@ -380,16 +380,16 @@ func (p *Posting) Clone(ndb *Datastore, ntrans *Transaction) *Posting {
 	np.trans = ntrans
 	np.account = ndb.GetAccount(p.account.name).(*Account)
 	if p.commodity != nil {
-		np.commodity = p.commodity.Clone(ndb)
+		np.commodity = p.commodity.Clone(ndb).(*Commodity)
 	}
 	if p.lotprice != nil {
-		np.lotprice = p.lotprice.Clone(ndb)
+		np.lotprice = p.lotprice.Clone(ndb).(*Commodity)
 	}
 	if p.costprice != nil {
-		np.costprice = p.costprice.Clone(ndb)
+		np.costprice = p.costprice.Clone(ndb).(*Commodity)
 	}
 	if p.balprice != nil {
-		np.balprice = p.balprice.Clone(ndb)
+		np.balprice = p.balprice.Clone(ndb).(*Commodity)
 	}
 	return &np
 }
