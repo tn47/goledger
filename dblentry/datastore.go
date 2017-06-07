@@ -337,13 +337,20 @@ func (db *Datastore) declare(value interface{}) error {
 			if commodity.name != "" && commodity.name != d.commdname {
 				x, y := commodity.name, d.commdname
 				return fmt.Errorf("name mismatching %q vs %q", x, y)
+			} else if commodity.name == "" {
+				commodity.name = d.commdname
+				commodity.noname = true
 			}
+
 			commodity.addNote(d.note)
 			if d.ndefault {
 				db.setDefaultcomm(commodity.name)
 			}
 			if d.commdnmrkt {
 				commodity.nomarket = true
+			}
+			if d.commdcurrn {
+				commodity.currency = true
 			}
 			// now finally update the datastore.commodity db.
 			db.commodities[commodity.name] = commodity

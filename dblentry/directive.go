@@ -28,6 +28,7 @@ type Directive struct {
 	commdname   string   // commodity
 	commdfmt    string   // commodity
 	commdnmrkt  bool     // commodity
+	commdcurrn  bool     // commodity
 	includefile string   // include
 	dpayee      string   // payee
 	dpayeealias []string // payee
@@ -149,6 +150,8 @@ func (d *Directive) Yledgerblock(db *Datastore, block []string) (int, error) {
 				d.commdfmt = nodes[2].(*parsec.Terminal).Value
 			case "DRTV_COMMODITY_NOMARKET":
 				d.commdnmrkt = true
+			case "DRTV_COMMODITY_CURRENCY":
+				d.commdcurrn = true
 			case "DRTV_DEFAULT":
 				d.ndefault = true
 			}
@@ -395,8 +398,11 @@ func (d *Directive) ycommoditydirectives(db *Datastore) parsec.Parser {
 	ynote := parsec.And(nil, ytokNote, ytokHardSpace, ytokValue)
 	yformat := parsec.And(nil, ytokFormat, ytokHardSpace, ytokValue)
 	ynomarket := parsec.And(nil, ytokNomarket)
+	ycurrency := parsec.And(nil, ytokCommCurrency)
 	ydefault := parsec.And(nil, ytokDefault)
-	y := parsec.OrdChoice(Vector2scalar, ynote, yformat, ynomarket, ydefault)
+	y := parsec.OrdChoice(
+		Vector2scalar, ynote, yformat, ynomarket, ycurrency, ydefault,
+	)
 	return y
 }
 

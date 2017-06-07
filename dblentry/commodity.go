@@ -15,6 +15,7 @@ type Commodity struct {
 	// or in pricing context it says the per unit price.
 	amount    float64
 	currency  bool
+	noname    bool
 	precision int
 	wspace    string
 	mark1k    bool
@@ -105,6 +106,7 @@ func (comm *Commodity) makeSimilar(amount float64) *Commodity {
 		notes:     comm.notes,
 		amount:    amount,
 		currency:  comm.currency,
+		noname:    comm.noname,
 		precision: comm.precision,
 		wspace:    comm.wspace,
 		mark1k:    comm.mark1k,
@@ -123,10 +125,14 @@ func (comm *Commodity) String() string {
 		fmsg := fmt.Sprintf("%%.%vf", comm.precision)
 		amountstr = fmt.Sprintf(fmsg, comm.amount)
 	}
-	if comm.currency {
-		return fmt.Sprintf("%v%v%v", comm.name, comm.wspace, amountstr)
+	name := comm.name
+	if comm.noname {
+		name = ""
 	}
-	return fmt.Sprintf("%v %v", amountstr, comm.name)
+	if comm.currency {
+		return fmt.Sprintf("%v%v%v", name, comm.wspace, amountstr)
+	}
+	return fmt.Sprintf("%v %v", amountstr, name)
 }
 
 func (comm *Commodity) Directive() string {
