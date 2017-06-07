@@ -1,7 +1,7 @@
-Warng: account "Assets:Checking" not pre-declared
-Warng: account "Income:Salary" not pre-declared
-Warng: account "Expenses:Groceries" not pre-declared
-Warng: account "Assets:Checking" not pre-declared
+Warng: In "dirtwithoacc.ldg" : account "Assets:Checking" not pre-declared
+Warng: In "dirtwithoacc.ldg" : account "Income:Salary" not pre-declared
+Warng: In "dirtwithoacc.ldg" : account "Expenses:Groceries" not pre-declared
+Warng: In "dirtwithoacc.ldg" : account "Assets:Checking" not pre-declared
 
   By-date      Account                 Balance 
                                                

@@ -223,39 +223,44 @@ func (reports *Reports) trystrict(
 		return
 	}
 
+	jf := trans.Journalfile()
 	comm := p.Commodity()
 	if comm != nil && reflect.ValueOf(comm).IsNil() == false {
 		if db.IsCommodityDeclared(comm.Name()) == false {
-			log.Warnf("commodity %q is not pre-declared\n", comm.Name())
+			fmsg := "In %q : commodity %q is not pre-declared\n"
+			log.Warnf(fmsg, jf, comm.Name())
 		}
 	}
 
 	pr := p.Lotprice()
 	if pr != nil && reflect.ValueOf(pr).IsNil() == false {
 		if db.IsCommodityDeclared(pr.Name()) == false {
-			log.Warnf("commodity %q not pre-declared\n", pr.Name())
+			fmsg := "In %q : commodity %q is not pre-declared\n"
+			log.Warnf(fmsg, jf, pr.Name())
 		}
 	}
 	pr = p.Costprice()
 	if pr != nil && reflect.ValueOf(pr).IsNil() == false {
 		if db.IsCommodityDeclared(pr.Name()) == false {
-			log.Warnf("commodity %q not pre-declared\n", pr.Name())
+			fmsg := "In %q : commodity %q is not pre-declared\n"
+			log.Warnf(fmsg, jf, pr.Name())
 		}
 	}
 	pr = p.Balanceprice()
 	if pr != nil && reflect.ValueOf(pr).IsNil() == false {
 		if db.IsCommodityDeclared(pr.Name()) == false {
-			log.Warnf("commodity %q not pre-declared\n", pr.Name())
+			fmsg := "In %q : commodity %q is not pre-declared\n"
+			log.Warnf(fmsg, jf, pr.Name())
 		}
 	}
 
 	accname := p.Account().Name()
 	if db.IsAccountDeclared(accname) == false {
-		log.Warnf("account %q not pre-declared\n", accname)
+		log.Warnf("In %q : account %q not pre-declared\n", jf, accname)
 	}
 	if api.Options.Checkpayee {
 		if payee := p.Payee(); db.IsPayeeDeclared(payee) == false {
-			log.Warnf("payee %q not pre-declared\n", payee)
+			log.Warnf("In %q : payee %q not pre-declared\n", jf, payee)
 		}
 	}
 }
@@ -267,10 +272,12 @@ func (reports *Reports) trypedantic(
 		return nil
 	}
 
+	jf := trans.Journalfile()
 	comm := p.Commodity()
 	if comm != nil && reflect.ValueOf(comm).IsNil() == false {
 		if db.IsCommodityDeclared(comm.Name()) == false {
-			err := fmt.Errorf("commodity %q is not pre-declared", comm.Name())
+			fmsg := "In %q : commodity %q is not pre-declared"
+			err := fmt.Errorf(fmsg, jf, comm.Name())
 			log.Errorf("%v\n", err)
 			return err
 		}
@@ -279,7 +286,8 @@ func (reports *Reports) trypedantic(
 	pr := p.Lotprice()
 	if pr != nil && reflect.ValueOf(pr).IsNil() == false {
 		if db.IsCommodityDeclared(pr.Name()) == false {
-			err := fmt.Errorf("commodity %q not pre-declared\n", pr.Name())
+			fmsg := "In %q : commodity %q not pre-declared\n"
+			err := fmt.Errorf(fmsg, jf, pr.Name())
 			log.Errorf("%v\n", err)
 			return err
 		}
@@ -287,7 +295,8 @@ func (reports *Reports) trypedantic(
 	pr = p.Costprice()
 	if pr != nil && reflect.ValueOf(pr).IsNil() == false {
 		if db.IsCommodityDeclared(pr.Name()) == false {
-			err := fmt.Errorf("commodity %q not pre-declared", pr.Name())
+			fmsg := "In %q : commodity %q not pre-declared"
+			err := fmt.Errorf(fmsg, jf, pr.Name())
 			log.Errorf("%v\n", err)
 			return err
 		}
@@ -295,7 +304,8 @@ func (reports *Reports) trypedantic(
 	pr = p.Balanceprice()
 	if pr != nil && reflect.ValueOf(pr).IsNil() == false {
 		if db.IsCommodityDeclared(pr.Name()) == false {
-			err := fmt.Errorf("commodity %q not pre-declared", pr.Name())
+			fmsg := "In %q : commodity %q not pre-declared"
+			err := fmt.Errorf(fmsg, jf, pr.Name())
 			log.Errorf("%v\n", err)
 			return err
 		}
@@ -303,13 +313,14 @@ func (reports *Reports) trypedantic(
 
 	accname := p.Account().Name()
 	if db.IsAccountDeclared(accname) == false {
-		err := fmt.Errorf("account %q not declared before\n", accname)
+		fmsg := "In %q : account %q not declared before\n"
+		err := fmt.Errorf(fmsg, jf, accname)
 		log.Errorf("%v\n", err)
 		return err
 	}
 	if api.Options.Checkpayee {
 		if payee := p.Payee(); db.IsPayeeDeclared(payee) == false {
-			err := fmt.Errorf("payee %q not pre-declared", payee)
+			err := fmt.Errorf("In %q : payee %q not pre-declared", jf, payee)
 			log.Errorf("%v\n", err)
 			return err
 		}

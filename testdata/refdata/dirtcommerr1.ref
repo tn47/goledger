@@ -1,1 +1,1 @@
-Error: *dblentry.Directive at lineno 7: name mismatching "INR" vs "$"
+Error: *dblentry.Directive at "dirtcommerr1.ldg":7 : name mismatching "INR" vs "$"

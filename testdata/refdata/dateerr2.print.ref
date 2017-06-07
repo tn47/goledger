@@ -1,1 +1,1 @@
-Error: parsec lineno 1: invalid date 2011/2/29 0:0:0
+Error: parsec at "dateerr2.ldg":1 : invalid date 2011/2/29 0:0:0

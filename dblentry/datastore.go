@@ -28,6 +28,8 @@ type Datastore struct {
 	name string
 
 	// immutable once firstpass is ok
+	journals    map[uint64]string
+	currjournal string
 	firstpass
 
 	// changes with every second pass.
@@ -50,6 +52,7 @@ type Datastore struct {
 func NewDatastore(name string, reporter api.Reporter) *Datastore {
 	db := &Datastore{
 		name:     name,
+		journals: make(map[uint64]string),
 		reporter: reporter,
 
 		pass:        DBSTART,
@@ -92,6 +95,22 @@ func (db *Datastore) getCommodity(name string, defcomm *Commodity) *Commodity {
 }
 
 //---- exported accessors
+
+func (db *Datastore) Addjournal(journalfile string, data []byte) {
+	hash := api.Crc64(data)
+	db.journals[hash] = journalfile
+	db.currjournal = journalfile
+}
+
+func (db *Datastore) Hasjournal(data []byte) bool {
+	hash := api.Crc64(data)
+	_, ok := db.journals[hash]
+	return ok
+}
+
+func (db *Datastore) CurrentJournal() string {
+	return db.currjournal
+}
 
 func (db *Datastore) GetCommodity(name string) api.Commoditiser {
 	return db.getCommodity(name, nil)

@@ -909,6 +909,10 @@ func TestUnbalanced(t *testing.T) {
 			[]string{"-f", "unbalanced2.ldg", "register"},
 			"refdata/unbalanced2.ref",
 		},
+		[]interface{}{
+			[]string{"-f", "unbalanced3.ldg", "balance"},
+			"refdata/unbalanced3.ref",
+		},
 	}
 	for _, testcase := range testcases {
 		ref := testdataFile(testcase[1].(string))

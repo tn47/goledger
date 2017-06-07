@@ -2,6 +2,7 @@ package main
 
 import "fmt"
 import "strings"
+import "io/ioutil"
 import "runtime/debug"
 import "path/filepath"
 
@@ -14,13 +15,24 @@ func dofirstpass(
 	reporter api.Reporter,
 	db *dblentry.Datastore, journalfile string) (err error) {
 
+	data, err := ioutil.ReadFile(journalfile)
+	if err != nil {
+		log.Errorf("%v\n", err)
+		return err
+	}
+	if db.Hasjournal(data) {
+		log.Debugf("%q already processed !!\n", journalfile)
+		return nil
+	}
+	db.Addjournal(journalfile, data)
+
 	var lineno int
 	var block []string
 	var eof bool
 
 	defer func() {
 		if r := recover(); r != nil {
-			log.Errorf("panic at lineno: %v\n", lineno)
+			log.Errorf("panic at %q:%v : %v\n", journalfile, lineno, r)
 			log.Errorf("\n%s", api.GetStacktrace(2, debug.Stack()))
 			err = fmt.Errorf("%s", r)
 		}
@@ -40,13 +52,13 @@ func dofirstpass(
 	for len(block) > 0 {
 		lineno -= len(block)
 		if err != nil {
-			log.Errorf("iterate lineno %v: %v\n", lineno, err)
+			log.Errorf("iterate at %q:%v : %v\n", journalfile, lineno, err)
 			return err
 		}
 
 		log.Debugf("parsing block: %v\n", block[0])
 		scanner := parsec.NewScanner([]byte(block[0]))
-		ytrans := dblentry.NewTransaction().Yledger(db)
+		ytrans := dblentry.NewTransaction(journalfile).Yledger(db)
 		yprice := dblentry.NewPrice().Yledger(db)
 		ydirective := dblentry.NewDirective().Yledger(db)
 		ycomment := dblentry.NewComment().Yledger(db)
@@ -78,12 +90,12 @@ func dofirstpass(
 		}
 
 		if err != nil {
-			log.Errorf("parsec lineno %v: %v\n", lineno, err)
+			log.Errorf("parsec at %q:%v : %v\n", journalfile, lineno, err)
 			return err
 		}
 		if err := db.Firstpass(node); err != nil {
-			fmsg := "%T at lineno %v: %v\n"
-			log.Errorf(fmsg, node, lineno-len(block)+1, err)
+			fmsg := "%T at %q:%v : %v\n"
+			log.Errorf(fmsg, node, journalfile, lineno-len(block)+1, err)
 			return err
 		}
 
@@ -92,9 +104,9 @@ func dofirstpass(
 		lineno, block, eof, err = iterate()
 	}
 	if err != nil {
-		log.Errorf("%v", err)
+		log.Errorf("%q : %v\n", journalfile, err)
 	} else if eof == false {
-		log.Errorf("expected eof")
+		log.Errorf("%q : expected eof\n", journalfile)
 	}
 	return nil
 }

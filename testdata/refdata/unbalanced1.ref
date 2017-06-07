@@ -1,1 +1,1 @@
-Error: *dblentry.Transaction at lineno 1: unbalanced transaction
+Error: *dblentry.Transaction at "unbalanced1.ldg":1 : unbalanced transaction

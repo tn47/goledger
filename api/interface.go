@@ -75,7 +75,11 @@ type Transactor interface {
 	// GetPostings return list of all postings under this transaction.
 	GetPostings() []Poster
 
+	// Crc64 return a hash value that can uniquely identify the transaction.
 	Crc64() uint64
+
+	// Journalfile in which this transaction is defined.
+	Journalfile() string
 
 	// Printlines return the original lines from which transaction was parsed.
 	Printlines() []string

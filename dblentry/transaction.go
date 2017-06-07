@@ -12,25 +12,27 @@ import "github.com/tn47/goledger/api"
 // Transaction instance for every transaction in the journal file.
 type Transaction struct {
 	// immutable after firstpass
-	date     time.Time
-	edate    time.Time
-	code     string
-	tags     []string
-	metadata map[string]interface{}
-	notes    []string
-	lineno   int
-	lines    []string
+	journalfile string
+	date        time.Time
+	edate       time.Time
+	code        string
+	tags        []string
+	metadata    map[string]interface{}
+	notes       []string
+	lineno      int
+	lines       []string
 
 	postings []*Posting
 }
 
 // NewTransaction create a new transaction object.
-func NewTransaction() *Transaction {
+func NewTransaction(journalfile string) *Transaction {
 	trans := &Transaction{
-		tags:     []string{},
-		metadata: map[string]interface{}{},
-		notes:    []string{},
-		lines:    []string{},
+		journalfile: journalfile,
+		tags:        []string{},
+		metadata:    map[string]interface{}{},
+		notes:       []string{},
+		lines:       []string{},
 	}
 	return trans
 }
@@ -104,6 +106,10 @@ func (trans *Transaction) Crc64() uint64 {
 		data = append(data, line...)
 	}
 	return api.Crc64(data)
+}
+
+func (trans *Transaction) Journalfile() string {
+	return trans.journalfile
 }
 
 //---- ledger parser
