@@ -334,7 +334,7 @@ func (db *Datastore) declare(value interface{}) error {
 			scanner := parsec.NewScanner([]byte(d.commdfmt))
 			node, _ := NewCommodity("").Yledger(db)(scanner)
 			commodity := node.(*Commodity)
-			if commodity.name != d.commdname {
+			if commodity.name != "" && commodity.name != d.commdname {
 				x, y := commodity.name, d.commdname
 				return fmt.Errorf("name mismatching %q vs %q", x, y)
 			}
