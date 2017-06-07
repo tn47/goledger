@@ -310,15 +310,21 @@ func (trans *Transaction) autobalance1(
 		return false, fmt.Errorf("unbalanced transaction")
 	}
 
-	unbcs, _ := trans.doBalance()
-	if len(unbcs) == 0 {
-		return true, nil
-	}
-
 	tallypost, err := trans.endposting(trans.postings)
 	if err != nil {
 		return false, err
 	}
+
+	unbcs, _ := trans.doBalance()
+	if len(unbcs) == 0 && tallypost == nil {
+		return true, nil
+
+	} else if len(unbcs) == 0 && tallypost != nil {
+		comm := db.GetCommodity(db.getDefaultcomm()).MakeSimilar(0)
+		tallypost.commodity = comm.(*Commodity)
+		return true, nil
+	}
+
 	if len(unbcs) == 1 && tallypost == nil {
 		return false, fmt.Errorf("unbalanced transaction")
 	} else if tallypost == nil {

@@ -214,16 +214,16 @@ func (acc *Account) FmtPassbook(
 		}
 	}
 
-	row := rows[len(rows)-1] // pick the last balance entry
-
-	comm := p.Commodity()
-	row[0], row[1] = trans.Date().Format("2006/Jan/02"), p.Payee()
-	if comm.IsDebit() {
-		row[2] = comm.String()
-	} else {
-		row[3] = comm.MakeSimilar(-comm.Amount()).String()
+	if len(rows) > 0 {
+		comm := p.Commodity()
+		cols := rows[len(rows)-1] // pick the last balance entry
+		cols[0], cols[1] = trans.Date().Format("2006/Jan/02"), p.Payee()
+		if comm.IsDebit() {
+			cols[2] = comm.String()
+		} else {
+			cols[3] = comm.MakeSimilar(-comm.Amount()).String()
+		}
 	}
-
 	return rows
 }
 

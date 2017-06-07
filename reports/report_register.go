@@ -25,6 +25,7 @@ func NewReportRegister(args []string) (*ReportRegister, error) {
 		rcf:      NewRCformat(),
 		register: make([][]string, 0),
 		balances: make(map[string]api.Commoditiser),
+		lastcomm: dblentry.NewCommodity(""),
 	}
 
 	filteraccounts := []string{}
@@ -198,14 +199,14 @@ func (report *ReportRegister) fillbalances(row []string) [][]string {
 		if balance.Amount() == 0 {
 			continue
 		}
-		rw := []string{date, payee, accname, amount, balance.String()}
-		rows = append(rows, rw)
+		cols := []string{date, payee, accname, amount, balance.String()}
+		rows = append(rows, cols)
 		date, payee, accname, amount = "", "", "", ""
 		report.lastcomm = balance
 	}
 	if len(rows) == 0 {
-		rw := []string{date, payee, accname, amount, report.lastcomm.String()}
-		rows = append(rows, rw)
+		cols := []string{date, payee, accname, amount, report.lastcomm.String()}
+		rows = append(rows, cols)
 	}
 	return rows
 }

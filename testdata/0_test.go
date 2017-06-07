@@ -863,6 +863,23 @@ func TestMixedComm(t *testing.T) {
 			"refdata/mixedcomm2.equity.ref",
 		},
 		[]interface{}{
+			[]string{"-f", "mixedcomm3.ldg", "balance"},
+			"refdata/mixedcomm3.balance.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "mixedcomm3.ldg", "register"},
+			"refdata/mixedcomm3.register.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "mixedcomm3.ldg", "equity"},
+			"refdata/mixedcomm3.equity.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "mixedcomm3.ldg", "passbook",
+				"EverQuest:Inventory2"},
+			"refdata/mixedcomm3.passbook.ref",
+		},
+		[]interface{}{
 			[]string{"-f", "commname.ldg", "balance"},
 			"refdata/commname.balance.ref",
 		},
@@ -912,6 +929,26 @@ func TestUnbalanced(t *testing.T) {
 		[]interface{}{
 			[]string{"-f", "unbalanced3.ldg", "balance"},
 			"refdata/unbalanced3.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "unbalanced4.ldg", "balance"},
+			"refdata/unbalanced4.balance.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "unbalanced4.ldg", "register"},
+			"refdata/unbalanced4.register.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "unbalanced4.ldg", "equity"},
+			"refdata/unbalanced4.equity.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "unbalanced4.ldg", "passbook", "TNEB"},
+			"refdata/unbalanced4.passbook1.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "unbalanced4.ldg", "passbook", "Subsidy"},
+			"refdata/unbalanced4.passbook2.ref",
 		},
 	}
 	for _, testcase := range testcases {

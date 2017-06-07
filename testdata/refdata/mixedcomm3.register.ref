@@ -1,0 +1,14 @@
+
+  By-date      Payee                   Account                   Amount    Balance 
+                                                                                   
+  2017-Sep-29  Get som stu at the Inn  Places:Black's Tavern  -3 Apples  -3 Apples 
+                                       Places:Black's Tavern  -5 Steaks  -3 Apples 
+                                                                         -5 Steaks 
+                                       Asset:Checking             $-100      $-100 
+                                                                         -3 Apples 
+                                                                         -5 Steaks 
+                                       Expense:Food                $100  -3 Apples 
+                                                                         -5 Steaks 
+                                       EverQuest:Inventory1    3 Apples  -5 Steaks 
+                                       EverQuest:Inventory2    5 Steaks   0 Steaks 
+
