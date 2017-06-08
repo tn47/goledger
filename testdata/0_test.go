@@ -86,6 +86,26 @@ func TestBeginEnd(t *testing.T) {
 			[]string{"-f", "beginend.ldg", "-end", "2012/03/15", "register"},
 			"refdata/beginend.register4.ref",
 		},
+		[]interface{}{
+			[]string{"-f", "beginend.ldg", "-begin", "2011/02/28", "-end",
+				"2012/03/15", "-dc", "register"},
+			"refdata/beginend.register1.dc.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "beginend.ldg", "-begin", "2011/02/28", "-end",
+				"2012/03/16", "-dc", "register"},
+			"refdata/beginend.register2.dc.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "beginend.ldg", "-begin", "2012/03/15",
+				"-dc", "register"},
+			"refdata/beginend.register3.dc.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "beginend.ldg", "-end", "2012/03/15",
+				"-dc", "register"},
+			"refdata/beginend.register4.dc.ref",
+		},
 		// equity
 		[]interface{}{
 			[]string{"-f", "beginend.ldg", "-begin", "2011/02/28", "-end",
@@ -254,6 +274,10 @@ func TestBasic(t *testing.T) {
 			"refdata/basic.register.ref",
 		},
 		[]interface{}{
+			[]string{"-f", "basic.ldg", "-dc", "register"},
+			"refdata/basic.register.dc.ref",
+		},
+		[]interface{}{
 			[]string{"-f", "basic.ldg", "equity"},
 			"refdata/basic.equity.ref",
 		},
@@ -340,6 +364,10 @@ func TestElidingAmount(t *testing.T) {
 			"refdata/elidingamount1.register.ref",
 		},
 		[]interface{}{
+			[]string{"-f", "elidingamount1.ldg", "-dc", "register"},
+			"refdata/elidingamount1.register.dc.ref",
+		},
+		[]interface{}{
 			[]string{"-f", "elidingamount1.ldg", "equity"},
 			"refdata/elidingamount1.equity.ref",
 		},
@@ -350,6 +378,10 @@ func TestElidingAmount(t *testing.T) {
 		[]interface{}{
 			[]string{"-f", "elidingamount2.ldg", "register"},
 			"refdata/elidingamount2.register.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "elidingamount2.ldg", "-dc", "register"},
+			"refdata/elidingamount2.register.dc.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "elidingamount2.ldg", "equity"},
@@ -507,6 +539,10 @@ func TestExplicitCost(t *testing.T) {
 			"refdata/explicitcost.register.ref",
 		},
 		[]interface{}{
+			[]string{"-f", "explicitcost.ldg", "-dc", "register"},
+			"refdata/explicitcost.register.dc.ref",
+		},
+		[]interface{}{
 			[]string{"-f", "explicitcost.ldg", "equity"},
 			"refdata/explicitcost.equity.ref",
 		},
@@ -536,6 +572,10 @@ func TestTotalCost(t *testing.T) {
 		[]interface{}{
 			[]string{"-f", "totalcost.ldg", "register"},
 			"refdata/totalcost.register.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "totalcost.ldg", "-dc", "register"},
+			"refdata/totalcost.register.dc.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "totalcost.ldg", "equity"},
@@ -583,6 +623,10 @@ func TestDates(t *testing.T) {
 		[]interface{}{
 			[]string{"-f", "dates.ldg", "register", "Expenses:Sta"},
 			"refdata/dates.register3.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "dates.ldg", "-dc", "register", "Expenses:Sta"},
+			"refdata/dates.register3.dc.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "dates.ldg", "equity"},

@@ -90,7 +90,8 @@ func (de *DoubleEntry) Credits() []api.Commoditiser {
 	return comms
 }
 
-func (de *DoubleEntry) AddBalance(comm *Commodity) error {
+func (de *DoubleEntry) AddBalance(commodity api.Commoditiser) error {
+	comm := commodity.(*Commodity)
 	if comm == nil {
 		return nil
 	}

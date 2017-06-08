@@ -1,0 +1,7 @@
+
+  By-date      Payee      Account                  Debit   Credit   Balance 
+                                                                            
+  2012-Mar-10  My Broker  Assets:Brokerage       10 AAPL            10 AAPL 
+                          Assets:Brokerage:Cash           $500.00  $-500.00 
+                                                                    10 AAPL 
+

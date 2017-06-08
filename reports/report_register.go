@@ -1,7 +1,6 @@
 package reports
 
 import "fmt"
-import "sort"
 
 import "github.com/prataprc/goparsec"
 
@@ -15,7 +14,7 @@ type ReportRegister struct {
 	fe       *api.Filterexpr
 	pfe      *api.Filterexpr
 	register [][]string
-	balances map[string]api.Commoditiser
+	de       *dblentry.DoubleEntry
 	lastcomm api.Commoditiser
 }
 
@@ -24,7 +23,7 @@ func NewReportRegister(args []string) (*ReportRegister, error) {
 	report := &ReportRegister{
 		rcf:      NewRCformat(),
 		register: make([][]string, 0),
-		balances: make(map[string]api.Commoditiser),
+		de:       dblentry.NewDoubleEntry("registerbalance"),
 		lastcomm: dblentry.NewCommodity(""),
 	}
 
@@ -71,6 +70,8 @@ func (report *ReportRegister) Transaction(
 
 	date, transpayee := trans.Date().Format("2006-Jan-02"), trans.Payee()
 	for _, p := range trans.GetPostings() {
+		var cols []string
+
 		accname := p.Account().Name()
 		if report.isfilteracc() && report.fe.Match(accname) == false {
 			continue
@@ -78,13 +79,26 @@ func (report *ReportRegister) Transaction(
 		if report.isfilterpayee() && report.pfe.Match(p.Payee()) == false {
 			continue
 		}
-		commodity := p.Commodity()
-		report.applyBalance(commodity)
-		row := []string{date, transpayee, accname, commodity.String(), ""}
-		if p.Payee() != trans.Payee() {
-			row[1] = p.Payee()
+		comm := p.Commodity()
+		report.de.AddBalance(comm)
+		amountstr := comm.String()
+		if api.Options.Dcformat == false {
+			cols = []string{date, transpayee, accname, amountstr, ""}
+		} else if comm.IsDebit() {
+			cols = []string{date, transpayee, accname, amountstr, "", ""}
+		} else if comm.IsCredit() {
+			amountstr = comm.MakeSimilar(-comm.Amount()).String()
+			cols = []string{date, transpayee, accname, "", amountstr, ""}
 		}
-		rows := report.fillbalances(row)
+		if p.Payee() != trans.Payee() {
+			cols[1] = p.Payee()
+		}
+		var rows [][]string
+		if api.Options.Dcformat {
+			rows = report.fillbalancesDc(cols)
+		} else {
+			rows = report.fillbalances(cols)
+		}
 		report.register = append(report.register, rows...)
 
 		date, transpayee = "", ""
@@ -106,6 +120,16 @@ func (report *ReportRegister) BubblePosting(
 }
 
 func (report *ReportRegister) Render(args []string, db api.Datastorer) {
+	if api.Options.Dcformat {
+		report.renderDcRegister(args, db)
+	} else {
+		report.renderRegister(args, db)
+	}
+}
+
+func (report *ReportRegister) renderRegister(
+	args []string, db api.Datastorer) {
+
 	rcf := report.rcf
 
 	cols := []string{"By-date", "Payee", "Account", "Amount", "Balance"}
@@ -150,6 +174,52 @@ func (report *ReportRegister) Render(args []string, db api.Datastorer) {
 	fmt.Fprintln(outfd)
 }
 
+func (report *ReportRegister) renderDcRegister(
+	args []string, db api.Datastorer) {
+
+	rcf := report.rcf
+
+	cols := []string{"By-date", "Payee", "Account", "Debit", "Credit", "Balance"}
+	rcf.addrow(cols...)
+	rcf.addrow([]string{"", "", "", "", "", ""}...)
+
+	for _, cols := range report.register {
+		report.rcf.addrow(cols...)
+	}
+
+	w0 := rcf.maxwidth(rcf.column(0)) // Date
+	w1 := rcf.maxwidth(rcf.column(1)) // Payee
+	w2 := rcf.maxwidth(rcf.column(2)) // Account name
+	w3 := rcf.maxwidth(rcf.column(3)) // Debit
+	w4 := rcf.maxwidth(rcf.column(4)) // Credit
+	w5 := rcf.maxwidth(rcf.column(5)) // Balance (amount)
+	if (w0 + w1 + w2 + w3 + w4 + w5) > 125 {
+		w1 = rcf.FitPayee(1, 125-w0-w2-w3-w4-w5)
+		if (w0 + w1 + w2 + w3 + w4 + w5) > 125 {
+			_ /*w2*/ = rcf.FitAccountname(1, 70-w0-w1-w3-w4-w5)
+		}
+	}
+
+	rcf.paddcells()
+	fmsg := rcf.Fmsg(" %%-%vs%%-%vs%%-%vs%%%vs%%%vs%%%vs\n")
+	comm1 := dblentry.NewCommodity("")
+
+	// start printing
+	outfd := api.Options.Outfd
+	fmt.Fprintln(outfd)
+	for i, cols := range report.rcf.rows {
+		items := []interface{}{cols[0], cols[1]}
+		if i < 2 {
+			items = append(items, cols[2], cols[3], cols[4], cols[5])
+		} else {
+			x := CommodityColor(db, comm1, cols[5])
+			items = append(items, api.YellowFn(cols[2]), cols[3], cols[4], x)
+		}
+		fmt.Fprintf(outfd, fmsg, items...)
+	}
+	fmt.Fprintln(outfd)
+}
+
 func (report *ReportRegister) Clone() api.Reporter {
 	nreport := *report
 	nreport.rcf = report.rcf.Clone()
@@ -171,31 +241,15 @@ func (report *ReportRegister) isfilterpayee() bool {
 	return report.pfe != nil
 }
 
-func (report *ReportRegister) applyBalance(comm api.Commoditiser) {
-	name := comm.Name()
-	if _, ok := report.balances[name]; ok == false {
-		report.balances[name] = comm.MakeSimilar(0)
+func (report *ReportRegister) fillbalances(cols []string) [][]string {
+	balances := report.de.Balances()
+	if len(balances) == 0 {
+		return [][]string{cols}
 	}
-	report.balances[name].ApplyAmount(comm)
-}
 
-func (report *ReportRegister) fillbalances(row []string) [][]string {
-	if len(report.balances) == 0 {
-		return [][]string{row}
-	}
-	names := []string{}
-	for name := range report.balances {
-		names = append(names, name)
-	}
-	sort.Strings(names)
-
-	bal := report.balances[names[0]]
-	row[len(row)-1] = bal.String()
-
-	date, payee, accname, amount := row[0], row[1], row[2], row[3]
+	date, payee, accname, amount := cols[0], cols[1], cols[2], cols[3]
 	rows := [][]string{}
-	for _, name := range names {
-		balance := report.balances[name]
+	for _, balance := range balances {
 		if balance.Amount() == 0 {
 			continue
 		}
@@ -206,6 +260,30 @@ func (report *ReportRegister) fillbalances(row []string) [][]string {
 	}
 	if len(rows) == 0 {
 		cols := []string{date, payee, accname, amount, report.lastcomm.String()}
+		rows = append(rows, cols)
+	}
+	return rows
+}
+
+func (report *ReportRegister) fillbalancesDc(cols []string) [][]string {
+	balances := report.de.Balances()
+	if len(balances) == 0 {
+		return [][]string{cols}
+	}
+
+	date, payee, accname, dr, cr := cols[0], cols[1], cols[2], cols[3], cols[4]
+	rows := [][]string{}
+	for _, balance := range balances {
+		if balance.Amount() == 0 {
+			continue
+		}
+		cols := []string{date, payee, accname, dr, cr, balance.String()}
+		rows = append(rows, cols)
+		date, payee, accname, dr, cr = "", "", "", "", ""
+		report.lastcomm = balance
+	}
+	if len(rows) == 0 {
+		cols := []string{date, payee, accname, dr, cr, report.lastcomm.String()}
 		rows = append(rows, cols)
 	}
 	return rows
