@@ -59,6 +59,54 @@ posting's account is called target account.
 * Posting with negative amount are treated as credit transaction, and the
 posting's account is called source account.
 
+To begin with, ledger tool expects one or more journal files to process.
+As mentioned earlier, a journal file typically contains directives and
+transactions. The format of journal file is plain text.
+
+```bash
+$ goledger -f journal.ldg
+```
+
+To process more than one journal files, supply them as
+``-f journal1.ldg,journal2.lsg``. Even if the journals are not in time order
+or transactions within a journal file is not in time order, goledger will
+sort them in time order before applying them.
+
+**Including journal files**
+
+If several journal files need to be processed, it is easier to create a new
+file and include other journal files within. For example consolidate.ldg
+can have:
+
+```
+include journal1.ldg
+include journal2.ldg
+```
+
+**Account-name**
+
+There are some conventions used in account naming. Account names can be
+composed of any character except:
+
+* Double spaces and tabs
+* Mathematical and logical operators: ``-+*/^&|=``
+* Bracketing characters: ``<>[](){}``
+* The at symbol: ``@``
+* semicolon: ``;``
+
+**Commodity-name**
+
+Commodity can appear before or after the amount, and may or may not be separated
+from it by a space. Most characters are allowed in a commodity name, except
+for the following:
+
+* Any kind of white-space
+* Numerical digits
+* Punctuation: ``.,;:?!``
+* Mathematical and logical operators: ``-+*/^&|=``
+* Bracketing characters: ``<>[](){}``
+* The at symbol: ``@``
+
 Standards, conventions and views
 --------------------------------
 
@@ -119,54 +167,6 @@ see whether or how to take it forward.
 Ledger commands
 ===============
 
-To begin with, ledger tool expects one or more journal files to process.
-As mentioned earlier, a journal file typically contains directives and
-transactions. The format of journal file is plain text.
-
-```bash
-$ goledger -f journal.ldg
-```
-
-To process more than one journal files, supply them as
-``-f journal1.ldg,journal2.lsg``. Even if the journals are not in time order
-or transactions within a journal file is not in time order, goledger will
-sort them in time order before applying them.
-
-**Including journal files**
-
-If there several journal files to be processed, it is easier to create a new
-file and include other journal files within. For example consolidate.ldg
-can have:
-
-```
-include journal1.ldg
-include journal2.ldg
-```
-
-**Account-name**
-
-There are some conventions used in account naming. Account names can be
-composed of any character except:
-
-* Double spaces and tabs
-* Mathematical and logical operators: ``-+*/^&|=``
-* Bracketing characters: ``<>[](){}``
-* The at symbol: ``@``
-* semicolon: ``;``
-
-**Commodity-name**
-
-Commodity can appear before or after the amount, and may or may not be separated
-from it by a space. Most characters are allowed in a commodity name, except
-for the following:
-
-* Any kind of white-space
-* Numerical digits
-* Punctuation: ``.,;:?!``
-* Mathematical and logical operators: ``-+*/^&|=``
-* Bracketing characters: ``<>[](){}``
-* The at symbol: ``@``
-
 **Balance**
 
 The primary objective of consolidating all transactions is to make sure that
@@ -197,6 +197,30 @@ $ goledger -f journal.ldg passbook John
 ```
 
 ``John`` is the third party for whom the passbook is generated.
+
+**equity**
+
+One way to organize journal file add all transactions in the same file year
+after year. But this can quickly get large and can become messy, it can also
+take goledger more time to process all the entries. To avoid this, we can
+split journals into separate files one for each financial-year. For this,
+``equity`` can be very handy, which can report the year end balance as a
+transaction for next year's ``Opening balance``.
+
+```bash
+goledger -f journal-2015.ldg equity > journal-2016.ldg
+```
+
+Now this come with the cost of information loss, that is, while processing
+the journal file for 2016, ``journal-2016.ldg`` goledger can't generate
+interesting reports from earlier transactions. To work around this:
+
+```bash
+goledger -f journal-2015.ldg,journal-2016.ldg -stitch register
+```
+
+use the ``-stitch`` that can skip all transactions with Payee as ``Opening
+balance``.
 
 Getting Started
 ===============
