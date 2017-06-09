@@ -27,7 +27,7 @@ source account (credit the giver) or target account (debit the receiver)
 * ``Transaction``, involving 2 or more postings, where the sum of credit
 postings should balance out the sum of debit postings.
 
-Once comfortable with above concepts, your can start book-keeping with ledger.
+Once comfortable with above concepts, we can start book-keeping with ledger.
 
 Transactions and Directives
 ===========================
@@ -116,12 +116,94 @@ receiver``. If a particular feature or a nicety is required in booking
 a transaction or in generating a report, please file an issue and let us
 see whether or how to take it forward.
 
+Ledger commands
+===============
+
+To begin with, ledger tool expects one or more journal files to process.
+As mentioned earlier, a journal file typically contains directives and
+transactions. The format of journal file is plain text.
+
+```bash
+$ goledger -f journal.ldg
+```
+
+To process more than one journal files, supply them as
+``-f journal1.ldg,journal2.lsg``. Even if the journals are not in time order
+or transactions within a journal file is not in time order, goledger will
+sort them in time order before applying them.
+
+**Including journal files**
+
+If there several journal files to be processed, it is easier to create a new
+file and include other journal files within. For example consolidate.ldg
+can have:
+
+```
+include journal1.ldg
+include journal2.ldg
+```
+
+**Account-name**
+
+There are some conventions used in account naming. Account names can be
+composed of any character except:
+
+* Double spaces and tabs
+* Mathematical and logical operators: ``-+*/^&|=``
+* Bracketing characters: ``<>[](){}``
+* The at symbol: ``@``
+* semicolon: ``;``
+
+**Commodity-name**
+
+Commodity can appear before or after the amount, and may or may not be separated
+from it by a space. Most characters are allowed in a commodity name, except
+for the following:
+
+* Any kind of white-space
+* Numerical digits
+* Punctuation: ``.,;:?!``
+* Mathematical and logical operators: ``-+*/^&|=``
+* Bracketing characters: ``<>[](){}``
+* The at symbol: ``@``
+
+**Balance**
+
+The primary objective of consolidating all transactions is to make sure that
+all debits and all credits balance out each other. So there is a ``balance``
+command.
+
+```bash
+$ goledger -f journal.ldg balance
+```
+
+It is also possible to filter out accounts listed in a balance report, for
+instance the below command will list only accounts containing ``Asset:``:
+
+```bash
+$ goledger -f journal.ldg balance Asset:
+```
+
+**Passbook**
+
+A passbook implies transaction between one account, let us call this as
+third party account, and all other accounts. The third party many not be
+interested in all the other accounts, from his/her point of view the contra
+posting in a transaction to all the other accounts are irrelevant. In such
+cases we can generate a passbook and give it to them:
+
+```bash
+$ goledger -f journal.ldg passbook John
+```
+
+``John`` is the third party for whom the passbook is generated.
+
 Getting Started
 ===============
 
 There are plans to package ledger for different platforms, like windows,
 ubuntu, mac, raspberry-pi, debian etc.. Until then, goledger can be
-obtained via golang-tools. If you are a mac user or linux user,
+obtained via golang-tools. For mac or linux users,
 [install Golang](https://golang.org/doc/install), and:
 
 ```bash
