@@ -242,6 +242,14 @@ func TestAccountType(t *testing.T) {
 			[]string{"-f", "acctypeerr3.ldg", "balance"},
 			"refdata/acctypeerr3.ref",
 		},
+		[]interface{}{
+			[]string{"-f", "pl.ldg", "-onlypl", "balance"},
+			"refdata/pl.balance.onlypl.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "pl.ldg", "-nopl", "balance"},
+			"refdata/pl.balance.nopl.ref",
+		},
 	}
 	for _, testcase := range testcases {
 		ref := testdataFile(testcase[1].(string))

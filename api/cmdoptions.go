@@ -26,6 +26,8 @@ var Options struct {
 	Pedantic   bool
 	Checkpayee bool
 	Stitch     bool
+	Nopl       bool
+	Onlypl     bool
 	Verbose    bool
 	Outfd      *os.File
 	Loglevel   string

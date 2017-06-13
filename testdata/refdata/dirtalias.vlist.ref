@@ -2,6 +2,5 @@
 account Expenses:Entertainment:Dining
     note  Eating out once a week
     alias  Dining
-    type  exchange
 
 

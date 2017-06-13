@@ -63,6 +63,10 @@ func argparse() ([]string, error) {
 		"Payee not previously declared will cause error.")
 	f.BoolVar(&api.Options.Stitch, "stitch", false,
 		"Skip payees with `Opening Balance`")
+	f.BoolVar(&api.Options.Nopl, "nopl", false,
+		"skip income and expense accounts")
+	f.BoolVar(&api.Options.Onlypl, "onlypl", false,
+		"skip accounts other than income and expense")
 	f.BoolVar(&api.Options.Verbose, "v", false,
 		"verbose reporting / listing")
 

@@ -1,0 +1,48 @@
+account Expenses:Dinning
+    type  expense
+account Expenses:Groceries
+    type  expense
+account Income:Contract1
+    type  income
+account Income:Contract2
+    type  income
+account Income:Salary
+    type  income
+account Profit and loss
+    type  income,expense
+
+2011/01/29  My Employer
+    Asset:Checking      500.00
+    Income:Salary      -500.00
+
+2011/01/29  My Employer
+    Asset:Cash         500.00
+    Income:Contract1  -500.00
+
+2011/01/29  My Employer
+    Asset:Checking     500.00
+    Income:Contract2  -500.00
+
+2011/03/15   Deposit
+    Asset:FD:KVB1   75.00
+    Asset:Checking       -75.00
+
+2011/03/15   Deposit
+    Asset:FD:KVB2   75.00
+    Asset:Cash       -75.00
+
+2011/03/15   Departmental store
+    Expenses:Groceries   100.00
+    Asset:Checking
+
+2011/03/15   KFC
+    Expenses:Dinning   75.00
+    Asset:Checking
+
+2011/03/15   Chats
+    Expenses:Dinning   75.00
+    Asset:Checking
+
+2011/03/31  Year ending
+    Profit and loss   1250
+    Capital           -1250

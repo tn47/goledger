@@ -1,28 +1,7 @@
 
-  By-date      Payee               Account                   Amount  Balance 
-                                                                             
-  2011-Jan-29  My Employer         Assets:Checking Income   500.00   500.00  
-                                   Income:Salary           -500.00     0.00  
-  2011-Feb-15  Departmental store  Expen                    100.00   100.00  
-                                   Assets:Checking         -100.00     0.00  
-  2011-Mar-15  KFC                 Expenses:Dinning          75.00    75.00  
-                                   Assets:Checking          -75.00     0.00  
-  2011-Apr-15  Chats               Expenses:Dinning          10.00    10.00  
-                                   Assets:Checking          -10.00     0.00  
-  2011-May-15  Dinner              Expenses:Dinning          25.00    25.00  
-                                   Assets:Checking          -25.00     0.00  
-  2011-Jun-15  Breakfast           Expenses:Dinning          15.00    15.00  
-                                   Assets:Checking          -15.00     0.00  
-  2011-Jul-15  Snacks              Expenses:Dinning           5.00     5.00  
-                                   Assets:Checking           -5.00     0.00  
-  2011-Aug-29  Pen                 Expenses:Stationary       10.00    10.00  
-                                   Assets:Checking          -10.00     0.00  
-  2011-Sep-15  Departmental store  Expenses:Groceries        50.00    50.00  
-                                   Assets:Checking          -50.00     0.00  
-  2011-Oct-15  KFC                 Expenses:Dinning          75.00    75.00  
-                                   Assets:Checking          -75.00     0.00  
-  2011-Nov-15  Chats               Expenses:Dinning          15.00    15.00  
-                                   Assets:Checking          -15.00     0.00  
-  2011-Dec-15  Chats               Expenses:Dinning           5.00     5.00  
-                                   Assets:Checking           -5.00     0.00  
+  By-date      Payee      Account                  Debit   Credit   Balance 
+                                                                            
+  2012-Mar-10  My Broker  Assets:Brokerage       10 AAPL            10 AAPL 
+                          Assets:Brokerage:Cash           $500.00  $-500.00 
+                                                                    10 AAPL 
 

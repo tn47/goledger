@@ -6,6 +6,11 @@ import "strings"
 import "github.com/prataprc/goparsec"
 import "github.com/tn47/goledger/api"
 
+var accountTypes = []string{
+	"credit", "debit", "creditbalance", "debitbalance",
+	"income", "expense", "accrual",
+}
+
 // Account implements api.Accounter{} interface.
 type Account struct {
 	name       string
@@ -26,7 +31,7 @@ func NewAccount(name string) *Account {
 	acc := &Account{
 		name:  name,
 		de:    NewDoubleEntry(name),
-		types: []string{"exchange"},
+		types: []string{},
 	}
 	return acc
 }
@@ -386,6 +391,9 @@ func (acc *Account) assert(comm, bal *Commodity) error {
 }
 
 func (acc *Account) assertcredit() error {
+	if api.HasString(acc.types, "credit") {
+		return nil
+	}
 	if api.HasString(acc.types, "debit") {
 		return fmt.Errorf("account %q cannot be source", acc.name)
 	}
@@ -393,6 +401,9 @@ func (acc *Account) assertcredit() error {
 }
 
 func (acc *Account) assertdebit() error {
+	if api.HasString(acc.types, "debit") {
+		return nil
+	}
 	if api.HasString(acc.types, "credit") {
 		return fmt.Errorf("account %q cannot be target", acc.name)
 	}
@@ -400,18 +411,20 @@ func (acc *Account) assertdebit() error {
 }
 
 func (acc *Account) assertcrb() error {
-	ok := api.HasString(acc.types, "debit")
-	ok = ok || api.HasString(acc.types, "debitbalance")
-	if ok {
+	if api.HasString(acc.types, "creditbalance") {
+		return nil
+	}
+	if api.HasString(acc.types, "debitbalance") {
 		return fmt.Errorf("account %q cannot have credit balance", acc.name)
 	}
 	return nil
 }
 
 func (acc *Account) assertdrb() error {
-	ok := api.HasString(acc.types, "credit")
-	ok = ok || api.HasString(acc.types, "creditbalance")
-	if ok {
+	if api.HasString(acc.types, "debitbalance") {
+		return nil
+	}
+	if api.HasString(acc.types, "creditbalance") {
 		return fmt.Errorf("account %q cannot have debit balance", acc.name)
 	}
 	return nil

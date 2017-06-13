@@ -69,6 +69,12 @@ func (report *ReportBalance) Posting(
 	if api.FilterPeriod(trans.Date(), true /*nobegin*/) == false {
 		return nil
 	}
+	if api.Options.Nopl && (acc.IsIncome() || acc.IsExpense()) {
+		return nil
+	}
+	if api.Options.Onlypl && !(acc.IsIncome() || acc.IsExpense()) {
+		return nil
+	}
 
 	// final balance
 	report.de.AddBalance(p.Commodity().(*dblentry.Commodity))
