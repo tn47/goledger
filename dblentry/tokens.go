@@ -77,8 +77,8 @@ var ytokDefault = parsec.Atom("default", "DRTV_DEFAULT")
 
 // tags
 var ytokColon = parsec.Atom(":", "COLON")
-var ytokTag = parsec.Token(":[^ \t\r\n]", "TAG")
-var ytokTagK = parsec.Token("[^ \t\r\n]:[ \t]", "TAGKEY")
+var ytokTag = parsec.Token(":[^ \t\r\n]*", "TAG")
+var ytokTagK = parsec.Token("[^ \t\r\n]+:[ \t]", "TAGKEY")
 var ytokTagV = parsec.Token(".+", "TAGVALUE")
 
 //

@@ -44,8 +44,8 @@ func (tag *Tags) Yledger(db *Datastore) parsec.Parser {
 	)
 	ytagm := parsec.And(
 		func(nodes []parsec.ParsecNode) parsec.ParsecNode {
-			key := string(nodes[0].(*parsec.Terminal).Value)
-			val := string(nodes[1].(*parsec.Terminal).Value)
+			key := strings.Trim(nodes[0].(*parsec.Terminal).Value, ": \t")
+			val := strings.Trim(nodes[1].(*parsec.Terminal).Value, " \t")
 			return map[string]interface{}{key: val}
 		},
 		ytokTagK, ytokTagV,
@@ -58,7 +58,7 @@ func (tag *Tags) Yledger(db *Datastore) parsec.Parser {
 				tag.tags = append(tag.tags, obj...)
 			case map[string]interface{}:
 				for k, v := range obj {
-					tag.tagm[k] = v
+					tag.tagm[strings.ToLower(k)] = v
 				}
 			}
 			return tag

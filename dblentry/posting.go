@@ -59,7 +59,7 @@ func (p *Posting) getMetadata(key string) interface{} {
 }
 
 func (p *Posting) setMetadata(key string, value interface{}) {
-	p.metadata[key] = value
+	p.metadata[strings.ToLower(key)] = value
 }
 
 func (p *Posting) isVirtual() bool {
@@ -197,9 +197,10 @@ func (p *Posting) Yledger(db *Datastore) parsec.Parser {
 
 				// optionally tags or tagkv or note
 				if note, ok := items[7].(*parsec.Terminal); ok {
-					scanner := parsec.NewScanner([]byte(note.Value))
+					input := strings.Trim(note.Value, "; ")
+					scanner := parsec.NewScanner([]byte(input))
 					if node, _ := NewTag().Yledger(db)(scanner); node == nil {
-						p.note = string(note.Value)
+						p.note = note.Value
 
 					} else {
 						tag := node.(*Tags)
