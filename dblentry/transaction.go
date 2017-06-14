@@ -47,7 +47,7 @@ func (trans *Transaction) getMetadata(key string) interface{} {
 }
 
 func (trans *Transaction) setMetadata(key string, value interface{}) {
-	trans.metadata[key] = value
+	trans.metadata[strings.ToLower(key)] = value
 }
 
 func (trans *Transaction) getState() string {
