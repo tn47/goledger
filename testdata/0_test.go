@@ -228,6 +228,7 @@ func TestZeroSource(t *testing.T) {
 		}
 	}
 }
+
 func TestAccountType(t *testing.T) {
 	testcases := [][]interface{}{
 		[]interface{}{
@@ -296,6 +297,33 @@ func TestBasic(t *testing.T) {
 		[]interface{}{
 			[]string{"-f", "lotdate.ldg", "print"},
 			"refdata/lotdate.print.ref",
+		},
+	}
+	for _, testcase := range testcases {
+		ref := testdataFile(testcase[1].(string))
+		args := testcase[0].([]string)
+		cmd := exec.Command(LEDGEREXEC, args...)
+		out, _ := cmd.CombinedOutput()
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
+		if bytes.Compare(out, ref) != 0 {
+			t.Logf(strings.Join(args, " "))
+			t.Logf("expected %s", ref)
+			t.Errorf("got %s", out)
+		}
+	}
+}
+
+func TestTags(t *testing.T) {
+	testcases := [][]interface{}{
+		[]interface{}{
+			[]string{"-f", "payeemeta.ldg", "register"},
+			"refdata/payeemeta.register.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "payeemeta.ldg", "-dc", "register", "@", "One"},
+			"refdata/payeemeta.register.dc.ref",
 		},
 	}
 	for _, testcase := range testcases {
