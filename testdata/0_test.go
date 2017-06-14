@@ -637,6 +637,15 @@ func TestDates(t *testing.T) {
 			"refdata/dates.register3.dc.ref",
 		},
 		[]interface{}{
+			[]string{"-f", "dates.ldg", "-detailed", "register", "Expenses"},
+			"refdata/dates.register.detailed1.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "dates.ldg", "-detailed", "register",
+				"Expenses:Sta"},
+			"refdata/dates.register.detailed2.ref",
+		},
+		[]interface{}{
 			[]string{"-f", "dates.ldg", "equity"},
 			"refdata/dates.equity.ref",
 		},

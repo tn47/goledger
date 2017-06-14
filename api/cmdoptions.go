@@ -28,6 +28,7 @@ var Options struct {
 	Stitch     bool
 	Nopl       bool
 	Onlypl     bool
+	Detailed   bool
 	Verbose    bool
 	Outfd      *os.File
 	Loglevel   string

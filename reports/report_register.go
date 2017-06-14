@@ -69,19 +69,20 @@ func (report *ReportRegister) Transaction(
 	}
 
 	date, transpayee := trans.Date().Format("2006-Jan-02"), trans.Payee()
+	matchok := false // short-circuit for matchForDetail()
 	for _, p := range trans.GetPostings() {
 		var cols []string
+		var ok bool
 
-		accname := p.Account().Name()
-		if report.isfilteracc() && report.fe.Match(accname) == false {
+		accname, payee, comm := p.Account().Name(), p.Payee(), p.Commodity()
+
+		ok, matchok = report.matchForDetail(matchok, accname, payee)
+		if ok == false {
 			continue
 		}
-		if report.isfilterpayee() && report.pfe.Match(p.Payee()) == false {
-			continue
-		}
-		comm := p.Commodity()
-		report.de.AddBalance(comm)
+
 		amountstr := comm.String()
+		report.de.AddBalance(comm)
 		if api.Options.Dcformat == false {
 			cols = []string{date, transpayee, accname, amountstr, ""}
 		} else if comm.IsDebit() {
@@ -233,14 +234,6 @@ func (report *ReportRegister) Startjournal(fname string, included bool) {
 	panic("not implemented")
 }
 
-func (report *ReportRegister) isfilteracc() bool {
-	return report.fe != nil
-}
-
-func (report *ReportRegister) isfilterpayee() bool {
-	return report.pfe != nil
-}
-
 func (report *ReportRegister) fillbalances(cols []string) [][]string {
 	balances := report.de.Balances()
 	if len(balances) == 0 {
@@ -287,4 +280,33 @@ func (report *ReportRegister) fillbalancesDc(cols []string) [][]string {
 		rows = append(rows, cols)
 	}
 	return rows
+}
+
+func (report *ReportRegister) matchForDetail(
+	matchok bool, accname, payee string) (bool, bool) {
+
+	if api.Options.Detailed && matchok {
+		return true, true
+	}
+	if report.isfilteracc() {
+		if report.fe.Match(accname) {
+			return true, true
+		}
+		return false, false
+	}
+	if report.isfilterpayee() {
+		if report.pfe.Match(payee) {
+			return true, true
+		}
+		return false, false
+	}
+	return true, false
+}
+
+func (report *ReportRegister) isfilteracc() bool {
+	return report.fe != nil
+}
+
+func (report *ReportRegister) isfilterpayee() bool {
+	return report.pfe != nil
 }

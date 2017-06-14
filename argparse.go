@@ -67,6 +67,8 @@ func argparse() ([]string, error) {
 		"skip income and expense accounts")
 	f.BoolVar(&api.Options.Onlypl, "onlypl", false,
 		"skip accounts other than income and expense")
+	f.BoolVar(&api.Options.Detailed, "detailed", false,
+		"for register, passbook commands list details")
 	f.BoolVar(&api.Options.Verbose, "v", false,
 		"verbose reporting / listing")
 
