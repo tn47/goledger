@@ -1,6 +1,8 @@
 package reports
 
 import "fmt"
+import "time"
+import "sort"
 
 import "github.com/prataprc/goparsec"
 
@@ -13,10 +15,13 @@ type ReportRegister struct {
 	rcf *RCformat
 	fe  *api.Filterexpr
 	pfe *api.Filterexpr
-	// mapreduce-1, mapreduce-2
+	// common for all map-reduce
+	lastcomm api.Commoditiser
 	register [][]string
 	de       *dblentry.DoubleEntry
-	lastcomm api.Commoditiser
+	// mapreduce-3
+	begindt, enddt *time.Time
+	accounts       map[string]*dblentry.DoubleEntry
 }
 
 // NewReportRegister create an instance for register reporting.
@@ -26,6 +31,7 @@ func NewReportRegister(args []string) (*ReportRegister, error) {
 		register: make([][]string, 0),
 		de:       dblentry.NewDoubleEntry("registerbalance"),
 		lastcomm: dblentry.NewCommodity(""),
+		accounts: make(map[string]*dblentry.DoubleEntry),
 	}
 
 	filteraccounts := []string{}
@@ -69,7 +75,9 @@ func (report *ReportRegister) Transaction(
 		return nil
 	}
 
-	if api.Options.Dcformat == false {
+	if api.Options.Subtotal {
+		return report.mapreduce3(db, trans)
+	} else if api.Options.Dcformat == false {
 		return report.mapreduce1(db, trans)
 	}
 	return report.mapreduce2(db, trans)
@@ -89,7 +97,10 @@ func (report *ReportRegister) BubblePosting(
 }
 
 func (report *ReportRegister) Render(args []string, db api.Datastorer) {
-	if api.Options.Dcformat == false {
+	if api.Options.Subtotal {
+		report.render3(args, db)
+		return
+	} else if api.Options.Dcformat == false {
 		report.render1(args, db)
 		return
 	}
@@ -216,6 +227,68 @@ func (report *ReportRegister) fillbalancesDc(cols []string) [][]string {
 	return rows
 }
 
+// -subtotal register
+func (report *ReportRegister) mapreduce3(
+	db api.Datastorer, trans api.Transactor) error {
+
+	date := trans.Date()
+	if report.begindt == nil || date.Before(*report.begindt) {
+		report.begindt = &date
+	}
+	if report.enddt == nil || date.After(*report.enddt) {
+		report.enddt = &date
+	}
+
+	for _, p := range trans.GetPostings() {
+		accname, payee := p.Account().Name(), p.Payee()
+		if ok, _ := report.filterOrDetail(false, accname, payee); ok == false {
+			continue
+		}
+		if _, ok := report.accounts[accname]; ok == false {
+			report.accounts[accname] = dblentry.NewDoubleEntry(accname)
+		}
+		report.accounts[accname].AddBalance(p.Commodity())
+	}
+
+	accnames := []string{}
+	for accname := range report.accounts {
+		accnames = append(accnames, accname)
+	}
+	sort.Strings(accnames)
+
+	runde := dblentry.NewDoubleEntry("subtotal")
+	report.register = [][]string{}
+	for _, accname := range accnames {
+		de, rows, balnames := report.accounts[accname], [][]string{}, []string{}
+		for _, abal := range de.Balances() {
+			cols := []string{"", "", "", "", ""}
+			if abal.IsDebit() {
+				cols[2] = abal.String()
+			} else if abal.IsCredit() {
+				cols[3] = abal.MakeSimilar(-abal.Amount()).String()
+			}
+			runde.AddBalance(abal)
+			cols[4] = runde.Balance(abal.Name()).String()
+			rows, balnames = append(rows, cols), append(balnames, abal.Name())
+		}
+		for _, bal := range runde.Balances() {
+			if api.HasString(balnames, bal.Name()) {
+				continue
+			}
+			cols := []string{"", "", "", "", bal.String()}
+			rows = append(rows, cols)
+		}
+		rows[0][1] = accname
+		report.register = append(report.register, rows...)
+	}
+	if len(report.register) > 0 {
+		x := report.begindt.Format("2006-Jan-02")
+		y := report.enddt.Format("2006-Jan-02")
+		report.register[0][0] = fmt.Sprintf("%v to %v", x, y)
+	}
+	return nil
+}
+
 func (report *ReportRegister) filterOrDetail(
 	matchok bool, accname, payee string) (bool, bool) {
 
@@ -328,6 +401,46 @@ func (report *ReportRegister) render2(args []string, db api.Datastorer) {
 		} else {
 			x := CommodityColor(db, comm1, cols[5])
 			items = append(items, api.YellowFn(cols[2]), cols[3], cols[4], x)
+		}
+		fmt.Fprintf(outfd, fmsg, items...)
+	}
+	fmt.Fprintln(outfd)
+}
+
+func (report *ReportRegister) render3(args []string, db api.Datastorer) {
+	rcf := report.rcf
+
+	cols := []string{"By-date", "Account", "Debit", "Credit", "Balance"}
+	rcf.addrow(cols...)
+	rcf.addrow([]string{"", "", "", "", ""}...)
+
+	for _, cols := range report.register {
+		report.rcf.addrow(cols...)
+	}
+
+	w0 := rcf.maxwidth(rcf.column(0)) // Date
+	w1 := rcf.maxwidth(rcf.column(1)) // Account name
+	w2 := rcf.maxwidth(rcf.column(2)) // Debit
+	w3 := rcf.maxwidth(rcf.column(3)) // Credit
+	w4 := rcf.maxwidth(rcf.column(4)) // Balance (amount)
+	if (w0 + w1 + w2 + w3 + w4) > 135 {
+		w1 = rcf.FitAccountname(1, 135-w0-w2-w3-w4)
+	}
+
+	rcf.paddcells()
+	fmsg := rcf.Fmsg(" %%-%vs%%-%vs%%-%vs%%%vs%%%vs\n")
+	comm1 := dblentry.NewCommodity("")
+
+	// start printing
+	outfd := api.Options.Outfd
+	fmt.Fprintln(outfd)
+	for i, cols := range report.rcf.rows {
+		items := []interface{}{cols[0]}
+		if i < 2 {
+			items = append(items, cols[1], cols[2], cols[3], cols[4])
+		} else {
+			x := CommodityColor(db, comm1, cols[4])
+			items = append(items, api.YellowFn(cols[1]), cols[2], cols[3], x)
 		}
 		fmt.Fprintf(outfd, fmsg, items...)
 	}

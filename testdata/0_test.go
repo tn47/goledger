@@ -342,6 +342,41 @@ func TestTags(t *testing.T) {
 	}
 }
 
+func TestSubtotal(t *testing.T) {
+	testcases := [][]interface{}{
+		[]interface{}{
+			[]string{"-f", "dates.ldg", "-subtotal", "register"},
+			"refdata/dates.register.subtotal.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "mixedcomm1.ldg", "-subtotal", "register"},
+			"refdata/mixedcomm1.register.subtotal.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "mixedcomm2.ldg", "-subtotal", "register"},
+			"refdata/mixedcomm2.register.subtotal.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "mixedcomm3.ldg", "-subtotal", "register"},
+			"refdata/mixedcomm3.register.subtotal.ref",
+		},
+	}
+	for _, testcase := range testcases {
+		ref := testdataFile(testcase[1].(string))
+		args := testcase[0].([]string)
+		cmd := exec.Command(LEDGEREXEC, args...)
+		out, _ := cmd.CombinedOutput()
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
+		if bytes.Compare(out, ref) != 0 {
+			t.Logf(strings.Join(args, " "))
+			t.Logf("expected %s", ref)
+			t.Errorf("got %s", out)
+		}
+	}
+}
+
 func TestPassbook(t *testing.T) {
 	testcases := [][]interface{}{
 		[]interface{}{

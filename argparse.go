@@ -39,6 +39,8 @@ func argparse() ([]string, error) {
 		"Limit the processing to transactions in PERIOD_EXPRESSION.")
 	f.BoolVar(&api.Options.Nosubtotal, "nosubtotal", false,
 		"Don't accumulate postings on sub-leger to parent ledger.")
+	f.BoolVar(&api.Options.Subtotal, "subtotal", false,
+		"all transactions to be collapsed into a single, transaction")
 	f.BoolVar(&api.Options.Cleared, "cleared", true,
 		"Display only cleared postings.")
 	f.BoolVar(&api.Options.Uncleared, "uncleared", true,

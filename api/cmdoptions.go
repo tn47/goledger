@@ -15,6 +15,7 @@ var Options struct {
 	Finyear    int
 	Period     string
 	Nosubtotal bool
+	Subtotal   bool
 	Cleared    bool
 	Uncleared  bool
 	Pending    bool
