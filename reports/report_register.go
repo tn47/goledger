@@ -10,9 +10,10 @@ import "github.com/tn47/goledger/dblentry"
 
 // ReportRegister for register reporting.
 type ReportRegister struct {
-	rcf      *RCformat
-	fe       *api.Filterexpr
-	pfe      *api.Filterexpr
+	rcf *RCformat
+	fe  *api.Filterexpr
+	pfe *api.Filterexpr
+	// mapreduce-1, mapreduce-2
 	register [][]string
 	de       *dblentry.DoubleEntry
 	lastcomm api.Commoditiser
@@ -68,43 +69,10 @@ func (report *ReportRegister) Transaction(
 		return nil
 	}
 
-	date, transpayee := trans.Date().Format("2006-Jan-02"), trans.Payee()
-	matchok := false // short-circuit for matchForDetail()
-	for _, p := range trans.GetPostings() {
-		var cols []string
-		var ok bool
-
-		accname, payee, comm := p.Account().Name(), p.Payee(), p.Commodity()
-
-		ok, matchok = report.matchForDetail(matchok, accname, payee)
-		if ok == false {
-			continue
-		}
-
-		amountstr := comm.String()
-		report.de.AddBalance(comm)
-		if api.Options.Dcformat == false {
-			cols = []string{date, transpayee, accname, amountstr, ""}
-		} else if comm.IsDebit() {
-			cols = []string{date, transpayee, accname, amountstr, "", ""}
-		} else if comm.IsCredit() {
-			amountstr = comm.MakeSimilar(-comm.Amount()).String()
-			cols = []string{date, transpayee, accname, "", amountstr, ""}
-		}
-		if p.Payee() != trans.Payee() {
-			cols[1] = p.Payee()
-		}
-		var rows [][]string
-		if api.Options.Dcformat {
-			rows = report.fillbalancesDc(cols)
-		} else {
-			rows = report.fillbalances(cols)
-		}
-		report.register = append(report.register, rows...)
-
-		date, transpayee = "", ""
+	if api.Options.Dcformat == false {
+		return report.mapreduce1(db, trans)
 	}
-	return nil
+	return report.mapreduce2(db, trans)
 }
 
 func (report *ReportRegister) Posting(
@@ -121,16 +89,163 @@ func (report *ReportRegister) BubblePosting(
 }
 
 func (report *ReportRegister) Render(args []string, db api.Datastorer) {
-	if api.Options.Dcformat {
-		report.renderDcRegister(args, db)
-	} else {
-		report.renderRegister(args, db)
+	if api.Options.Dcformat == false {
+		report.render1(args, db)
+		return
 	}
+	report.render2(args, db)
 }
 
-func (report *ReportRegister) renderRegister(
-	args []string, db api.Datastorer) {
+func (report *ReportRegister) Clone() api.Reporter {
+	nreport := *report
+	nreport.rcf = report.rcf.Clone()
+	nreport.pfe = report.pfe
+	nreport.fe = report.fe
+	nreport.register = make([][]string, 0)
+	return &nreport
+}
 
+func (report *ReportRegister) Startjournal(fname string, included bool) {
+	panic("not implemented")
+}
+
+// [-detailed] register
+func (report *ReportRegister) mapreduce1(
+	db api.Datastorer, trans api.Transactor) error {
+
+	date, transpayee := trans.Date().Format("2006-Jan-02"), trans.Payee()
+	matchok := false
+	for _, p := range trans.GetPostings() {
+		var ok bool
+		accname, payee, comm := p.Account().Name(), p.Payee(), p.Commodity()
+		ok, matchok = report.filterOrDetail(matchok, accname, payee)
+		if ok == false {
+			continue
+		}
+		cols := []string{date, transpayee, accname, comm.String(), ""}
+		if p.Payee() != trans.Payee() {
+			cols[1] = p.Payee()
+		}
+		date, transpayee = "", ""
+
+		report.de.AddBalance(comm) // should come before fillbalances
+
+		report.register = append(report.register, report.fillbalances(cols)...)
+	}
+	return nil
+}
+
+func (report *ReportRegister) fillbalances(cols []string) [][]string {
+	balances := report.de.Balances()
+	if len(balances) == 0 {
+		return [][]string{cols}
+	}
+
+	date, payee, accname, amount := cols[0], cols[1], cols[2], cols[3]
+	rows := [][]string{}
+	for _, balance := range balances {
+		if balance.Amount() == 0 {
+			continue
+		}
+		cols := []string{date, payee, accname, amount, balance.String()}
+		rows = append(rows, cols)
+		date, payee, accname, amount = "", "", "", ""
+		report.lastcomm = balance
+	}
+	if len(rows) == 0 {
+		cols := []string{date, payee, accname, amount, report.lastcomm.String()}
+		rows = append(rows, cols)
+	}
+	return rows
+}
+
+// -dc [-detailed] register
+func (report *ReportRegister) mapreduce2(
+	db api.Datastorer, trans api.Transactor) error {
+
+	date, transpayee := trans.Date().Format("2006-Jan-02"), trans.Payee()
+	matchok := false // short-circuit for filterOrDetail()
+	for _, p := range trans.GetPostings() {
+		var ok bool
+		accname, payee, comm := p.Account().Name(), p.Payee(), p.Commodity()
+		ok, matchok = report.filterOrDetail(matchok, accname, payee)
+		if ok == false {
+			continue
+		}
+		amountstr := comm.String()
+		cols := []string{date, transpayee, accname}
+		if comm.IsDebit() {
+			cols = append(cols, amountstr, "", "")
+		} else if comm.IsCredit() {
+			amount := -comm.Amount()
+			cols = append(cols, "", comm.MakeSimilar(amount).String(), "")
+		}
+		if p.Payee() != trans.Payee() {
+			cols[1] = p.Payee()
+		}
+		date, transpayee = "", ""
+
+		report.de.AddBalance(comm) // should come before fillbalancesDc
+
+		report.register = append(report.register, report.fillbalancesDc(cols)...)
+	}
+	return nil
+}
+
+func (report *ReportRegister) fillbalancesDc(cols []string) [][]string {
+	balances := report.de.Balances()
+	if len(balances) == 0 {
+		return [][]string{cols}
+	}
+
+	date, payee, accname, dr, cr := cols[0], cols[1], cols[2], cols[3], cols[4]
+	rows := [][]string{}
+	for _, balance := range balances {
+		if balance.Amount() == 0 {
+			continue
+		}
+		cols := []string{date, payee, accname, dr, cr, balance.String()}
+		rows = append(rows, cols)
+		date, payee, accname, dr, cr = "", "", "", "", ""
+		report.lastcomm = balance
+	}
+	if len(rows) == 0 {
+		cols := []string{date, payee, accname, dr, cr, report.lastcomm.String()}
+		rows = append(rows, cols)
+	}
+	return rows
+}
+
+func (report *ReportRegister) filterOrDetail(
+	matchok bool, accname, payee string) (bool, bool) {
+
+	if api.Options.Detailed && matchok {
+		return true, true
+	}
+	if report.isfilteracc() {
+		if report.fe.Match(accname) {
+			return true, true
+		}
+		return false, false
+	}
+	if report.isfilterpayee() {
+		if report.pfe.Match(payee) {
+			return true, true
+		}
+		return false, false
+	}
+	return true, false
+}
+
+func (report *ReportRegister) isfilteracc() bool {
+	return report.fe != nil
+}
+
+func (report *ReportRegister) isfilterpayee() bool {
+	return report.pfe != nil
+}
+
+func (report *ReportRegister) render1(args []string, db api.Datastorer) {
 	rcf := report.rcf
 
 	cols := []string{"By-date", "Payee", "Account", "Amount", "Balance"}
@@ -175,9 +290,7 @@ func (report *ReportRegister) renderRegister(
 	fmt.Fprintln(outfd)
 }
 
-func (report *ReportRegister) renderDcRegister(
-	args []string, db api.Datastorer) {
-
+func (report *ReportRegister) render2(args []string, db api.Datastorer) {
 	rcf := report.rcf
 
 	cols := []string{"By-date", "Payee", "Account", "Debit", "Credit", "Balance"}
@@ -219,94 +332,4 @@ func (report *ReportRegister) renderDcRegister(
 		fmt.Fprintf(outfd, fmsg, items...)
 	}
 	fmt.Fprintln(outfd)
-}
-
-func (report *ReportRegister) Clone() api.Reporter {
-	nreport := *report
-	nreport.rcf = report.rcf.Clone()
-	nreport.pfe = report.pfe
-	nreport.fe = report.fe
-	nreport.register = make([][]string, 0)
-	return &nreport
-}
-
-func (report *ReportRegister) Startjournal(fname string, included bool) {
-	panic("not implemented")
-}
-
-func (report *ReportRegister) fillbalances(cols []string) [][]string {
-	balances := report.de.Balances()
-	if len(balances) == 0 {
-		return [][]string{cols}
-	}
-
-	date, payee, accname, amount := cols[0], cols[1], cols[2], cols[3]
-	rows := [][]string{}
-	for _, balance := range balances {
-		if balance.Amount() == 0 {
-			continue
-		}
-		cols := []string{date, payee, accname, amount, balance.String()}
-		rows = append(rows, cols)
-		date, payee, accname, amount = "", "", "", ""
-		report.lastcomm = balance
-	}
-	if len(rows) == 0 {
-		cols := []string{date, payee, accname, amount, report.lastcomm.String()}
-		rows = append(rows, cols)
-	}
-	return rows
-}
-
-func (report *ReportRegister) fillbalancesDc(cols []string) [][]string {
-	balances := report.de.Balances()
-	if len(balances) == 0 {
-		return [][]string{cols}
-	}
-
-	date, payee, accname, dr, cr := cols[0], cols[1], cols[2], cols[3], cols[4]
-	rows := [][]string{}
-	for _, balance := range balances {
-		if balance.Amount() == 0 {
-			continue
-		}
-		cols := []string{date, payee, accname, dr, cr, balance.String()}
-		rows = append(rows, cols)
-		date, payee, accname, dr, cr = "", "", "", "", ""
-		report.lastcomm = balance
-	}
-	if len(rows) == 0 {
-		cols := []string{date, payee, accname, dr, cr, report.lastcomm.String()}
-		rows = append(rows, cols)
-	}
-	return rows
-}
-
-func (report *ReportRegister) matchForDetail(
-	matchok bool, accname, payee string) (bool, bool) {
-
-	if api.Options.Detailed && matchok {
-		return true, true
-	}
-	if report.isfilteracc() {
-		if report.fe.Match(accname) {
-			return true, true
-		}
-		return false, false
-	}
-	if report.isfilterpayee() {
-		if report.pfe.Match(payee) {
-			return true, true
-		}
-		return false, false
-	}
-	return true, false
-}
-
-func (report *ReportRegister) isfilteracc() bool {
-	return report.fe != nil
-}
-
-func (report *ReportRegister) isfilterpayee() bool {
-	return report.pfe != nil
 }
