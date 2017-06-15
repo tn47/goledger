@@ -407,6 +407,16 @@ func TestPassbook(t *testing.T) {
 			[]string{"-f", "mixedcomm1.ldg", "passbook", "EverQuest:Inventory"},
 			"refdata/mixedcomm1.passbook.ref",
 		},
+		[]interface{}{
+			[]string{"-f", "dates.ldg", "-bypayee", "passbook",
+				"Expenses:Dinning"},
+			"refdata/dates.passbook.bypayee1.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "dates.ldg", "-bypayee", "passbook",
+				"Assets:Checking"},
+			"refdata/dates.passbook.bypayee2.ref",
+		},
 	}
 	for _, testcase := range testcases {
 		ref := testdataFile(testcase[1].(string))

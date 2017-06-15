@@ -1,21 +1,31 @@
 package reports
 
-import "strings"
 import "fmt"
+import "sort"
+import "time"
+import "strings"
 
 import "github.com/prataprc/golog"
 import "github.com/tn47/goledger/api"
 import "github.com/tn47/goledger/dblentry"
 
 type ReportPassbook struct {
-	rcf      *RCformat
-	accname  string
+	rcf     *RCformat
+	accname string
+	// common to all mapreduce
 	postings [][]string
+	// mapreduce-2
+	findates map[string]*time.Time            // payee -> time
+	payees   map[string]*dblentry.DoubleEntry // payee -> de
+	de       *dblentry.DoubleEntry
 }
 
 func NewReportPassbook(args []string) (*ReportPassbook, error) {
 	report := &ReportPassbook{
-		rcf: NewRCformat(), postings: make([][]string, 0),
+		rcf:      NewRCformat(),
+		postings: make([][]string, 0),
+		findates: make(map[string]*time.Time),
+		payees:   make(map[string]*dblentry.DoubleEntry),
 	}
 
 	if len(args) == 1 {
@@ -48,12 +58,10 @@ func (report *ReportPassbook) Posting(
 		return nil
 	}
 
-	acc := p.Account()
-	if acc.Name() == report.accname {
-		rows := acc.FmtPassbook(db, trans, p, acc)
-		report.postings = append(report.postings, rows...)
+	if api.Options.Bypayee {
+		return report.mapreduce2(db, trans, p)
 	}
-	return nil
+	return report.mapreduce1(db, trans, p)
 }
 
 func (report *ReportPassbook) BubblePosting(
@@ -64,6 +72,95 @@ func (report *ReportPassbook) BubblePosting(
 }
 
 func (report *ReportPassbook) Render(args []string, db api.Datastorer) {
+	if api.Options.Bypayee {
+		report.prerender2(args, db)
+	}
+	report.render1(args, db)
+}
+
+func (report *ReportPassbook) Clone() api.Reporter {
+	nreport := *report
+	nreport.rcf = report.rcf.Clone()
+	nreport.postings = make([][]string, 0, len(report.postings))
+	for _, posting := range report.postings {
+		nreport.postings = append(nreport.postings, posting)
+	}
+	return &nreport
+}
+
+func (report *ReportPassbook) Startjournal(fname string, included bool) {
+	panic("not implemented")
+}
+
+func (report *ReportPassbook) mapreduce1(
+	db api.Datastorer, trans api.Transactor, p api.Poster) error {
+
+	acc := p.Account()
+	if acc.Name() == report.accname {
+		rows := acc.FmtPassbook(db, trans, p, acc)
+		report.postings = append(report.postings, rows...)
+	}
+	return nil
+}
+
+func (report *ReportPassbook) mapreduce2(
+	db api.Datastorer, trans api.Transactor, p api.Poster) error {
+
+	if p.Account().Name() != report.accname {
+		return nil
+	}
+
+	date, payee := trans.Date(), p.Payee()
+	findate, ok := report.findates[payee]
+	if ok == false || findate.Before(date) {
+		report.findates[payee] = &date
+	}
+	_, ok = report.payees[payee]
+	if ok == false {
+		report.payees[payee] = dblentry.NewDoubleEntry(payee)
+	}
+	report.payees[payee].AddBalance(p.Commodity())
+	return nil
+}
+
+func (report *ReportPassbook) prerender2(args []string, db api.Datastorer) {
+	payees := []string{}
+	for payee := range report.payees {
+		payees = append(payees, payee)
+	}
+	sort.Strings(payees)
+
+	report.de = dblentry.NewDoubleEntry("passbook")
+	for _, payee := range payees {
+		de, balrows, balnames := report.payees[payee], [][]string{}, []string{}
+		for _, bal := range de.Balances() {
+			cols := []string{"", ""} // date, payee
+			if bal.IsDebit() {
+				cols = append(cols, bal.String(), "", "")
+			} else if bal.IsCredit() {
+				amtstr := bal.MakeSimilar(-bal.Amount()).String()
+				cols = append(cols, "", amtstr, "")
+			}
+			report.de.AddBalance(bal)
+			cols[len(cols)-1] = report.de.Balance(bal.Name()).String()
+			balnames = append(balnames, bal.Name())
+			balrows = append(balrows, cols)
+		}
+		for _, bal := range report.de.Balances() {
+			if api.HasString(balnames, bal.Name()) {
+				continue
+			}
+			balrows = append(balrows, []string{"", "", "", "", bal.String()})
+		}
+		if len(balrows) > 0 {
+			balrows[0][0] = report.findates[payee].Format("2006-Jan-02")
+			balrows[0][1] = payee
+		}
+		report.postings = append(report.postings, balrows...)
+	}
+}
+
+func (report *ReportPassbook) render1(args []string, db api.Datastorer) {
 	rcf := report.rcf
 
 	cols := []string{"By-date", "Payee", "Debit", "Credit", "Balance"}
@@ -100,18 +197,4 @@ func (report *ReportPassbook) Render(args []string, db api.Datastorer) {
 		fmt.Fprintf(outfd, fmsg, items...)
 	}
 	fmt.Fprintln(outfd)
-}
-
-func (report *ReportPassbook) Clone() api.Reporter {
-	nreport := *report
-	nreport.rcf = report.rcf.Clone()
-	nreport.postings = make([][]string, 0, len(report.postings))
-	for _, posting := range report.postings {
-		nreport.postings = append(nreport.postings, posting)
-	}
-	return &nreport
-}
-
-func (report *ReportPassbook) Startjournal(fname string, included bool) {
-	panic("not implemented")
 }
