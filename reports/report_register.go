@@ -98,6 +98,7 @@ func (report *ReportRegister) BubblePosting(
 
 func (report *ReportRegister) Render(args []string, db api.Datastorer) {
 	if api.Options.Subtotal {
+		report.prerender3(args, db)
 		report.render3(args, db)
 		return
 	} else if api.Options.Dcformat == false {
@@ -250,42 +251,6 @@ func (report *ReportRegister) mapreduce3(
 		report.accounts[accname].AddBalance(p.Commodity())
 	}
 
-	accnames := []string{}
-	for accname := range report.accounts {
-		accnames = append(accnames, accname)
-	}
-	sort.Strings(accnames)
-
-	runde := dblentry.NewDoubleEntry("subtotal")
-	report.register = [][]string{}
-	for _, accname := range accnames {
-		de, rows, balnames := report.accounts[accname], [][]string{}, []string{}
-		for _, abal := range de.Balances() {
-			cols := []string{"", "", "", "", ""}
-			if abal.IsDebit() {
-				cols[2] = abal.String()
-			} else if abal.IsCredit() {
-				cols[3] = abal.MakeSimilar(-abal.Amount()).String()
-			}
-			runde.AddBalance(abal)
-			cols[4] = runde.Balance(abal.Name()).String()
-			rows, balnames = append(rows, cols), append(balnames, abal.Name())
-		}
-		for _, bal := range runde.Balances() {
-			if api.HasString(balnames, bal.Name()) {
-				continue
-			}
-			cols := []string{"", "", "", "", bal.String()}
-			rows = append(rows, cols)
-		}
-		rows[0][1] = accname
-		report.register = append(report.register, rows...)
-	}
-	if len(report.register) > 0 {
-		x := report.begindt.Format("2006-Jan-02")
-		y := report.enddt.Format("2006-Jan-02")
-		report.register[0][0] = fmt.Sprintf("%v to %v", x, y)
-	}
 	return nil
 }
 
@@ -405,6 +370,45 @@ func (report *ReportRegister) render2(args []string, db api.Datastorer) {
 		fmt.Fprintf(outfd, fmsg, items...)
 	}
 	fmt.Fprintln(outfd)
+}
+
+func (report *ReportRegister) prerender3(args []string, db api.Datastorer) {
+	accnames := []string{}
+	for accname := range report.accounts {
+		accnames = append(accnames, accname)
+	}
+	sort.Strings(accnames)
+
+	report.de = dblentry.NewDoubleEntry("subtotal")
+	report.register = [][]string{}
+	for _, accname := range accnames {
+		de, rows, balnames := report.accounts[accname], [][]string{}, []string{}
+		for _, abal := range de.Balances() {
+			cols := []string{"", "", "", "", ""}
+			if abal.IsDebit() {
+				cols[2] = abal.String()
+			} else if abal.IsCredit() {
+				cols[3] = abal.MakeSimilar(-abal.Amount()).String()
+			}
+			report.de.AddBalance(abal)
+			cols[4] = report.de.Balance(abal.Name()).String()
+			rows, balnames = append(rows, cols), append(balnames, abal.Name())
+		}
+		for _, bal := range report.de.Balances() {
+			if api.HasString(balnames, bal.Name()) {
+				continue
+			}
+			cols := []string{"", "", "", "", bal.String()}
+			rows = append(rows, cols)
+		}
+		rows[0][1] = accname
+		report.register = append(report.register, rows...)
+	}
+	if len(report.register) > 0 {
+		x := report.begindt.Format("2006-Jan-02")
+		y := report.enddt.Format("2006-Jan-02")
+		report.register[0][0] = fmt.Sprintf("%v to %v", x, y)
+	}
 }
 
 func (report *ReportRegister) render3(args []string, db api.Datastorer) {
