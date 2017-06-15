@@ -28,6 +28,7 @@ var Options struct {
 	Onlypl     bool
 	Detailed   bool
 	Bypayee    bool
+	Daily      bool
 	Verbose    bool
 	Outfd      *os.File
 	Loglevel   string

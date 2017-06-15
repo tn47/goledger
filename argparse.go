@@ -67,6 +67,8 @@ func argparse() ([]string, error) {
 		"for register, passbook commands list details")
 	f.BoolVar(&api.Options.Bypayee, "bypayee", false,
 		"Group postings by common payee names")
+	f.BoolVar(&api.Options.Daily, "daily", false,
+		"Group postings by day")
 	f.BoolVar(&api.Options.Verbose, "v", false,
 		"verbose reporting / listing")
 

@@ -1,0 +1,21 @@
+
+  By-date      Payee               Account                   Amount   Balance 
+                                                                              
+  2011-Jun-15  Breakfast           Assets:Checking          -15.00    -15.00  
+                                   Expenses:Dinning          15.00      0.00  
+  2011-Dec-15  Chats               Assets:Checking          -30.00    -30.00  
+                                   Expenses:Dinning          30.00      0.00  
+  2011-Sep-15  Departmental store  Assets:Checking         -150.00   -150.00  
+                                   Expen                    100.00    -50.00  
+                                   Expenses:Groceries        50.00      0.00  
+  2011-May-15  Dinner              Assets:Checking          -25.00    -25.00  
+                                   Expenses:Dinning          25.00      0.00  
+  2011-Oct-15  KFC                 Assets:Checking         -150.00   -150.00  
+                                   Expenses:Dinning         150.00      0.00  
+  2011-Jan-29  My Employer         Assets:Checking Income   500.00    500.00  
+                                   Income:Salary           -500.00      0.00  
+  2011-Aug-29  Pen                 Assets:Checking          -10.00    -10.00  
+                                   Expenses:Stationary       10.00      0.00  
+  2011-Jul-15  Snacks              Assets:Checking           -5.00     -5.00  
+                                   Expenses:Dinning           5.00      0.00  
+

@@ -25,6 +25,9 @@ type ReportRegister struct {
 	// mapreduce-3
 	findates map[string]*time.Time                       // payee -> date string
 	payees   map[string]map[string]*dblentry.DoubleEntry // payee -> accounts
+	// mapreduce-4
+	dailytm []string                                    // array of datestr
+	daily   map[string]map[string]*dblentry.DoubleEntry // datestr -> accounts
 }
 
 // NewReportRegister create an instance for register reporting.
@@ -80,7 +83,9 @@ func (report *ReportRegister) Transaction(
 		return nil
 	}
 
-	if api.Options.Bypayee {
+	if api.Options.Daily {
+		return report.mapreduce4(db, trans)
+	} else if api.Options.Bypayee {
 		return report.mapreduce3(db, trans)
 	} else if api.Options.Subtotal {
 		return report.mapreduce2(db, trans)
@@ -102,12 +107,23 @@ func (report *ReportRegister) BubblePosting(
 }
 
 func (report *ReportRegister) Render(args []string, db api.Datastorer) {
-	if api.Options.Subtotal {
-		report.prerender3(args, db)
-		report.render3(args, db)
-		return
+	nopayee := false
+	if api.Options.Daily {
+		report.prerender5(args, db)
+		nopayee = true
 	} else if api.Options.Bypayee {
 		report.prerender4(args, db)
+	} else if api.Options.Subtotal {
+		report.prerender3(args, db)
+		nopayee = true
+	}
+
+	if nopayee && api.Options.Dcformat {
+		report.render4(args, db)
+		return
+	} else if nopayee {
+		report.render3(args, db)
+		return
 	}
 
 	if api.Options.Dcformat == false {
@@ -135,14 +151,12 @@ func (report *ReportRegister) mapreduce1(
 	db api.Datastorer, trans api.Transactor) error {
 
 	date, transpayee := trans.Date().Format("2006-Jan-02"), trans.Payee()
-	matchok := false // short-circuit for filterOrDetail
+	filterfn := report.matchAccOrPayee(trans)
 	for _, p := range trans.GetPostings() {
-		var ok bool
-		accname, payee, comm := p.Account().Name(), p.Payee(), p.Commodity()
-		ok, matchok = report.filterOrDetail(matchok, accname, payee)
-		if ok == false {
+		if filterfn(p) == false {
 			continue
 		}
+		accname, comm := p.Account().Name(), p.Commodity()
 		cols := []string{date, transpayee, accname}
 		if api.Options.Dcformat == false {
 			cols = append(cols, comm.String(), "")
@@ -228,11 +242,12 @@ func (report *ReportRegister) mapreduce2(
 		report.enddt = &date
 	}
 
+	filterfn := report.matchAccOrPayee(trans)
 	for _, p := range trans.GetPostings() {
-		accname, payee := p.Account().Name(), p.Payee()
-		if ok, _ := report.filterOrDetail(false, accname, payee); ok == false {
+		if filterfn(p) == false {
 			continue
 		}
+		accname := p.Account().Name()
 		if _, ok := report.accounts[accname]; ok == false {
 			report.accounts[accname] = dblentry.NewDoubleEntry(accname)
 		}
@@ -242,12 +257,15 @@ func (report *ReportRegister) mapreduce2(
 	return nil
 }
 
-// -subtotal register
+// -bypayee register
 func (report *ReportRegister) mapreduce3(
 	db api.Datastorer, trans api.Transactor) error {
 
-	date := trans.Date()
+	date, filterfn := trans.Date(), report.matchAccOrPayee(trans)
 	for _, p := range trans.GetPostings() {
+		if filterfn(p) == false {
+			continue
+		}
 		accname, payee := p.Account().Name(), p.Payee()
 		_, ok := report.findates[payee]
 		if ok == false || report.findates[payee].Before(date) {
@@ -268,25 +286,53 @@ func (report *ReportRegister) mapreduce3(
 	return nil
 }
 
-func (report *ReportRegister) filterOrDetail(
-	matchok bool, accname, payee string) (bool, bool) {
+// -daily register
+func (report *ReportRegister) mapreduce4(
+	db api.Datastorer, trans api.Transactor) error {
 
-	if api.Options.Detailed && matchok {
-		return true, true
-	}
-	if report.isfilteracc() {
-		if report.fe.Match(accname) {
-			return true, true
+	report.daily = make(map[string]map[string]*dblentry.DoubleEntry)
+	datestr := trans.Date().Format("2006-Jan-02")
+	filterfn := report.matchAccOrPayee(trans)
+	for _, p := range trans.GetPostings() {
+		if filterfn(p) == false {
+			continue
 		}
-		return false, false
-	}
-	if report.isfilterpayee() {
-		if report.pfe.Match(payee) {
-			return true, true
+		accname := p.Account().Name()
+		accounts, ok := report.daily[datestr]
+		if ok == false {
+			accounts = make(map[string]*dblentry.DoubleEntry)
+			report.daily[datestr] = accounts
+			report.dailytm = append(report.dailytm, datestr)
 		}
-		return false, false
+		accde, ok := accounts[accname]
+		if ok == false {
+			accde = dblentry.NewDoubleEntry(datestr + "/" + accname)
+			accounts[accname] = accde
+		}
+		accde.AddBalance(p.Commodity())
 	}
-	return true, false
+	return nil
+}
+
+func (report *ReportRegister) matchAccOrPayee(
+	trans api.Transactor) func(p api.Poster) bool {
+
+	matchtrans := false
+	for _, p := range trans.GetPostings() {
+		accname, payee := p.Account().Name(), p.Payee()
+		accok := report.isfilteracc() == false || report.fe.Match(accname)
+		payeeok := report.isfilterpayee() == false || report.pfe.Match(payee)
+		matchtrans = matchtrans || (accok && payeeok)
+	}
+	return func(p api.Poster) bool {
+		if api.Options.Detailed && matchtrans {
+			return true
+		}
+		accname, payee := p.Account().Name(), p.Payee()
+		accok := report.isfilteracc() == false || report.fe.Match(accname)
+		payeeok := report.isfilterpayee() == false || report.pfe.Match(payee)
+		return accok && payeeok
+	}
 }
 
 func (report *ReportRegister) isfilteracc() bool {
@@ -386,6 +432,90 @@ func (report *ReportRegister) render2(args []string, db api.Datastorer) {
 	fmt.Fprintln(outfd)
 }
 
+// nopayee
+func (report *ReportRegister) render3(args []string, db api.Datastorer) {
+	rcf := report.rcf
+
+	cols := []string{"By-date", "Account", "Amount", "Balance"}
+	rcf.addrow(cols...)
+	rcf.addrow([]string{"", "", "", ""}...)
+
+	for _, cols := range report.register {
+		report.rcf.addrow(cols...)
+	}
+
+	w0 := rcf.maxwidth(rcf.column(0)) // Date
+	w1 := rcf.maxwidth(rcf.column(1)) // Account name
+	w2 := rcf.maxwidth(rcf.column(2)) // Amount
+	w3 := rcf.maxwidth(rcf.column(3)) // Balance (amount)
+	if (w0 + w1 + w2 + w3) > 70 {
+		w1 = rcf.FitAccountname(1, 70-w0-w2-w3)
+	}
+
+	rcf.paddcells()
+	fmsg := rcf.Fmsg(" %%-%vs%%-%vs%%%vs%%%vs\n")
+	comm1 := dblentry.NewCommodity("")
+	comm2 := dblentry.NewCommodity("")
+
+	// start printing
+	outfd := api.Options.Outfd
+	fmt.Fprintln(outfd)
+	for i, cols := range report.rcf.rows {
+		items := []interface{}{cols[0]}
+		if i < 2 {
+			items = append(items, cols[1], cols[2], cols[3])
+		} else {
+			x := CommodityColor(db, comm1, cols[2])
+			y := CommodityColor(db, comm2, cols[3])
+			items = append(items, api.YellowFn(cols[1]), x, y)
+		}
+		fmt.Fprintf(outfd, fmsg, items...)
+	}
+	fmt.Fprintln(outfd)
+}
+
+// nopayee, dcformat
+func (report *ReportRegister) render4(args []string, db api.Datastorer) {
+	rcf := report.rcf
+
+	cols := []string{"By-date", "Account", "Debit", "Credit", "Balance"}
+	rcf.addrow(cols...)
+	rcf.addrow([]string{"", "", "", "", ""}...)
+
+	for _, cols := range report.register {
+		report.rcf.addrow(cols...)
+	}
+
+	w0 := rcf.maxwidth(rcf.column(0)) // Date
+	w1 := rcf.maxwidth(rcf.column(1)) // Account name
+	w2 := rcf.maxwidth(rcf.column(2)) // Debit
+	w3 := rcf.maxwidth(rcf.column(3)) // Credit
+	w4 := rcf.maxwidth(rcf.column(4)) // Balance (amount)
+	if (w0 + w1 + w2 + w3 + w4) > 135 {
+		w1 = rcf.FitAccountname(1, 135-w0-w2-w3-w4)
+	}
+
+	rcf.paddcells()
+	fmsg := rcf.Fmsg(" %%-%vs%%-%vs%%-%vs%%%vs%%%vs\n")
+	comm1 := dblentry.NewCommodity("")
+
+	// start printing
+	outfd := api.Options.Outfd
+	fmt.Fprintln(outfd)
+	for i, cols := range report.rcf.rows {
+		items := []interface{}{cols[0]}
+		if i < 2 {
+			items = append(items, cols[1], cols[2], cols[3], cols[4])
+		} else {
+			x := CommodityColor(db, comm1, cols[4])
+			items = append(items, api.YellowFn(cols[1]), cols[2], cols[3], x)
+		}
+		fmt.Fprintf(outfd, fmsg, items...)
+	}
+	fmt.Fprintln(outfd)
+}
+
+// -subtotal
 func (report *ReportRegister) prerender3(args []string, db api.Datastorer) {
 	accnames := []string{}
 	for accname := range report.accounts {
@@ -399,7 +529,9 @@ func (report *ReportRegister) prerender3(args []string, db api.Datastorer) {
 		de, rows, balnames := report.accounts[accname], [][]string{}, []string{}
 		for _, abal := range de.Balances() {
 			cols := []string{"", ""} // date-range, accname
-			if abal.IsDebit() {
+			if api.Options.Dcformat == false {
+				cols = append(cols, abal.String(), "")
+			} else if abal.IsDebit() {
 				cols = append(cols, abal.String(), "", "")
 			} else if abal.IsCredit() {
 				abalstr := abal.MakeSimilar(-abal.Amount()).String()
@@ -413,7 +545,11 @@ func (report *ReportRegister) prerender3(args []string, db api.Datastorer) {
 			if api.HasString(balnames, bal.Name()) {
 				continue
 			}
-			rows = append(rows, []string{"", "", "", "", bal.String()})
+			if api.Options.Dcformat {
+				rows = append(rows, []string{"", "", "", "", bal.String()})
+			} else {
+				rows = append(rows, []string{"", "", "", bal.String()})
+			}
 		}
 		rows[0][1] = accname
 		report.register = append(report.register, rows...)
@@ -425,6 +561,7 @@ func (report *ReportRegister) prerender3(args []string, db api.Datastorer) {
 	}
 }
 
+// -bypayee
 func (report *ReportRegister) prerender4(args []string, db api.Datastorer) {
 	payees := []string{}
 	for payee := range report.payees {
@@ -488,42 +625,59 @@ func (report *ReportRegister) prerender4(args []string, db api.Datastorer) {
 	}
 }
 
-func (report *ReportRegister) render3(args []string, db api.Datastorer) {
-	rcf := report.rcf
-
-	cols := []string{"By-date", "Account", "Debit", "Credit", "Balance"}
-	rcf.addrow(cols...)
-	rcf.addrow([]string{"", "", "", "", ""}...)
-
-	for _, cols := range report.register {
-		report.rcf.addrow(cols...)
-	}
-
-	w0 := rcf.maxwidth(rcf.column(0)) // Date
-	w1 := rcf.maxwidth(rcf.column(1)) // Account name
-	w2 := rcf.maxwidth(rcf.column(2)) // Debit
-	w3 := rcf.maxwidth(rcf.column(3)) // Credit
-	w4 := rcf.maxwidth(rcf.column(4)) // Balance (amount)
-	if (w0 + w1 + w2 + w3 + w4) > 135 {
-		w1 = rcf.FitAccountname(1, 135-w0-w2-w3-w4)
-	}
-
-	rcf.paddcells()
-	fmsg := rcf.Fmsg(" %%-%vs%%-%vs%%-%vs%%%vs%%%vs\n")
-	comm1 := dblentry.NewCommodity("")
-
-	// start printing
-	outfd := api.Options.Outfd
-	fmt.Fprintln(outfd)
-	for i, cols := range report.rcf.rows {
-		items := []interface{}{cols[0]}
-		if i < 2 {
-			items = append(items, cols[1], cols[2], cols[3], cols[4])
-		} else {
-			x := CommodityColor(db, comm1, cols[4])
-			items = append(items, api.YellowFn(cols[1]), cols[2], cols[3], x)
+// -daily
+func (report *ReportRegister) prerender5(args []string, db api.Datastorer) {
+	sortaccount := func(accounts map[string]*dblentry.DoubleEntry) []string {
+		accnames := []string{}
+		for accname := range accounts {
+			accnames = append(accnames, accname)
 		}
-		fmt.Fprintf(outfd, fmsg, items...)
+		sort.Strings(accnames)
+		return accnames
 	}
-	fmt.Fprintln(outfd)
+
+	report.de = dblentry.NewDoubleEntry("regbalance")
+	report.register = [][]string{}
+	for _, datestr := range report.dailytm {
+		daterows, balrows, balnames := [][]string{}, [][]string{}, []string{}
+		accnames := sortaccount(report.daily[datestr])
+		for _, accname := range accnames {
+			de := report.daily[datestr][accname]
+			accrows := [][]string{}
+			for _, abal := range de.Balances() {
+				cols := []string{"", ""} // date-range, accname
+				if api.Options.Dcformat == false {
+					cols = append(cols, abal.String(), "")
+				} else if abal.IsDebit() {
+					cols = append(cols, abal.String(), "", "")
+				} else if abal.IsCredit() {
+					abalstr := abal.MakeSimilar(-abal.Amount()).String()
+					cols = append(cols, "", abalstr, "")
+				}
+				report.de.AddBalance(abal)
+				cols[len(cols)-1] = report.de.Balance(abal.Name()).String()
+				accrows = append(accrows, cols)
+				balnames = append(balnames, abal.Name())
+			}
+			accrows[0][2] = accname
+			balrows = append(balrows, accrows...)
+		}
+		daterows = append(daterows, balrows...)
+
+		for _, bal := range report.de.Balances() {
+			if api.HasString(balnames, bal.Name()) {
+				continue
+			}
+			var cols []string
+			if api.Options.Dcformat {
+				cols = []string{"", "", "", "", bal.String()}
+			} else {
+				cols = []string{"", "", "", bal.String()}
+			}
+			daterows = append(daterows, cols)
+		}
+
+		daterows[0][0] = datestr
+		report.register = append(report.register, daterows...)
+	}
 }

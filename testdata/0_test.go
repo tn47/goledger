@@ -346,19 +346,35 @@ func TestSubtotal(t *testing.T) {
 	testcases := [][]interface{}{
 		[]interface{}{
 			[]string{"-f", "dates.ldg", "-subtotal", "register"},
-			"refdata/dates.register.subtotal.ref",
+			"refdata/dates.register.subtotal1.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "mixedcomm1.ldg", "-subtotal", "register"},
-			"refdata/mixedcomm1.register.subtotal.ref",
+			"refdata/mixedcomm1.register.subtotal1.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "mixedcomm2.ldg", "-subtotal", "register"},
-			"refdata/mixedcomm2.register.subtotal.ref",
+			"refdata/mixedcomm2.register.subtotal1.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "mixedcomm3.ldg", "-subtotal", "register"},
-			"refdata/mixedcomm3.register.subtotal.ref",
+			"refdata/mixedcomm3.register.subtotal1.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "dates.ldg", "-subtotal", "-dc", "register"},
+			"refdata/dates.register.subtotal2.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "mixedcomm1.ldg", "-subtotal", "-dc", "register"},
+			"refdata/mixedcomm1.register.subtotal2.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "mixedcomm2.ldg", "-subtotal", "-dc", "register"},
+			"refdata/mixedcomm2.register.subtotal2.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "mixedcomm3.ldg", "-subtotal", "-dc", "register"},
+			"refdata/mixedcomm3.register.subtotal2.ref",
 		},
 	}
 	for _, testcase := range testcases {
@@ -724,11 +740,20 @@ func TestDates(t *testing.T) {
 		},
 		[]interface{}{
 			[]string{"-f", "dates.ldg", "-bypayee", "register"},
-			"refdata/dates.register.bypayee.ref",
+			"refdata/dates.register.bypayee1.ref",
 		},
 		[]interface{}{
 			[]string{"-f", "dates.ldg", "-bypayee", "-dc", "register"},
-			"refdata/dates.register.bypayee.dc.ref",
+			"refdata/dates.register.bypayee1.dc.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "dates.ldg", "-bypayee", "register", "Dinning"},
+			"refdata/dates.register.bypayee2.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "dates.ldg", "-bypayee", "-dc", "register",
+				"Asset"},
+			"refdata/dates.register.bypayee2.dc.ref",
 		},
 	}
 	for _, testcase := range testcases {

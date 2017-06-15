@@ -1,0 +1,16 @@
+
+  By-date                     Account                   Amount   Balance 
+                                                                         
+  2017-Sep-29 to 2017-Sep-29  Asset:Checking             $-100     $-100 
+                              EverQuest:Inventory1    3 Apples  3 Apples 
+                                                                   $-100 
+                              EverQuest:Inventory2    5 Steaks  5 Steaks 
+                                                                   $-100 
+                                                                3 Apples 
+                              Expense:Food                $100        $0 
+                                                                3 Apples 
+                                                                5 Steaks 
+                              Places:Black's Tavern  -3 Apples  0 Apples 
+                                                     -5 Steaks  0 Steaks 
+                                                                      $0 
+
