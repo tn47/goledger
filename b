@@ -1,5 +1,0 @@
-                  By-date      Payee  Account              Amount  Balance
-
-                  2012-Mar-10  KFC    Expenses:Food        $20.00   $20.00
-                                      Assets:Cash         $-10.00   $10.00
-                                      Liabilities:Credit  $-10.00       0

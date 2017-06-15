@@ -712,6 +712,14 @@ func TestDates(t *testing.T) {
 			[]string{"-f", "dates.ldg", "equity"},
 			"refdata/dates.equity.ref",
 		},
+		[]interface{}{
+			[]string{"-f", "dates.ldg", "-bypayee", "register"},
+			"refdata/dates.register.bypayee.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "dates.ldg", "-bypayee", "-dc", "register"},
+			"refdata/dates.register.bypayee.dc.ref",
+		},
 	}
 	for _, testcase := range testcases {
 		ref := testdataFile(testcase[1].(string))

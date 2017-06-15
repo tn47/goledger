@@ -47,12 +47,6 @@ func argparse() ([]string, error) {
 		"Display only uncleared postings.")
 	f.BoolVar(&api.Options.Pending, "pending", true,
 		"Display only pending postings.")
-	f.BoolVar(&api.Options.Onlyreal, "real", true,
-		"Display only real postings.")
-	f.BoolVar(&api.Options.Onlyactual, "actual", true,
-		"Display only actual postings, not automated ones.")
-	f.BoolVar(&api.Options.Related, "related", false,
-		"Display only related postings.")
 	f.BoolVar(&api.Options.Dcformat, "dc", false,
 		"Display only real postings.")
 	f.BoolVar(&api.Options.Strict, "strict", false,
@@ -71,6 +65,8 @@ func argparse() ([]string, error) {
 		"skip accounts other than income and expense")
 	f.BoolVar(&api.Options.Detailed, "detailed", false,
 		"for register, passbook commands list details")
+	f.BoolVar(&api.Options.Bypayee, "bypayee", false,
+		"Group postings by common payee names")
 	f.BoolVar(&api.Options.Verbose, "v", false,
 		"verbose reporting / listing")
 

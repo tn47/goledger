@@ -19,9 +19,6 @@ var Options struct {
 	Cleared    bool
 	Uncleared  bool
 	Pending    bool
-	Onlyreal   bool
-	Onlyactual bool
-	Related    bool
 	Dcformat   bool
 	Strict     bool
 	Pedantic   bool
@@ -30,6 +27,7 @@ var Options struct {
 	Nopl       bool
 	Onlypl     bool
 	Detailed   bool
+	Bypayee    bool
 	Verbose    bool
 	Outfd      *os.File
 	Loglevel   string
