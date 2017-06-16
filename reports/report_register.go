@@ -37,6 +37,8 @@ type ReportRegister struct {
 	quarterly map[int]map[int]map[string]*dblentry.DoubleEntry
 	// mapreduce-8 year->account->de
 	yearly map[int]map[string]*dblentry.DoubleEntry
+	// mapreduce-8 year->account->de
+	dow map[time.Weekday]map[string]*dblentry.DoubleEntry
 }
 
 // NewReportRegister create an instance for register reporting.
@@ -55,6 +57,7 @@ func NewReportRegister(args []string) (*ReportRegister, error) {
 		monthly:   make(map[int]map[int]map[string]*dblentry.DoubleEntry),
 		quarterly: make(map[int]map[int]map[string]*dblentry.DoubleEntry),
 		yearly:    make(map[int]map[string]*dblentry.DoubleEntry),
+		dow:       make(map[time.Weekday]map[string]*dblentry.DoubleEntry),
 	}
 
 	filteraccounts := []string{}
@@ -98,7 +101,9 @@ func (report *ReportRegister) Transaction(
 		return nil
 	}
 
-	if api.Options.Yearly {
+	if api.Options.Dow {
+		return report.mapreduce9(db, trans)
+	} else if api.Options.Yearly {
 		return report.mapreduce8(db, trans)
 	} else if api.Options.Quarterly {
 		return report.mapreduce7(db, trans)
@@ -131,7 +136,10 @@ func (report *ReportRegister) BubblePosting(
 
 func (report *ReportRegister) Render(args []string, db api.Datastorer) {
 	nopayee := false
-	if api.Options.Yearly {
+	if api.Options.Dow {
+		report.prerender10(args, db)
+		nopayee = true
+	} else if api.Options.Yearly {
 		report.prerender9(args, db)
 		nopayee = true
 	} else if api.Options.Quarterly {
@@ -422,6 +430,38 @@ func (report *ReportRegister) mapreduce6(
 	return nil
 }
 
+// -quarterly register
+func (report *ReportRegister) mapreduce7(
+	db api.Datastorer, trans api.Transactor) error {
+
+	date := trans.Date()
+	year, quarter := date.Year(), int(date.Month()-1)/3
+	filterfn := report.matchAccOrPayee(trans)
+	for _, p := range trans.GetPostings() {
+		if filterfn(p) == false {
+			continue
+		}
+		quarters, ok := report.quarterly[year]
+		if ok == false {
+			quarters = make(map[int]map[string]*dblentry.DoubleEntry)
+			report.quarterly[year] = quarters
+		}
+		accounts, ok := quarters[quarter]
+		if ok == false {
+			accounts = make(map[string]*dblentry.DoubleEntry)
+			quarters[quarter] = accounts
+		}
+		accname := p.Account().Name()
+		accde, ok := accounts[accname]
+		if ok == false {
+			accde = dblentry.NewDoubleEntry(fmt.Sprintf("%v/%v", year, quarter))
+			accounts[accname] = accde
+		}
+		accde.AddBalance(p.Commodity())
+	}
+	return nil
+}
+
 // -yearly register
 func (report *ReportRegister) mapreduce8(
 	db api.Datastorer, trans api.Transactor) error {
@@ -448,31 +488,25 @@ func (report *ReportRegister) mapreduce8(
 	return nil
 }
 
-// -quarterly register
-func (report *ReportRegister) mapreduce7(
+// -dow register
+func (report *ReportRegister) mapreduce9(
 	db api.Datastorer, trans api.Transactor) error {
 
-	date := trans.Date()
-	year, quarter := date.Year(), int(date.Month()-1)/3
+	dow := trans.Date().Weekday()
 	filterfn := report.matchAccOrPayee(trans)
 	for _, p := range trans.GetPostings() {
 		if filterfn(p) == false {
 			continue
 		}
-		quarters, ok := report.quarterly[year]
-		if ok == false {
-			quarters = make(map[int]map[string]*dblentry.DoubleEntry)
-			report.quarterly[year] = quarters
-		}
-		accounts, ok := quarters[quarter]
+		accounts, ok := report.dow[dow]
 		if ok == false {
 			accounts = make(map[string]*dblentry.DoubleEntry)
-			quarters[quarter] = accounts
+			report.dow[dow] = accounts
 		}
 		accname := p.Account().Name()
 		accde, ok := accounts[accname]
 		if ok == false {
-			accde = dblentry.NewDoubleEntry(fmt.Sprintf("%v/%v", year, quarter))
+			accde = dblentry.NewDoubleEntry(fmt.Sprintf("%v", dow))
 			accounts[accname] = accde
 		}
 		accde.AddBalance(p.Commodity())
@@ -1135,6 +1169,69 @@ func (report *ReportRegister) prerender9(args []string, db api.Datastorer) {
 		}
 
 		daterows[0][0] = fmt.Sprintf("%v", year)
+		report.register = append(report.register, daterows...)
+	}
+}
+
+// -dow register
+func (report *ReportRegister) prerender10(args []string, db api.Datastorer) {
+	dows := []int{}
+	for dow := range report.dow {
+		dows = append(dows, int(dow))
+	}
+	sort.Ints(dows)
+
+	sortaccount := func(accounts map[string]*dblentry.DoubleEntry) []string {
+		accnames := []string{}
+		for accname := range accounts {
+			accnames = append(accnames, accname)
+		}
+		sort.Strings(accnames)
+		return accnames
+	}
+
+	report.de = dblentry.NewDoubleEntry("regbalance")
+	report.register = [][]string{}
+	for _, dow := range dows {
+		accounts := report.dow[time.Weekday(dow)]
+		daterows, balrows, balnames := [][]string{}, [][]string{}, []string{}
+		accnames := sortaccount(accounts)
+		for _, accname := range accnames {
+			de, accrows := accounts[accname], [][]string{}
+			for _, abal := range de.Balances() {
+				cols := []string{"", ""} // date-range, accname
+				if api.Options.Dcformat == false {
+					cols = append(cols, abal.String(), "")
+				} else if abal.IsDebit() {
+					cols = append(cols, abal.String(), "", "")
+				} else if abal.IsCredit() {
+					abalstr := abal.MakeSimilar(-abal.Amount()).String()
+					cols = append(cols, "", abalstr, "")
+				}
+				report.de.AddBalance(abal)
+				cols[len(cols)-1] = report.de.Balance(abal.Name()).String()
+				accrows = append(accrows, cols)
+				balnames = append(balnames, abal.Name())
+			}
+			accrows[0][1] = accname
+			balrows = append(balrows, accrows...)
+		}
+		daterows = append(daterows, balrows...)
+
+		for _, bal := range report.de.Balances() {
+			if api.HasString(balnames, bal.Name()) {
+				continue
+			}
+			var cols []string
+			if api.Options.Dcformat {
+				cols = []string{"", "", "", "", bal.String()}
+			} else {
+				cols = []string{"", "", "", bal.String()}
+			}
+			daterows = append(daterows, cols)
+		}
+
+		daterows[0][0] = fmt.Sprintf("%vs", time.Weekday(dow))
 		report.register = append(report.register, daterows...)
 	}
 }
