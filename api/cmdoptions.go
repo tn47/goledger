@@ -31,6 +31,7 @@ var Options struct {
 	Daily      bool
 	Weekly     bool
 	Monthly    bool
+	Quarterly  bool
 	Verbose    bool
 	Outfd      *os.File
 	Loglevel   string
