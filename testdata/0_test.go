@@ -844,6 +844,42 @@ func TestWeekly(t *testing.T) {
 	}
 }
 
+func TestMonthly(t *testing.T) {
+	testcases := [][]interface{}{
+		[]interface{}{
+			[]string{"-f", "drewr.ldg", "-monthly", "register"},
+			"refdata/drewr.register.monthly1.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "drewr.ldg", "-monthly", "-dc", "register"},
+			"refdata/drewr.register.monthly2.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "drewr.ldg", "-monthly", "register", "Expense"},
+			"refdata/drewr.register.monthly3.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "drewr.ldg", "-monthly", "-detailed", "register",
+				"Assets:Savings"},
+			"refdata/drewr.register.monthly4.ref",
+		},
+	}
+	for _, testcase := range testcases {
+		ref := testdataFile(testcase[1].(string))
+		args := testcase[0].([]string)
+		cmd := exec.Command(LEDGEREXEC, args...)
+		out, _ := cmd.CombinedOutput()
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
+		if bytes.Compare(out, ref) != 0 {
+			t.Logf(strings.Join(args, " "))
+			t.Logf("expected %s", ref)
+			t.Errorf("got %s", out)
+		}
+	}
+}
+
 func TestDate7(t *testing.T) {
 	testcases := [][]interface{}{
 		[]interface{}{

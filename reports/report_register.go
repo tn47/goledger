@@ -31,6 +31,8 @@ type ReportRegister struct {
 	// mapreduce-5 year->week->account->de
 	weeklytm map[int]map[int][2]*time.Time
 	weekly   map[int]map[int]map[string]*dblentry.DoubleEntry
+	// mapreduce-6 year->month->account->de
+	monthly map[int]map[int]map[string]*dblentry.DoubleEntry
 }
 
 // NewReportRegister create an instance for register reporting.
@@ -46,6 +48,7 @@ func NewReportRegister(args []string) (*ReportRegister, error) {
 		daily:    make(map[string]map[string]*dblentry.DoubleEntry),
 		weeklytm: make(map[int]map[int][2]*time.Time),
 		weekly:   make(map[int]map[int]map[string]*dblentry.DoubleEntry),
+		monthly:  make(map[int]map[int]map[string]*dblentry.DoubleEntry),
 	}
 
 	filteraccounts := []string{}
@@ -89,7 +92,9 @@ func (report *ReportRegister) Transaction(
 		return nil
 	}
 
-	if api.Options.Weekly {
+	if api.Options.Monthly {
+		return report.mapreduce6(db, trans)
+	} else if api.Options.Weekly {
 		return report.mapreduce5(db, trans)
 	} else if api.Options.Daily {
 		return report.mapreduce4(db, trans)
@@ -116,7 +121,10 @@ func (report *ReportRegister) BubblePosting(
 
 func (report *ReportRegister) Render(args []string, db api.Datastorer) {
 	nopayee := false
-	if api.Options.Weekly {
+	if api.Options.Monthly {
+		report.prerender7(args, db)
+		nopayee = true
+	} else if api.Options.Weekly {
 		report.prerender6(args, db)
 		nopayee = true
 	} else if api.Options.Daily {
@@ -362,6 +370,38 @@ func (report *ReportRegister) mapreduce5(
 			be[1] = &date
 		}
 		report.weeklytm[year][week] = be
+	}
+	return nil
+}
+
+// -monthly register
+func (report *ReportRegister) mapreduce6(
+	db api.Datastorer, trans api.Transactor) error {
+
+	date := trans.Date()
+	year, month := date.Year(), int(date.Month())
+	filterfn := report.matchAccOrPayee(trans)
+	for _, p := range trans.GetPostings() {
+		if filterfn(p) == false {
+			continue
+		}
+		months, ok := report.monthly[year]
+		if ok == false {
+			months = make(map[int]map[string]*dblentry.DoubleEntry)
+			report.monthly[year] = months
+		}
+		accounts, ok := months[month]
+		if ok == false {
+			accounts = make(map[string]*dblentry.DoubleEntry)
+			months[month] = accounts
+		}
+		accname := p.Account().Name()
+		accde, ok := accounts[accname]
+		if ok == false {
+			accde = dblentry.NewDoubleEntry(fmt.Sprintf("%v/%v", year, month))
+			accounts[accname] = accde
+		}
+		accde.AddBalance(p.Commodity())
 	}
 	return nil
 }
@@ -806,6 +846,82 @@ func (report *ReportRegister) prerender6(args []string, db api.Datastorer) {
 			be := report.weeklytm[year][week]
 			x, y := be[0].Format("2006-Jan-02"), be[1].Format("2006-Jan-02")
 			daterows[0][0] = fmt.Sprintf("%v - %v", x, y)
+			report.register = append(report.register, daterows...)
+		}
+	}
+}
+
+// -monthly
+func (report *ReportRegister) prerender7(args []string, db api.Datastorer) {
+	years := []int{}
+	for year := range report.monthly {
+		years = append(years, year)
+	}
+	sort.Ints(years)
+
+	sortaccount := func(accounts map[string]*dblentry.DoubleEntry) []string {
+		accnames := []string{}
+		for accname := range accounts {
+			accnames = append(accnames, accname)
+		}
+		sort.Strings(accnames)
+		return accnames
+	}
+	sortmonths := func(months map[int]map[string]*dblentry.DoubleEntry) []int {
+		monthns := []int{}
+		for month := range months {
+			monthns = append(monthns, month)
+		}
+		sort.Ints(monthns)
+		return monthns
+	}
+
+	report.de = dblentry.NewDoubleEntry("regbalance")
+	report.register = [][]string{}
+	for _, year := range years {
+		months := report.monthly[year]
+		monthns := sortmonths(months)
+		for _, month := range monthns {
+			accounts := months[month]
+			daterows, balrows, balnames := [][]string{}, [][]string{}, []string{}
+			accnames := sortaccount(accounts)
+			for _, accname := range accnames {
+				de, accrows := accounts[accname], [][]string{}
+				for _, abal := range de.Balances() {
+					cols := []string{"", ""} // date-range, accname
+					if api.Options.Dcformat == false {
+						cols = append(cols, abal.String(), "")
+					} else if abal.IsDebit() {
+						cols = append(cols, abal.String(), "", "")
+					} else if abal.IsCredit() {
+						abalstr := abal.MakeSimilar(-abal.Amount()).String()
+						cols = append(cols, "", abalstr, "")
+					}
+					report.de.AddBalance(abal)
+					cols[len(cols)-1] = report.de.Balance(abal.Name()).String()
+					accrows = append(accrows, cols)
+					balnames = append(balnames, abal.Name())
+				}
+				accrows[0][1] = accname
+				balrows = append(balrows, accrows...)
+			}
+			daterows = append(daterows, balrows...)
+
+			for _, bal := range report.de.Balances() {
+				if api.HasString(balnames, bal.Name()) {
+					continue
+				}
+				var cols []string
+				if api.Options.Dcformat {
+					cols = []string{"", "", "", "", bal.String()}
+				} else {
+					cols = []string{"", "", "", bal.String()}
+				}
+				daterows = append(daterows, cols)
+			}
+
+			tm := time.Date(year, time.Month(month), 0, 0, 0, 0, 0, time.Local)
+			daterows[0][0] = tm.Format("2006-Jan")
 			report.register = append(report.register, daterows...)
 		}
 	}

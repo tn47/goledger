@@ -1,0 +1,19 @@
+
+  By-date   Account                            Amount    Balance 
+                                                                 
+  2003-Nov  Assets:Checking                  $-225.00   $-225.00 
+            Equity:Opening Balances         $-1000.00  $-1225.00 
+            Expenses:Escrow                   $300.00   $-925.00 
+            Expenses:Food:Groceries           $225.00   $-700.00 
+            Expenses:Interest:Mortgage        $500.00   $-200.00 
+            Liabilities:Mortgage:Principal    $200.00      $0.00 
+  2003-Dec  Assets:Checking                  $1591.00   $1591.00 
+            Assets:Savings                  $-5200.00  $-3609.00 
+            Expenses:Auto                    $5500.00   $1891.00 
+            Expenses:Books                     $20.00   $1911.00 
+            Expenses:Food:Groceries           $109.00   $2020.00 
+            Income:Salary                   $-2000.00     $20.00 
+            Liabilities:MasterCard            $-20.00      $0.00 
+  2004-Jan  Assets:Checking:Business           $30.00     $30.00 
+            Income:Sales                      $-30.00      $0.00 
+
