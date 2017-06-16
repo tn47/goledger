@@ -69,6 +69,8 @@ func argparse() ([]string, error) {
 		"Group postings by common payee names")
 	f.BoolVar(&api.Options.Daily, "daily", false,
 		"Group postings by day")
+	f.BoolVar(&api.Options.Weekly, "weekly", false,
+		"Group postings by week")
 	f.BoolVar(&api.Options.Verbose, "v", false,
 		"verbose reporting / listing")
 

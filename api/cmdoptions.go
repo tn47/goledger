@@ -29,6 +29,7 @@ var Options struct {
 	Detailed   bool
 	Bypayee    bool
 	Daily      bool
+	Weekly     bool
 	Verbose    bool
 	Outfd      *os.File
 	Loglevel   string
