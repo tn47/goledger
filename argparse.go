@@ -75,6 +75,8 @@ func argparse() ([]string, error) {
 		"Group postings by month")
 	f.BoolVar(&api.Options.Quarterly, "quarterly", false,
 		"Group postings by quarter")
+	f.BoolVar(&api.Options.Yearly, "yearly", false,
+		"Group postings by yearly")
 	f.BoolVar(&api.Options.Verbose, "v", false,
 		"verbose reporting / listing")
 

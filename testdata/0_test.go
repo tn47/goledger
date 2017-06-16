@@ -916,6 +916,42 @@ func TestQuarterly(t *testing.T) {
 	}
 }
 
+func TestYearly(t *testing.T) {
+	testcases := [][]interface{}{
+		[]interface{}{
+			[]string{"-f", "drewr.ldg", "-yearly", "register"},
+			"refdata/drewr.register.yearly1.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "drewr.ldg", "-yearly", "-dc", "register"},
+			"refdata/drewr.register.yearly2.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "drewr.ldg", "-yearly", "register", "Expense"},
+			"refdata/drewr.register.yearly3.ref",
+		},
+		[]interface{}{
+			[]string{"-f", "drewr.ldg", "-yearly", "-detailed", "register",
+				"Assets:Savings"},
+			"refdata/drewr.register.yearly4.ref",
+		},
+	}
+	for _, testcase := range testcases {
+		ref := testdataFile(testcase[1].(string))
+		args := testcase[0].([]string)
+		cmd := exec.Command(LEDGEREXEC, args...)
+		out, _ := cmd.CombinedOutput()
+		if updateref {
+			ioutil.WriteFile(testcase[1].(string), out, 0660)
+		}
+		if bytes.Compare(out, ref) != 0 {
+			t.Logf(strings.Join(args, " "))
+			t.Logf("expected %s", ref)
+			t.Errorf("got %s", out)
+		}
+	}
+}
+
 func TestDate7(t *testing.T) {
 	testcases := [][]interface{}{
 		[]interface{}{
