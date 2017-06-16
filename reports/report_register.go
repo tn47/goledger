@@ -40,6 +40,7 @@ func NewReportRegister(args []string) (*ReportRegister, error) {
 		accounts: make(map[string]*dblentry.DoubleEntry),
 		findates: make(map[string]*time.Time),
 		payees:   make(map[string]map[string]*dblentry.DoubleEntry),
+		daily:    make(map[string]map[string]*dblentry.DoubleEntry),
 	}
 
 	filteraccounts := []string{}
@@ -290,7 +291,6 @@ func (report *ReportRegister) mapreduce3(
 func (report *ReportRegister) mapreduce4(
 	db api.Datastorer, trans api.Transactor) error {
 
-	report.daily = make(map[string]map[string]*dblentry.DoubleEntry)
 	datestr := trans.Date().Format("2006-Jan-02")
 	filterfn := report.matchAccOrPayee(trans)
 	for _, p := range trans.GetPostings() {
@@ -659,7 +659,7 @@ func (report *ReportRegister) prerender5(args []string, db api.Datastorer) {
 				accrows = append(accrows, cols)
 				balnames = append(balnames, abal.Name())
 			}
-			accrows[0][2] = accname
+			accrows[0][1] = accname
 			balrows = append(balrows, accrows...)
 		}
 		daterows = append(daterows, balrows...)
