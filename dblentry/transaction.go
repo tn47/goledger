@@ -6,7 +6,7 @@ import "strings"
 import "sort"
 
 import "github.com/prataprc/goparsec"
-import "github.com/prataprc/golog"
+import "github.com/bnclabs/golog"
 import "github.com/tn47/goledger/api"
 
 // Transaction instance for every transaction in the journal file.

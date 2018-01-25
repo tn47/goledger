@@ -5,7 +5,7 @@ import "sort"
 import "time"
 import "strings"
 
-import "github.com/prataprc/golog"
+import "github.com/bnclabs/golog"
 import "github.com/tn47/goledger/api"
 import "github.com/tn47/goledger/dblentry"
 

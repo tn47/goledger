@@ -4,7 +4,7 @@ import "time"
 import "fmt"
 import "regexp"
 
-import "github.com/prataprc/golog"
+import "github.com/bnclabs/golog"
 
 type firstpass struct {
 	defaultcomm string

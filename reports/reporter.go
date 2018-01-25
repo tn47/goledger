@@ -4,7 +4,7 @@ import "fmt"
 import "time"
 import "reflect"
 
-import "github.com/prataprc/golog"
+import "github.com/bnclabs/golog"
 import "github.com/tn47/goledger/api"
 
 // Reports manages all reporting commands.

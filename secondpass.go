@@ -1,6 +1,6 @@
 package main
 
-import "github.com/prataprc/golog"
+import "github.com/bnclabs/golog"
 import "github.com/tn47/goledger/api"
 
 func secondpass(db api.Datastorer) error {

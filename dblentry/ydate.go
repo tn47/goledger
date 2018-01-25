@@ -7,7 +7,7 @@ import "strings"
 import "strconv"
 
 import "github.com/prataprc/goparsec"
-import "github.com/prataprc/golog"
+import "github.com/bnclabs/golog"
 import "github.com/tn47/goledger/api"
 
 //---- ledger parser

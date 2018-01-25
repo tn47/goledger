@@ -7,7 +7,7 @@ import "runtime/debug"
 import "path/filepath"
 
 import "github.com/prataprc/goparsec"
-import "github.com/prataprc/golog"
+import "github.com/bnclabs/golog"
 import "github.com/tn47/goledger/dblentry"
 import "github.com/tn47/goledger/api"
 import "github.com/tn47/goledger/reports"

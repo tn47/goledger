@@ -3,7 +3,7 @@ package main
 import "os"
 import "fmt"
 
-import "github.com/prataprc/golog"
+import "github.com/bnclabs/golog"
 import "github.com/tn47/goledger/dblentry"
 import "github.com/tn47/goledger/reports"
 import "github.com/tn47/goledger/api"

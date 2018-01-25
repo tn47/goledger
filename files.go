@@ -8,7 +8,7 @@ import "strings"
 import "io/ioutil"
 import "path/filepath"
 
-import "github.com/prataprc/golog"
+import "github.com/bnclabs/golog"
 
 func readlines(filepath string) ([]string, error) {
 	fd, err := os.Open(filepath)
