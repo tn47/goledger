@@ -1,7 +1,7 @@
 Command line accounting
 =======================
 
-[![Join the chat at https://gitter.im/tn47/goledger](https://badges.gitter.im/tn47/goledger.svg)](https://gitter.im/tn47/goledger?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![talk on matrix](https://github.com/prataprc/dotfiles/blob/master/assets/talkonmatrix.svg)](https://riot.im/app/#/user/@prataprc:matrix.org?action=chat)
 [![Build Status](https://travis-ci.org/tn47/goledger.svg?branch=master)](https://travis-ci.org/tn47/goledger)
 [![GoDoc](https://godoc.org/github.com/tn47/goledger?status.png)](https://godoc.org/github.com/tn47/goledger)
 
